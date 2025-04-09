@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Event Statistics</h1>
+
+  <h2>Events by Category</h2>
+  <table border="1">
+    <tr>
+      <th>Category</th>
+      <th>Event Count</th>
+    </tr>
+    {% for stat in event_stats %}
+      <tr>
+        <td>{{ stat.category }}</td>
+        <td>{{ stat.event_count }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Tickets Sold by Event</h2>
+  <table border="1">
+    <tr>
+      <th>Event Title</th>
+      <th>Ticket Count</th>
+    </tr>
+    {% for stat in ticket_stats %}
+      <tr>
+        <td>{{ stat.title }}</td>
+        <td>{{ stat.ticket_count }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
