@@ -1,0 +1,183 @@
+{
+  "users": [
+    {
+      "username": "john_doe",
+      "email": "john@example.com",
+      "password": "password123",
+      "role": "organizer",
+      "phone": "1234567890",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false
+    },
+    {
+      "username": "jane_smith",
+      "email": "jane@example.com",
+      "password": "password123",
+      "role": "guest",
+      "phone": "0987654321",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false
+    },
+    {
+      "username": "admin_user",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role": "admin",
+      "phone": "5555555555",
+      "is_active": true,
+      "is_staff": true,
+      "is_superuser": true
+    }
+  ],
+  "permissions": [
+    {
+      "name": "manage_events",
+      "description": "Can create and manage events"
+    },
+    {
+      "name": "manage_tickets",
+      "description": "Can manage tickets for events"
+    }
+  ],
+  "user_permissions": [
+    {
+      "user": "john_doe",
+      "permission": "manage_events"
+    },
+    {
+      "user": "admin_user",
+      "permission": "manage_tickets"
+    }
+  ],
+  "events": [
+    {
+      "title": "Music Festival 2025",
+      "description": "A grand music festival with top artists.",
+      "category": "Music",
+      "start_datetime": "2025-06-01T10:00:00",
+      "end_datetime": "2025-06-01T22:00:00",
+      "location_name": "City Park",
+      "location_lat": 10.7769,
+      "location_lng": 106.7009,
+      "location_address": "123 Park Street, HCMC",
+      "organizer": "john_doe",
+      "ticket_price": 50.00,
+      "total_tickets": 100,
+      "available_tickets": 100,
+      "status": "upcoming",
+      "is_public": true,
+      "tags": ["music", "festival"]
+    },
+    {
+      "title": "Tech Conference 2025",
+      "description": "A conference for tech enthusiasts.",
+      "category": "Technology",
+      "start_datetime": "2025-07-15T09:00:00",
+      "end_datetime": "2025-07-15T17:00:00",
+      "location_name": "Convention Center",
+      "location_lat": 10.7800,
+      "location_lng": 106.6900,
+      "location_address": "456 Tech Road, HCMC",
+      "organizer": "john_doe",
+      "ticket_price": 100.00,
+      "total_tickets": 200,
+      "available_tickets": 200,
+      "status": "upcoming",
+      "is_public": true,
+      "tags": ["tech", "conference"]
+    }
+  ],
+  "tickets": [
+    {
+      "event": "Music Festival 2025",
+      "user": "jane_smith",
+      "price": 50.00,
+      "qr_code": "QR12345",
+      "status": "purchased",
+      "purchase_date": "2025-04-10T15:00:00"
+    },
+    {
+      "event": "Tech Conference 2025",
+      "user": "jane_smith",
+      "price": 100.00,
+      "qr_code": "QR67890",
+      "status": "purchased",
+      "purchase_date": "2025-04-11T10:00:00"
+    }
+  ],
+  "payments": [
+    {
+      "ticket": "QR12345",
+      "user": "jane_smith",
+      "payment_method": "credit_card",
+      "amount": 50.00,
+      "status": "completed",
+      "stripe_transaction_id": "txn_12345",
+      "payment_date": "2025-04-10T15:05:00"
+    },
+    {
+      "ticket": "QR67890",
+      "user": "jane_smith",
+      "payment_method": "paypal",
+      "amount": 100.00,
+      "status": "completed",
+      "stripe_transaction_id": "txn_67890",
+      "payment_date": "2025-04-11T10:05:00"
+    }
+  ],
+  "reviews": [
+    {
+      "event": "Music Festival 2025",
+      "user": "jane_smith",
+      "rating": 5,
+      "comment": "Amazing event, loved the music!"
+    }
+  ],
+  "discount_codes": [
+    {
+      "code": "SUMMER25",
+      "discount_percent": 25,
+      "event": "Music Festival 2025",
+      "valid_until": "2025-05-31T23:59:59",
+      "max_uses": 50,
+      "used_count": 0,
+      "is_active": true
+    }
+  ],
+  "notifications": [
+    {
+      "user": "jane_smith",
+      "event": "Music Festival 2025",
+      "title": "Ticket Purchased",
+      "message": "You have successfully purchased a ticket for Music Festival 2025!",
+      "type": "info",
+      "is_read": false,
+      "created_at": "2025-04-10T15:10:00"
+    },
+    {
+      "user": "john_doe",
+      "event": "Tech Conference 2025",
+      "title": "Event Reminder",
+      "message": "Your event Tech Conference 2025 is coming up soon!",
+      "type": "reminder",
+      "is_read": false,
+      "created_at": "2025-04-11T10:10:00"
+    }
+  ],
+  "chat_messages": [
+    {
+      "event": "Music Festival 2025",
+      "sender": "jane_smith",
+      "message": "Looking forward to the festival! Anyone else going?",
+      "created_at": "2025-04-10T16:00:00"
+    },
+    {
+      "event": "Music Festival 2025",
+      "sender": "john_doe",
+      "message": "Yes, I’ll be there! It’s going to be amazing.",
+      "created_at": "2025-04-10T16:05:00"
+    }
+  ]
+}
