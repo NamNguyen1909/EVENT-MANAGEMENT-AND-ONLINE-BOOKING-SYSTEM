@@ -6,8 +6,7 @@ from django import forms
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.urls import path
 from .models import (
-    User, Permission, UserPermission, Event, Ticket, Payment,
-    Review, DiscountCode, Notification, ChatMessage
+    User, Event, Ticket, Payment, Review, DiscountCode, Notification, ChatMessage
 )
 
 # Form tùy chỉnh cho Event
@@ -122,8 +121,6 @@ admin_site = MyAdminSite(name='event_admin')
 
 # Đăng ký các model
 admin_site.register(User, UserAdmin)
-admin_site.register(Permission)
-admin_site.register(UserPermission)
 admin_site.register(Event, EventAdmin)
 admin_site.register(Ticket, TicketAdmin)
 admin_site.register(Payment)

@@ -9,7 +9,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bookingandmanagementapis.settin
 django.setup()
 
 # Import các model từ app bem
-from bem.models import User, Permission, UserPermission, Event, Ticket, Payment, Review, DiscountCode, Notification, ChatMessage
+from bem.models import User, Event, Ticket, Payment, Review, DiscountCode, Notification, ChatMessage
 
 def load_dummy_data():
     # Đọc file JSON
@@ -35,36 +35,7 @@ def load_dummy_data():
         user.save()
         print(f"Đã tạo user: {user.username}")
 
-    # 2. Nhập dữ liệu cho Permission
-    print("\nĐang nhập dữ liệu cho Permission...")
-    for perm_data in data.get('permissions', []):
-        if Permission.objects.filter(name=perm_data['name']).exists():
-            print(f"Permission {perm_data['name']} đã tồn tại, bỏ qua...")
-            continue
-        permission = Permission(
-            name=perm_data['name'],
-            description=perm_data['description']
-        )
-        permission.save()
-        print(f"Đã tạo permission: {permission.name}")
-
-    # 3. Nhập dữ liệu cho UserPermission
-    print("\nĐang nhập dữ liệu cho UserPermission...")
-    for user_perm_data in data.get('user_permissions', []):
-        try:
-            user = User.objects.get(username=user_perm_data['user'])
-            permission = Permission.objects.get(name=user_perm_data['permission'])
-        except (User.DoesNotExist, Permission.DoesNotExist) as e:
-            print(f"User {user_perm_data['user']} hoặc Permission {user_perm_data['permission']} không tồn tại, bỏ qua...")
-            continue
-        if UserPermission.objects.filter(user=user, permission=permission).exists():
-            print(f"UserPermission cho {user.username} và {permission.name} đã tồn tại, bỏ qua...")
-            continue
-        user_perm = UserPermission(user=user, permission=permission)
-        user_perm.save()
-        print(f"Đã cấp permission {permission.name} cho user {user.username}")
-
-    # 4. Nhập dữ liệu cho Event
+    # 2. Nhập dữ liệu cho Event
     print("\nĐang nhập dữ liệu cho Event...")
     for event_data in data.get('events', []):
         if Event.objects.filter(title=event_data['title']).exists():
@@ -98,7 +69,7 @@ def load_dummy_data():
         event.save()
         print(f"Đã tạo event: {event.title}")
 
-    # 5. Nhập dữ liệu cho Ticket
+    # 3. Nhập dữ liệu cho Ticket
     print("\nĐang nhập dữ liệu cho Ticket...")
     for ticket_data in data.get('tickets', []):
         try:
@@ -119,7 +90,7 @@ def load_dummy_data():
         ticket.save()
         print(f"Đã tạo ticket cho user {user.username} tại event {event.title}")
 
-    # 6. Nhập dữ liệu cho Payment
+    # 4. Nhập dữ liệu cho Payment
     print("\nĐang nhập dữ liệu cho Payment...")
     for payment_data in data.get('payments', []):
         try:
@@ -141,7 +112,7 @@ def load_dummy_data():
         payment.save()
         print(f"Đã tạo payment cho ticket {ticket.qr_code}")
 
-    # 7. Nhập dữ liệu cho Review
+    # 5. Nhập dữ liệu cho Review
     print("\nĐang nhập dữ liệu cho Review...")
     for review_data in data.get('reviews', []):
         try:
@@ -159,7 +130,7 @@ def load_dummy_data():
         review.save()
         print(f"Đã tạo review cho event {event.title} bởi user {user.username}")
 
-    # 8. Nhập dữ liệu cho DiscountCode
+    # 6. Nhập dữ liệu cho DiscountCode
     print("\nĐang nhập dữ liệu cho DiscountCode...")
     for discount_data in data.get('discount_codes', []):
         try:
@@ -180,7 +151,7 @@ def load_dummy_data():
         discount.save()
         print(f"Đã tạo discount code {discount.code} cho event {event.title}")
 
-    # 9. Nhập dữ liệu cho Notification
+    # 7. Nhập dữ liệu cho Notification
     print("\nĐang nhập dữ liệu cho Notification...")
     for notif_data in data.get('notifications', []):
         try:
@@ -202,7 +173,7 @@ def load_dummy_data():
         notification.save()
         print(f"Đã tạo notification cho user {user.username}")
 
-    # 10. Nhập dữ liệu cho ChatMessage
+    # 8. Nhập dữ liệu cho ChatMessage
     print("\nĐang nhập dữ liệu cho ChatMessage...")
     for chat_data in data.get('chat_messages', []):
         try:

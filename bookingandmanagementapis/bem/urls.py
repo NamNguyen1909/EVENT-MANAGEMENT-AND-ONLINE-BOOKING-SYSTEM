@@ -5,7 +5,6 @@ from . import views
 # Định nghĩa router cho các ViewSet
 router = DefaultRouter()
 router.register('users', views.UserViewSet, basename='user')
-router.register('permissions', views.PermissionViewSet, basename='permission')
 router.register('events', views.EventViewSet, basename='event')
 router.register('tickets', views.TicketViewSet, basename='ticket')
 router.register('payments', views.PaymentViewSet, basename='payment')

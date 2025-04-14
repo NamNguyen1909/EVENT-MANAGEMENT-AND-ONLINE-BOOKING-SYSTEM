@@ -45,15 +45,20 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'oauth2_provider',
+    'django_filters',
 ]
 
 OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-    'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-)
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    )
 }
+
 
 import cloudinary
 import cloudinary.uploader
@@ -158,3 +163,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CLIENT_ID = '8ffKpIirrTnTvP47dPg9OD5dSntM41tLGfpYYdFN'
+CLIENT_SECRET = 'eTAAT3evTfYEBuvWf2JDtog5QLKzJr4NqUw6G6aQmeNoGtaE6cXGi2rc55BSnJX3zdpFXKb4J5eipboE3bZOCmIc1xvCXWetw532xfHdFgZzSLs6nfWKH9J7IaaS53FS'
+# qjHF1c2jweUusePcxjdhILGL4Dt1EM

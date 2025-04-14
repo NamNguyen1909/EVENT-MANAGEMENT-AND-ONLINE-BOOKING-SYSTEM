@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import (
-    User, Permission, UserPermission, Event, Ticket, Payment,
-    Review, DiscountCode, Notification, ChatMessage
+    User, Event, Ticket, Payment, Review, DiscountCode, Notification, ChatMessage
 )
 
 # Serializer cho User
@@ -24,22 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])  # Mã hóa mật khẩu
         user.save()
         return user
-
-# Serializer cho Permission
-class PermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Permission
-        fields = ['id', 'name', 'description']
-
-# Serializer cho UserPermission
-class UserPermissionSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    permission = serializers.PrimaryKeyRelatedField(queryset=Permission.objects.all())
-
-    class Meta:
-        model = UserPermission
-        fields = ['id', 'user', 'permission', 'granted_at']
-        read_only_fields = ['granted_at']
 
 # Serializer cho Event
 class EventSerializer(serializers.ModelSerializer):
@@ -121,7 +104,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 # Serializer chi tiết cho User
 class UserDetailSerializer(serializers.ModelSerializer):
-    permissions = UserPermissionSerializer(many=True, read_only=True, source='permissions')
     organized_events = EventSerializer(many=True, read_only=True, source='organized_events')
     tickets = TicketSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
@@ -138,7 +120,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'role', 'phone', 'avatar', 'is_active',
-            'created_at', 'updated_at', 'preferences', 'permissions', 'organized_events',
+            'created_at', 'updated_at', 'preferences', 'organized_events',
             'tickets', 'payments', 'reviews', 'notifications', 'chat_messages'
         ]
         read_only_fields = ['created_at', 'updated_at']

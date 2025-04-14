@@ -22,6 +22,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)  # Thêm is_superuser
         return self.create_user(username, email, password, **extra_fields)
 
+
 # Người dùng
 class User(AbstractBaseUser):
     username = models.CharField(max_length=255, unique=True)
@@ -51,25 +52,6 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return self.is_superuser
-
-
-# Quyền
-class Permission(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=255, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-# Quyền của người dùng
-class UserPermission(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='permissions')
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='user_permissions')
-    granted_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.permission.name}"
 
 
 # Sự kiện
