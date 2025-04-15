@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n#a90+f16#@i=+!4kg^__it^(1)xv!$xy3xr4i^ma*#i41(^@('
+SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -163,6 +163,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CLIENT_ID = '8ffKpIirrTnTvP47dPg9OD5dSntM41tLGfpYYdFN'
-CLIENT_SECRET = 'eTAAT3evTfYEBuvWf2JDtog5QLKzJr4NqUw6G6aQmeNoGtaE6cXGi2rc55BSnJX3zdpFXKb4J5eipboE3bZOCmIc1xvCXWetw532xfHdFgZzSLs6nfWKH9J7IaaS53FS'
-# qjHF1c2jweUusePcxjdhILGL4Dt1EM
+CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
+CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
+# Aybym0BYHcRDVaI0LQf19UiOaHKjp7
