@@ -73,11 +73,11 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username or self.email
 
-    def has_perm(self, perm, obj=None):
-        return self.is_superuser
-
-    def has_module_perms(self, app_label):
-        return self.is_superuser
+    # def has_perm(self, perm, obj=None):
+    #     return self.is_superuser
+    #
+    # def has_module_perms(self, app_label):
+    #     return self.is_superuser
 
     def get_customer_group(self):
         now = timezone.now()
@@ -168,8 +168,8 @@ class Tag(models.Model):
 
 # Vé
 class Ticket(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='purchased_tickets')
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='sold_tickets')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets')
     qr_code = models.CharField(max_length=255, unique=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -208,22 +208,15 @@ class Ticket(models.Model):
 
 # Thanh toán
 class Payment(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-        ('refunded', 'Refunded'),
-    )
     PAYMENT_METHOD_CHOICES = (
         ('momo', 'MoMo'),
         ('vnpay', 'VNPay'),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    tickets = models.ManyToManyField(Ticket, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
     transaction_id = models.CharField(max_length=255, unique=True)
 
@@ -233,26 +226,43 @@ class Payment(models.Model):
             models.Index(fields=['transaction_id']),
         ]
 
+    # def calculate_amount(self):
+    #     if not self.tickets.exists():
+    #         raise ValidationError("No tickets associated with this payment.")
+    #     total = sum(ticket.event.ticket_price for ticket in self.tickets.filter(is_paid=False))
+    #     return total
+    #
+    # def save(self, *args, **kwargs):
+    #     if not self.amount:
+    #         self.amount = self.calculate_amount()
+    #     if self.status == 'completed' and not self.paid_at:
+    #         self.paid_at = timezone.now()
+    #     super().save(*args, **kwargs)
+    #     if self.status == 'completed':
+    #         for ticket in self.tickets.filter(is_paid=False):
+    #             ticket.mark_as_paid(self.paid_at)
+    #     elif self.status in ['cancelled', 'refunded']:
+    #         for ticket in self.tickets.filter(is_paid=True):
+    #             ticket.is_paid = False
+    #             ticket.purchase_date = None
+    #             ticket.save()
     def calculate_amount(self):
-        if not self.tickets.exists():
-            raise ValidationError("No tickets associated with this payment.")
-        total = sum(ticket.event.ticket_price for ticket in self.tickets.filter(is_paid=False))
+        """Tính tổng tiền dựa trên các vé chưa thanh toán của người dùng."""
+        tickets = Ticket.objects.filter(user=self.user, is_paid=False)  # Lấy các vé chưa thanh toán
+        total = sum(ticket.event.ticket_price for ticket in tickets)
         return total
 
     def save(self, *args, **kwargs):
-        if not self.amount:
+        """Ghi đè phương thức save để tự động tính tổng tiền và cập nhật vé."""
+        if not self.amount:  # Nếu chưa có giá trị cho amount
             self.amount = self.calculate_amount()
-        if self.status == 'completed' and not self.paid_at:
-            self.paid_at = timezone.now()
-        super().save(*args, **kwargs)
-        if self.status == 'completed':
-            for ticket in self.tickets.filter(is_paid=False):
-                ticket.mark_as_paid(self.paid_at)
-        elif self.status in ['cancelled', 'refunded']:
-            for ticket in self.tickets.filter(is_paid=True):
-                ticket.is_paid = False
-                ticket.purchase_date = None
-                ticket.save()
+        self.status = True
+        super().save(*args, **kwargs)  # Lưu Payment trước để có `paid_at`
+
+        # Cập nhật trạng thái các vé liên quan
+        tickets = Ticket.objects.filter(user=self.user, is_paid=False)
+        for ticket in tickets:
+            ticket.mark_as_paid(self.paid_at)  # Đánh dấu vé là đã thanh toán
 
 
 # Đánh giá
@@ -261,7 +271,6 @@ class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_reviews')
     rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(null=True, blank=True)
-    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -315,7 +324,6 @@ class Notification(models.Model):
         ('reminder', 'Reminder'),
         ('update', 'Event Update'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notifications')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='event_notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
     title = models.CharField(max_length=255)

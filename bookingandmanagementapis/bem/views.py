@@ -44,14 +44,14 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         return [permissions.AllowAny()]
 
     def create(self, request, *args, **kwargs):
-        role = request.data.get('role', 'attendee')  # Mặc định là attendee
+        role = request.data.get('role', 'attendee')
         if role not in ['admin', 'organizer', 'attendee']:
             return Response({"error": "Vai trò không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = self.get_serializer(data=request.data)
+        data = request.data.copy()  # Sao chép dữ liệu yêu cầu
+        data['role'] = role  # Đảm bảo role được đưa vào dữ liệu
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        user.role = role
-        user.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(methods=['get', 'patch'], detail=False, url_path='current-user')

@@ -14,33 +14,39 @@ class TagSerializer(serializers.ModelSerializer):
 
 # Serializer cho User
 class UserSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, read_only=True)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['avatar'] = instance.avatar.url if instance.avatar else ''
-        data['customer_group'] = instance.get_customer_group().value
-        return data
+    password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = [
-            'id', 'username', 'email', 'role', 'phone', 'avatar', 'total_spent',
-            'tags', 'is_active', 'is_staff', 'is_superuser', 'created_at', 'updated_at'
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-        read_only_fields = ['created_at', 'updated_at', 'is_staff', 'is_superuser']
+        fields = ['id', 'username', 'email', 'password', 'phone', 'role']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
+        # Lấy password và xóa khỏi validated_data để không truyền trực tiếp vào create_user
+        password = validated_data.pop('password')
+        # Tạo user mới
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password'],
-            **{k: v for k, v in validated_data.items() if k not in ['username', 'email', 'password']}
+            password=password,  # create_user sẽ tự động mã hóa password
+            phone=validated_data.get('phone')
         )
+        # Lưu các trường khác nếu cần
+        for field, value in validated_data.items():
+            if field != 'username' and field != 'email' and field != 'phone':
+                setattr(user, field, value)
+        user.save()
         return user
+
+    def update(self, instance, validated_data):
+        # Xử lý cập nhật password nếu có
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)  # Mã hóa password
+        instance.save()
+        return instance
 
 
 # Serializer cho Event
