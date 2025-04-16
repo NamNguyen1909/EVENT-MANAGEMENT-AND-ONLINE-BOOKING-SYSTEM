@@ -65,7 +65,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 # Serializer cho Ticket
 class TicketSerializer(serializers.ModelSerializer):
-    event = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    event = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:

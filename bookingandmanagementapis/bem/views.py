@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics, status, permissions
+from rest_framework import viewsets, generics, status, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -19,13 +19,14 @@ from .models import (
     ChatMessage, EventTrendingLog
 )
 from . import serializers, perms
+from .paginators import ItemPaginator
 
 
 # Phân trang tùy chỉnh
-class ItemPaginator(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+# class ItemPaginator(PageNumberPagination):
+#     page_size = 10
+#     page_size_query_param = 'page_size'
+#     max_page_size = 100
 
 
 # ViewSet cho User
@@ -212,7 +213,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
 
 
 # ViewSet cho Tag
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ViewSet):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -224,6 +225,47 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [perms.IsAdminOrOrganizer()]
         return [permissions.IsAuthenticated()]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        # Áp dụng tìm kiếm
+        for backend in self.filter_backends:
+            queryset = backend().filter_queryset(request, queryset, self)
+        # Áp dụng phân trang
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = self.serializer_class(page or queryset, many=True)
+        return paginator.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        tag = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer_class(tag)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None, *args, **kwargs):
+        tag = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer_class(tag, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def partial_update(self, request, pk=None, *args, **kwargs):
+        tag = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer_class(tag, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        tag = get_object_or_404(self.queryset, pk=pk)
+        tag.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ViewSet cho Ticket
@@ -484,10 +526,26 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
 
 
 # ViewSet cho EventTrendingLog
-class EventTrendingLogViewSet(viewsets.ReadOnlyModelViewSet):
+class EventTrendingLogViewSet(viewsets.ViewSet):
     queryset = EventTrendingLog.objects.all()
     serializer_class = serializers.EventTrendingLogSerializer
     permission_classes = [perms.IsAdminOrOrganizer]
     pagination_class = ItemPaginator
     filter_backends = [OrderingFilter]
     ordering_fields = ['last_updated', 'view_count', 'ticket_sold_count']
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        # Áp dụng sắp xếp
+        for backend in self.filter_backends:
+            queryset = backend().filter_queryset(request, queryset, self)
+        # Áp dụng phân trang
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = self.serializer_class(page or queryset, many=True)
+        return paginator.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        log = get_object_or_404(self.queryset, pk=pk)
+        serializer = self.serializer_class(log)
+        return Response(serializer.data)
