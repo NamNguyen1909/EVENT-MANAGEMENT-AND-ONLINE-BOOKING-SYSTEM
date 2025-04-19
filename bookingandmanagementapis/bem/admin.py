@@ -96,10 +96,9 @@ class PaymentAdmin(admin.ModelAdmin):
 
 # Admin cho Review
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'user', 'rating', 'is_approved', 'created_at']
+    list_display = ['id', 'event', 'user', 'rating', 'comment', 'created_at']
     search_fields = ['event__title', 'user__username', 'comment']
-    list_filter = ['rating', 'is_approved', 'created_at']
-    list_editable = ['is_approved']
+    list_filter = ['rating', 'created_at']
 
 
 # Admin cho DiscountCode

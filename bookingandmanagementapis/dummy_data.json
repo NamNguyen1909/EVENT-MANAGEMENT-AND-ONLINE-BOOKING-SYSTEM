@@ -1,311 +1,272 @@
 {
-  "users": [
-    {
-      "username": "john_doe",
-      "email": "john@example.com",
-      "password": "password123",
-      "role": "organizer",
-      "phone": "1234567890",
-      "total_spent": 0.00,
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "jane_smith",
-      "email": "jane@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "0987654321",
-      "total_spent": 150.00,
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "admin_user",
-      "email": "admin@example.com",
-      "password": "admin123",
-      "role": "admin",
-      "phone": "5555555555",
-      "total_spent": 0.00,
-      "is_active": true,
-      "is_staff": true,
-      "is_superuser": true
-    },
-    {
-      "username": "bob_jones",
-      "email": "bob@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "1112223333",
-      "total_spent": 120.00,
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    }
-  ],
-  "tags": [
-    {
-      "name": "music"
-    },
-    {
-      "name": "festival"
-    },
-    {
-      "name": "tech"
-    },
-    {
-      "name": "conference"
-    },
-    {
-      "name": "sports"
-    },
-    {
-      "name": "marathon"
-    }
-  ],
-  "events": [
-    {
-      "title": "Music Festival 2025",
-      "description": "A grand music festival with top artists.",
-      "category": "music",
-      "start_time": "2025-06-01T10:00:00",
-      "end_time": "2025-06-01T22:00:00",
-      "location": "City Park, 123 Park Street, HCMC",
-      "latitude": 10.7769,
-      "longitude": 106.7009,
-      "organizer": "john_doe",
-      "ticket_price": 50.00,
-      "total_tickets": 100,
-      "is_active": true,
-      "tags": ["music", "festival"]
-    },
-    {
-      "title": "Tech Conference 2025",
-      "description": "A conference for tech enthusiasts.",
-      "category": "conference",
-      "start_time": "2025-07-15T09:00:00",
-      "end_time": "2025-07-15T17:00:00",
-      "location": "Convention Center, 456 Tech Road, HCMC",
-      "latitude": 10.7800,
-      "longitude": 106.6900,
-      "organizer": "john_doe",
-      "ticket_price": 100.00,
-      "total_tickets": 200,
-      "is_active": true,
-      "tags": ["tech", "conference"]
-    },
-    {
-      "title": "Marathon 2025",
-      "description": "A marathon event for sports enthusiasts.",
-      "category": "sports",
-      "start_time": "2025-08-01T06:00:00",
-      "end_time": "2025-08-01T12:00:00",
-      "location": "City Stadium, 789 Sports Avenue, HCMC",
-      "latitude": 10.7900,
-      "longitude": 106.6800,
-      "organizer": "john_doe",
-      "ticket_price": 20.00,
-      "total_tickets": 150,
-      "is_active": true,
-      "tags": ["sports", "marathon"]
-    }
-  ],
-  "tickets": [
-    {
-      "event": "Music Festival 2025",
-      "user": "jane_smith",
-      "qr_code": "QR12345",
-      "is_paid": true,
-      "is_checked_in": false,
-      "purchase_date": "2025-04-10T15:00:00"
-    },
-    {
-      "event": "Music Festival 2025",
-      "user": "bob_jones",
-      "qr_code": "QR12346",
-      "is_paid": true,
-      "is_checked_in": false,
-      "purchase_date": "2025-04-10T15:10:00"
-    },
-    {
-      "event": "Music Festival 2025",
-      "user": "bob_jones",
-      "qr_code": "QR12347",
-      "is_paid": true,
-      "is_checked_in": true,
-      "purchase_date": "2025-04-10T15:20:00",
-      "check_in_date": "2025-04-10T15:30:00"
-    },
-    {
-      "event": "Tech Conference 2025",
-      "user": "jane_smith",
-      "qr_code": "QR67890",
-      "is_paid": true,
-      "is_checked_in": false,
-      "purchase_date": "2025-04-11T10:00:00"
-    },
-    {
-      "event": "Marathon 2025",
-      "user": "bob_jones",
-      "qr_code": "QR54321",
-      "is_paid": true,
-      "is_checked_in": false,
-      "purchase_date": "2025-04-11T11:00:00"
-    }
-  ],
-  "payments": [
-    {
-      "user": "jane_smith",
-      "amount": 50.00,
-      "payment_method": "momo",
-      "status": "completed",
-      "transaction_id": "txn_12345",
-      "paid_at": "2025-04-10T15:05:00",
-      "tickets": ["QR12345"]
-    },
-    {
-      "user": "bob_jones",
-      "amount": 50.00,
-      "payment_method": "momo",
-      "status": "completed",
-      "transaction_id": "txn_12346",
-      "paid_at": "2025-04-10T15:15:00",
-      "tickets": ["QR12346"]
-    },
-    {
-      "user": "bob_jones",
-      "amount": 50.00,
-      "payment_method": "momo",
-      "status": "completed",
-      "transaction_id": "txn_12347",
-      "paid_at": "2025-04-10T15:25:00",
-      "tickets": ["QR12347"]
-    },
-    {
-      "user": "jane_smith",
-      "amount": 100.00,
-      "payment_method": "vnpay",
-      "status": "completed",
-      "transaction_id": "txn_67890",
-      "paid_at": "2025-04-11T10:05:00",
-      "tickets": ["QR67890"]
-    },
-    {
-      "user": "bob_jones",
-      "amount": 20.00,
-      "payment_method": "momo",
-      "status": "completed",
-      "transaction_id": "txn_54321",
-      "paid_at": "2025-04-11T11:05:00",
-      "tickets": ["QR54321"]
-    }
-  ],
-  "reviews": [
-    {
-      "event": "Music Festival 2025",
-      "user": "jane_smith",
-      "rating": 5,
-      "comment": "Amazing event, loved the music!",
-      "is_approved": true,
-      "created_at": "2025-04-10T16:00:00"
-    },
-    {
-      "event": "Tech Conference 2025",
-      "user": "jane_smith",
-      "rating": 4,
-      "comment": "Very informative, but the schedule was tight.",
-      "is_approved": true,
-      "created_at": "2025-04-11T11:00:00"
-    }
-  ],
-  "discount_codes": [
-    {
-      "code": "SUMMER25",
-      "discount_percentage": 25,
-      "user_group": "regular",
-      "is_active": true,
-      "valid_from": "2025-04-01T00:00:00",
-      "valid_to": "2025-05-31T23:59:59",
-      "max_uses": 50,
-      "used_count": 0
-    },
-    {
-      "code": "EXPIRED10",
-      "discount_percentage": 10,
-      "user_group": "regular",
-      "is_active": true,
-      "valid_from": "2025-03-01T00:00:00",
-      "valid_to": "2025-04-01T23:59:59",
-      "max_uses": 20,
-      "used_count": 0
-    }
-  ],
-  "notifications": [
-    {
-      "user": "jane_smith",
-      "event": "Music Festival 2025",
-      "title": "Ticket Purchased",
-      "message": "You have successfully purchased a ticket for Music Festival 2025!",
-      "notification_type": "reminder",
-      "is_read": false,
-      "created_at": "2025-04-10T15:10:00"
-    },
-    {
-      "user": "john_doe",
-      "event": "Tech Conference 2025",
-      "title": "Event Reminder",
-      "message": "Your event Tech Conference 2025 is coming up soon!",
-      "notification_type": "reminder",
-      "is_read": false,
-      "created_at": "2025-04-11T10:10:00"
-    }
-  ],
-  "chat_messages": [
-    {
-      "event": "Music Festival 2025",
-      "sender": "jane_smith",
-      "receiver": "john_doe",
-      "message": "Looking forward to the festival! Anyone else going?",
-      "is_from_organizer": false,
-      "created_at": "2025-04-10T16:00:00"
-    },
-    {
-      "event": "Music Festival 2025",
-      "sender": "john_doe",
-      "receiver": "jane_smith",
-      "message": "Yes, I’ll be there! It’s going to be amazing.",
-      "is_from_organizer": true,
-      "created_at": "2025-04-10T16:05:00"
-    },
-    {
-      "event": "Marathon 2025",
-      "sender": "bob_jones",
-      "receiver": "john_doe",
-      "message": "Anyone training for the marathon?",
-      "is_from_organizer": false,
-      "created_at": "2025-04-11T11:10:00"
-    }
-  ],
-  "event_trending_logs": [
-    {
-      "event": "Music Festival 2025",
-      "view_count": 120,
-      "ticket_sold_count": 3,
-      "last_updated": "2025-04-11T12:00:00"
-    },
-    {
-      "event": "Tech Conference 2025",
-      "view_count": 80,
-      "ticket_sold_count": 1,
-      "last_updated": "2025-04-11T12:00:00"
-    },
-    {
-      "event": "Marathon 2025",
-      "view_count": 50,
-      "ticket_sold_count": 1,
-      "last_updated": "2025-04-11T12:00:00"
-    }
-  ]
+    "users": [
+        {
+            "username": "john_doe",
+            "email": "john@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "1234567890",
+            "total_spent": 0,
+            "is_active": true
+        },
+        {
+            "username": "jane_smith",
+            "email": "jane@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0987654321",
+            "total_spent": 112.50,
+            "is_active": true
+        },
+        {
+            "username": "bob_jones",
+            "email": "bob@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "5555555555",
+            "total_spent": 90.00,
+            "is_active": true
+        },
+        {
+            "username": "alice_brown",
+            "email": "alice@example.com",
+            "password": "password123",
+            "role": "organizer",
+            "phone": "1112223333",
+            "total_spent": 0,
+            "is_active": true
+        },
+        {
+            "username": "admin_user",
+            "email": "admin@example.com",
+            "password": "admin123",
+            "role": "admin",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true
+        }
+    ],
+    "tags": [
+        {"name": "music"},
+        {"name": "tech"},
+        {"name": "sports"},
+        {"name": "conference"}
+    ],
+    "events": [
+        {
+            "title": "Music Festival 2025",
+            "description": "A grand music festival featuring top artists.",
+            "category": "music",
+            "start_time": "2025-05-01T09:00:00",
+            "end_time": "2025-05-01T23:00:00",
+            "location": "Central Park, New York",
+            "latitude": 40.785091,
+            "longitude": -73.968285,
+            "organizer": "alice_brown",
+            "ticket_price": 75.00,
+            "total_tickets": 5,
+            "is_active": true,
+            "tags": ["music"]
+        },
+        {
+            "title": "Tech Conference 2025",
+            "description": "A conference for tech enthusiasts.",
+            "category": "conference",
+            "start_time": "2025-06-15T10:00:00",
+            "end_time": "2025-06-16T17:00:00",
+            "location": "San Francisco Convention Center",
+            "latitude": 37.774929,
+            "longitude": -122.419416,
+            "organizer": "alice_brown",
+            "ticket_price": 150.00,
+            "total_tickets": 3,
+            "is_active": true,
+            "tags": ["tech", "conference"]
+        },
+        {
+            "title": "Marathon 2025",
+            "description": "Annual marathon event.",
+            "category": "sports",
+            "start_time": "2025-07-20T06:00:00",
+            "end_time": "2025-07-20T12:00:00",
+            "location": "Boston, MA",
+            "latitude": 42.360081,
+            "longitude": -71.058884,
+            "organizer": "alice_brown",
+            "ticket_price": 40.00,
+            "total_tickets": 5,
+            "is_active": true,
+            "tags": ["sports"]
+        }
+    ],
+    "discount_codes": [
+        {
+            "code": "WELCOME10",
+            "discount_percentage": 10.00,
+            "user_group": "new",
+            "is_active": true,
+            "valid_from": "2025-01-01T00:00:00",
+            "valid_to": "2025-12-31T23:59:59",
+            "max_uses": 100,
+            "used_count": 0
+        },
+        {
+            "code": "VIP20",
+            "discount_percentage": 20.00,
+            "user_group": "vip",
+            "is_active": true,
+            "valid_from": "2025-01-01T00:00:00",
+            "valid_to": "2025-12-31T23:59:59",
+            "max_uses": 50,
+            "used_count": 0
+        }
+    ],
+    "tickets": [
+        {
+            "event": "Music Festival 2025",
+            "user": "jane_smith",
+            "qr_code": "ticket_001",
+            "is_paid": true,
+            "is_checked_in": false,
+            "purchase_date": "2025-04-10T10:00:00",
+            "check_in_date": null
+        },
+        {
+            "event": "Music Festival 2025",
+            "user": "bob_jones",
+            "qr_code": "ticket_002",
+            "is_paid": true,
+            "is_checked_in": false,
+            "purchase_date": "2025-04-10T10:00:00",
+            "check_in_date": null
+        },
+        {
+            "event": "Tech Conference 2025",
+            "user": "john_doe",
+            "qr_code": "ticket_003",
+            "is_paid": true,
+            "is_checked_in": false,
+            "purchase_date": "2025-04-10T10:00:00",
+            "check_in_date": null
+        },
+        {
+            "event": "Marathon 2025",
+            "user": "jane_smith",
+            "qr_code": "ticket_004",
+            "is_paid": true,
+            "is_checked_in": false,
+            "purchase_date": "2025-04-10T10:00:00",
+            "check_in_date": null
+        }
+    ],
+    "payments": [
+        {
+            "user": "jane_smith",
+            "amount": 112.50,
+            "payment_method": "momo",
+            "status": true,
+            "transaction_id": "trans_001",
+            "paid_at": "2025-04-10T10:00:00",
+            "discount_code": "WELCOME10"
+        },
+        {
+            "user": "bob_jones",
+            "amount": 90.00,
+            "payment_method": "vnpay",
+            "status": true,
+            "transaction_id": "trans_002",
+            "paid_at": "2025-04-10T10:00:00",
+            "discount_code": null
+        },
+        {
+            "user": "john_doe",
+            "amount": 150.00,
+            "payment_method": "momo",
+            "status": true,
+            "transaction_id": "trans_003",
+            "paid_at": "2025-04-10T10:00:00",
+            "discount_code": null
+        }
+    ],
+    "reviews": [
+        {
+            "event": "Music Festival 2025",
+            "user": "jane_smith",
+            "rating": 5,
+            "comment": "Amazing event!"
+        },
+        {
+            "event": "Music Festival 2025",
+            "user": "bob_jones",
+            "rating": 4,
+            "comment": "Great music, but too crowded."
+        },
+        {
+            "event": "Tech Conference 2025",
+            "user": "john_doe",
+            "rating": 3,
+            "comment": "Good speakers, but poor organization."
+        }
+    ],
+    "notifications": [
+        {
+            "user": "jane_smith",
+            "event": "Music Festival 2025",
+            "title": "Reminder: Music Festival 2025",
+            "message": "Don't forget to attend the Music Festival 2025!",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "user": "john_doe",
+            "event": "Tech Conference 2025",
+            "title": "Reminder: Tech Conference 2025",
+            "message": "Tech Conference 2025 is happening soon!",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "user": "jane_smith",
+            "event": "Marathon 2025",
+            "title": "Reminder: Marathon 2025",
+            "message": "Get ready for Marathon 2025!",
+            "notification_type": "reminder",
+            "is_read": false
+        }
+    ],
+    "chat_messages": [
+        {
+            "event": "Music Festival 2025",
+            "sender": "alice_brown",
+            "receiver": "jane_smith",
+            "message": "Looking forward to seeing you at the festival!",
+            "is_from_organizer": true,
+            "is_read": false
+        },
+        {
+            "event": "Tech Conference 2025",
+            "sender": "alice_brown",
+            "receiver": "john_doe",
+            "message": "We have updated the schedule for the conference.",
+            "is_from_organizer": true,
+            "is_read": false
+        }
+    ],
+    "event_trending_logs": [
+        {
+            "event": "Music Festival 2025",
+            "view_count": 120,
+            "ticket_sold_count": 3
+        },
+        {
+            "event": "Tech Conference 2025",
+            "view_count": 80,
+            "ticket_sold_count": 1
+        },
+        {
+            "event": "Marathon 2025",
+            "view_count": 50,
+            "ticket_sold_count": 1
+        }
+    ]
 }

@@ -1,10 +1,11 @@
 from datetime import timedelta
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
+import uuid
 
 
 # Quản lý người dùng tùy chỉnh
@@ -73,11 +74,11 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username or self.email
 
-    # def has_perm(self, perm, obj=None):
-    #     return self.is_superuser
-    #
-    # def has_module_perms(self, app_label):
-    #     return self.is_superuser
+    def has_perm(self, perm, obj=None):
+        return self.is_superuser
+
+    def has_module_perms(self, app_label):
+        return self.is_superuser
 
     def get_customer_group(self):
         now = timezone.now()
@@ -93,6 +94,11 @@ class User(AbstractBaseUser):
 
 
 # Sự kiện
+class EventQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True, end_time__gte=timezone.now())
+
+
 class Event(models.Model):
     CATEGORY_CHOICES = (
         ('music', 'Music'),
@@ -115,18 +121,20 @@ class Event(models.Model):
     is_active = models.BooleanField(default=True)
 
     location = models.CharField(max_length=500)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
 
     total_tickets = models.IntegerField(validators=[MinValueValidator(0)])
     ticket_price = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(0)])
 
-    tags = models.ManyToManyField('Tag', blank=True)
+    tags = models.ManyToManyField('Tag', blank=True, related_name='events')
 
     poster = CloudinaryField('poster', null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = EventQuerySet.as_manager()
 
     class Meta:
         constraints = [
@@ -145,18 +153,17 @@ class Event(models.Model):
 
     def clean(self):
         if self.start_time >= self.end_time:
-            raise ValidationError("Start time must be before end time.")
+            raise ValidationError("Thời gian bắt đầu phải trước thời gian kết thúc.")
         if self.organizer.role != 'organizer':
-            raise ValidationError("Only organizers can create events.")
+            raise ValidationError("Chỉ có người tổ chức mới có thể tạo sự kiện.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def check_event_status(self):
-        if timezone.now() > self.end_time:
-            self.is_active = False
-            self.save()
+    @property
+    def sold_tickets_count(self):
+        return self.tickets.count()
 
 
 class Tag(models.Model):
@@ -170,7 +177,7 @@ class Tag(models.Model):
 class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets')
-    qr_code = models.CharField(max_length=255, unique=True)
+    qr_code = models.CharField(max_length=255, unique=True, default=uuid.uuid4)
 
     created_at = models.DateTimeField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)
@@ -186,13 +193,16 @@ class Ticket(models.Model):
         ]
 
     def __str__(self):
-        return f"Ticket of {self.user} for {self.event.title}"
+        return f"Vé của {self.user} cho {self.event.title}"
+
+    def clean(self):
+        if self.event.tickets.count() >= self.event.total_tickets:
+            raise ValidationError("Hết vé cho sự kiện này.")
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Chỉ kiểm tra khi tạo mới
-            if self.event.sold_tickets.count() >= self.event.total_tickets:
-                raise ValidationError("No more tickets available for this event.")
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            self.full_clean()
+            super().save(*args, **kwargs)
 
     def mark_as_paid(self, paid_at):
         self.is_paid = True
@@ -204,6 +214,9 @@ class Ticket(models.Model):
             self.is_checked_in = True
             self.check_in_date = timezone.now()
             self.save()
+
+    def get_display_qr_code(self):
+        return f"****{str(self.qr_code)[-4:]}"  # Hiển thị 4 ký tự cuối để bảo mật
 
 
 # Thanh toán
@@ -219,6 +232,7 @@ class Payment(models.Model):
     status = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
     transaction_id = models.CharField(max_length=255, unique=True)
+    discount_code = models.ForeignKey('DiscountCode', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
 
     class Meta:
         indexes = [
@@ -226,43 +240,31 @@ class Payment(models.Model):
             models.Index(fields=['transaction_id']),
         ]
 
-    # def calculate_amount(self):
-    #     if not self.tickets.exists():
-    #         raise ValidationError("No tickets associated with this payment.")
-    #     total = sum(ticket.event.ticket_price for ticket in self.tickets.filter(is_paid=False))
-    #     return total
-    #
-    # def save(self, *args, **kwargs):
-    #     if not self.amount:
-    #         self.amount = self.calculate_amount()
-    #     if self.status == 'completed' and not self.paid_at:
-    #         self.paid_at = timezone.now()
-    #     super().save(*args, **kwargs)
-    #     if self.status == 'completed':
-    #         for ticket in self.tickets.filter(is_paid=False):
-    #             ticket.mark_as_paid(self.paid_at)
-    #     elif self.status in ['cancelled', 'refunded']:
-    #         for ticket in self.tickets.filter(is_paid=True):
-    #             ticket.is_paid = False
-    #             ticket.purchase_date = None
-    #             ticket.save()
     def calculate_amount(self):
-        """Tính tổng tiền dựa trên các vé chưa thanh toán của người dùng."""
-        tickets = Ticket.objects.filter(user=self.user, is_paid=False)  # Lấy các vé chưa thanh toán
+        tickets = Ticket.objects.filter(user=self.user, is_paid=False).select_related('event')
         total = sum(ticket.event.ticket_price for ticket in tickets)
-        return total
+        if self.discount_code and self.discount_code.is_valid():
+            discount = total * (self.discount_code.discount_percentage / 100)
+            total -= discount
+        return max(total, 0)
 
     def save(self, *args, **kwargs):
-        """Ghi đè phương thức save để tự động tính tổng tiền và cập nhật vé."""
-        if not self.amount:  # Nếu chưa có giá trị cho amount
-            self.amount = self.calculate_amount()
-        self.status = True
-        super().save(*args, **kwargs)  # Lưu Payment trước để có `paid_at`
+        with transaction.atomic():
+            if not self.amount:
+                self.amount = self.calculate_amount()
+            if self.status and not self.paid_at:
+                self.paid_at = timezone.now()
+            super().save(*args, **kwargs)
+            if self.status:
+                tickets = Ticket.objects.filter(user=self.user, is_paid=False).select_related('event')
+                for ticket in tickets:
+                    ticket.mark_as_paid(self.paid_at)
+                if self.discount_code and self.discount_code.is_valid():
+                    self.discount_code.used_count += 1
+                    self.discount_code.save()
 
-        # Cập nhật trạng thái các vé liên quan
-        tickets = Ticket.objects.filter(user=self.user, is_paid=False)
-        for ticket in tickets:
-            ticket.mark_as_paid(self.paid_at)  # Đánh dấu vé là đã thanh toán
+    def get_display_transaction_id(self):
+        return f"****{self.transaction_id[-4:]}"  # Hiển thị 4 ký tự cuối để bảo mật
 
 
 # Đánh giá
@@ -279,13 +281,13 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return f"Review {self.rating} - {self.event.title}"
+        return f"Đánh giá {self.rating} - {self.event.title}"
 
 
 # Mã giảm giá
 class DiscountCode(models.Model):
     code = models.CharField(max_length=50, unique=True, db_index=True)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0)])
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     user_group = models.CharField(
@@ -324,6 +326,7 @@ class Notification(models.Model):
         ('reminder', 'Reminder'),
         ('update', 'Event Update'),
     )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='event_notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
     title = models.CharField(max_length=255)
@@ -347,6 +350,7 @@ class ChatMessage(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     message = models.TextField()
     is_from_organizer = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -356,12 +360,12 @@ class ChatMessage(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_from_organizer and self.sender.role != 'organizer':
-            raise ValidationError("Only organizers can send messages as organizers.")
+            raise ValidationError("Chỉ có người tổ chức mới có thể gửi tin nhắn với tư cách người tổ chức.")
         super().save(*args, **kwargs)
 
 
 class EventTrendingLog(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='trending_logs')
     view_count = models.IntegerField(default=0)
     ticket_sold_count = models.IntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)

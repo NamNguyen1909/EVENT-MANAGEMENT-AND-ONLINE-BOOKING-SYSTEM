@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Avg, Q, F
+from django.db.models import Count, Avg, Q
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -23,10 +23,10 @@ from .paginators import ItemPaginator
 
 
 # Phân trang tùy chỉnh
-# class ItemPaginator(PageNumberPagination):
-#     page_size = 10
-#     page_size_query_param = 'page_size'
-#     max_page_size = 100
+class ItemPaginator(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 # ViewSet cho User
@@ -47,9 +47,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         role = request.data.get('role', 'attendee')
         if role not in ['admin', 'organizer', 'attendee']:
             return Response({"error": "Vai trò không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
-        data = request.data.copy()  # Sao chép dữ liệu yêu cầu
-        data['role'] = role  # Đảm bảo role được đưa vào dữ liệu
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -66,7 +64,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='tickets')
     def get_tickets(self, request, pk):
         user = self.get_object()
-        tickets = user.purchased_tickets.all()
+        tickets = user.tickets.all().select_related('event')
         page = self.paginate_queryset(tickets)
         serializer = serializers.TicketSerializer(page or tickets, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -74,7 +72,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='payments')
     def get_payments(self, request, pk):
         user = self.get_object()
-        payments = user.payments.all()
+        payments = user.payments.all().select_related('discount_code')
         page = self.paginate_queryset(payments)
         serializer = serializers.PaymentSerializer(page or payments, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -82,7 +80,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='reviews')
     def get_reviews(self, request, pk):
         user = self.get_object()
-        reviews = user.event_reviews.all()
+        reviews = user.event_reviews.all().select_related('event')
         page = self.paginate_queryset(reviews)
         serializer = serializers.ReviewSerializer(page or reviews, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -90,7 +88,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='notifications')
     def get_notifications(self, request, pk):
         user = self.get_object()
-        notifications = user.user_notifications.all()
+        notifications = user.notifications.all().select_related('event')
         page = self.paginate_queryset(notifications)
         serializer = serializers.NotificationSerializer(page or notifications, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -98,7 +96,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='sent-messages')
     def get_sent_messages(self, request, pk):
         user = self.get_object()
-        messages = user.sent_messages.all()
+        messages = user.sent_messages.all().select_related('event', 'receiver')
         page = self.paginate_queryset(messages)
         serializer = serializers.ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -128,7 +126,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = self.queryset.select_related('organizer').prefetch_related('tags')
         q = self.request.query_params.get('q')
         if q:
             queryset = queryset.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(location__icontains=q))
@@ -140,7 +138,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
     @action(methods=['get'], detail=True, url_path='tickets')
     def get_tickets(self, request, pk):
         event = self.get_object()
-        tickets = event.sold_tickets.all()
+        tickets = event.tickets.all().select_related('user')
         page = self.paginate_queryset(tickets)
         serializer = serializers.TicketSerializer(page or tickets, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -160,7 +158,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
             serializer.is_valid(raise_exception=True)
             review = serializer.save()
             return Response(serializers.ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
-        reviews = event.reviews.all()
+        reviews = event.reviews.all().select_related('user')
         page = self.paginate_queryset(reviews)
         serializer = serializers.ReviewSerializer(page or reviews, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -168,7 +166,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
     @action(methods=['get'], detail=True, url_path='chat-messages')
     def get_chat_messages(self, request, pk):
         event = self.get_object()
-        messages = event.chat_messages.all()
+        messages = event.chat_messages.all().select_related('sender', 'receiver')
         page = self.paginate_queryset(messages)
         serializer = serializers.ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -181,7 +179,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         queryset = Event.objects.filter(
             is_active=True,
             start_time__gte=timezone.now()
-        )
+        ).select_related('organizer').prefetch_related('tags')
         if categories:
             queryset = queryset.filter(category__in=categories)
         suggested_events = queryset.order_by('start_time')[:5]
@@ -193,7 +191,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         hot_events = Event.objects.filter(
             is_active=True,
             start_time__gte=timezone.now()
-        ).annotate(tickets_sold=Count('sold_tickets')).order_by('-tickets_sold')[:5]
+        ).annotate(tickets_sold=Count('tickets')).order_by('-tickets_sold')[:5]
         serializer = self.get_serializer(hot_events, many=True)
         return Response(serializer.data)
 
@@ -202,8 +200,8 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         event = self.get_object()
         if not (request.user == event.organizer or request.user.role == 'admin'):
             return Response({"error": "Không có quyền truy cập."}, status=status.HTTP_403_FORBIDDEN)
-        tickets_sold = event.sold_tickets.count()
-        revenue = sum(ticket.event.ticket_price for ticket in event.sold_tickets.filter(is_paid=True))
+        tickets_sold = event.tickets.count()
+        revenue = sum(ticket.event.ticket_price for ticket in event.tickets.filter(is_paid=True))
         data = {
             'tickets_sold': tickets_sold,
             'revenue': revenue,
@@ -213,7 +211,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
 
 
 # ViewSet cho Tag
-class TagViewSet(viewsets.ViewSet):
+class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -225,47 +223,6 @@ class TagViewSet(viewsets.ViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [perms.IsAdminOrOrganizer()]
         return [permissions.IsAuthenticated()]
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.queryset
-        # Áp dụng tìm kiếm
-        for backend in self.filter_backends:
-            queryset = backend().filter_queryset(request, queryset, self)
-        # Áp dụng phân trang
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(queryset, request)
-        serializer = self.serializer_class(page or queryset, many=True)
-        return paginator.get_paginated_response(serializer.data) if page else Response(serializer.data)
-
-    def retrieve(self, request, pk=None, *args, **kwargs):
-        tag = get_object_or_404(self.queryset, pk=pk)
-        serializer = self.serializer_class(tag)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def update(self, request, pk=None, *args, **kwargs):
-        tag = get_object_or_404(self.queryset, pk=pk)
-        serializer = self.serializer_class(tag, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def partial_update(self, request, pk=None, *args, **kwargs):
-        tag = get_object_or_404(self.queryset, pk=pk)
-        serializer = self.serializer_class(tag, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def destroy(self, request, pk=None, *args, **kwargs):
-        tag = get_object_or_404(self.queryset, pk=pk)
-        tag.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ViewSet cho Ticket
@@ -283,38 +240,37 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         return super().get_permissions()
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).select_related('event')
 
     @action(detail=False, methods=['post'], url_path='book')
     def book_ticket(self, request):
         event_id = request.data.get('event_id')
-        discount_code = request.data.get('discount_code')
+        discount_code_id = request.data.get('discount_code_id')
         try:
             event = Event.objects.get(id=event_id, is_active=True, start_time__gte=timezone.now())
         except Event.DoesNotExist:
             return Response({"error": "Sự kiện không tồn tại hoặc không khả dụng."}, status=status.HTTP_404_NOT_FOUND)
 
-        if event.sold_tickets.count() >= event.total_tickets:
+        if event.tickets.count() >= event.total_tickets:
             return Response({"error": "Hết vé."}, status=status.HTTP_400_BAD_REQUEST)
 
         price = event.ticket_price
         discount = 0
-        if discount_code:
+        discount_obj = None
+        if discount_code_id:
             try:
-                discount_query = DiscountCode.objects.filter(
-                    code=discount_code,
+                discount_obj = DiscountCode.objects.get(
+                    id=discount_code_id,
                     is_active=True,
                     valid_from__lte=timezone.now(),
                     valid_to__gte=timezone.now()
                 )
-                discount_query = discount_query.filter(Q(max_uses__isnull=True) | Q(used_count__lt=F('max_uses')))
-                discount_obj = discount_query.get()
+                if discount_obj.max_uses is not None and discount_obj.used_count >= discount_obj.max_uses:
+                    return Response({"error": "Mã giảm giá đã hết lượt sử dụng."}, status=status.HTTP_400_BAD_REQUEST)
                 if discount_obj.user_group != request.user.get_customer_group().value:
                     return Response({"error": "Mã giảm giá không áp dụng cho nhóm khách hàng này."}, status=status.HTTP_400_BAD_REQUEST)
                 discount = (price * discount_obj.discount_percentage) / 100
                 price -= discount
-                discount_obj.used_count += 1
-                discount_obj.save()
             except DiscountCode.DoesNotExist:
                 return Response({"error": "Mã giảm giá không hợp lệ hoặc đã hết hạn."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -338,11 +294,11 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         payment = Payment(
             user=request.user,
             amount=price,
-            payment_method='momo',  # Mặc định, có thể thay đổi qua request
-            status='pending',
-            transaction_id=str(uuid.uuid4())
+            payment_method=request.data.get('payment_method', 'momo'),
+            status=False,
+            transaction_id=str(uuid.uuid4()),
+            discount_code=discount_obj
         )
-        payment.tickets.add(ticket)
         payment.save()
 
         notification = Notification(
@@ -357,7 +313,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
 
         send_mail(
             subject=f"Xác Nhận Đặt Vé cho {event.title}",
-            message=f"Kính gửi {request.user.username},\n\nBạn đã đặt vé cho {event.title}.\nMã QR: {qr_code}\nVui lòng thanh toán để hoàn tất.\n\nTrân trọng!",
+            message=f"Kính gửi {request.user.username},\n\nBạn đã đặt vé cho {event.title}.\nMã QR: {ticket.get_display_qr_code()}\nVui lòng thanh toán để hoàn tất.\n\nTrân trọng!",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[request.user.email],
             fail_silently=True
@@ -393,31 +349,26 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
     pagination_class = ItemPaginator
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).select_related('discount_code')
 
     @action(detail=True, methods=['post'], url_path='confirm')
     def confirm_payment(self, request, pk):
         payment = self.get_object()
-        if payment.status != 'pending':
+        if payment.status:
             return Response({"error": "Thanh toán đã được xử lý."}, status=status.HTTP_400_BAD_REQUEST)
         if payment.user != request.user:
             return Response({"error": "Không có quyền xác nhận thanh toán này."}, status=status.HTTP_403_FORBIDDEN)
 
-        payment.status = 'completed'
+        payment.status = True
         payment.paid_at = timezone.now()
         payment.save()
 
-        for ticket in payment.tickets.all():
-            ticket.mark_as_paid(payment.paid_at)
-            request.user.total_spent += ticket.event.ticket_price
-            request.user.save()
-
         notification = Notification(
             user=request.user,
-            event=payment.tickets.first().event,
+            event=Ticket.objects.filter(user=request.user, is_paid=False).select_related('event').first().event,
             notification_type='reminder',
             title="Thanh Toán Thành Công",
-            message=f"Thanh toán cho vé sự kiện {payment.tickets.first().event.title} đã hoàn tất.",
+            message=f"Thanh toán cho vé sự kiện đã hoàn tất.",
             is_read=False
         )
         notification.save()
@@ -445,7 +396,7 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
     pagination_class = ItemPaginator
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).select_related('event')
 
     @action(detail=False, methods=['post'], url_path='create-notification')
     def create_notification(self, request):
@@ -535,11 +486,9 @@ class EventTrendingLogViewSet(viewsets.ViewSet):
     ordering_fields = ['last_updated', 'view_count', 'ticket_sold_count']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset
-        # Áp dụng sắp xếp
+        queryset = self.queryset.select_related('event')
         for backend in self.filter_backends:
             queryset = backend().filter_queryset(request, queryset, self)
-        # Áp dụng phân trang
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         serializer = self.serializer_class(page or queryset, many=True)
