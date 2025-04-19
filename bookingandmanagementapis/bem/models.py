@@ -7,6 +7,11 @@ from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
 import uuid
 
+# pip install qrcode[pil]
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+
 
 # Quản lý người dùng tùy chỉnh
 class UserManager(BaseUserManager):
@@ -99,6 +104,7 @@ class EventQuerySet(models.QuerySet):
         return self.filter(is_active=True, end_time__gte=timezone.now())
 
 
+# Sự kiện
 class Event(models.Model):
     CATEGORY_CHOICES = (
         ('music', 'Music'),
@@ -126,6 +132,7 @@ class Event(models.Model):
 
     total_tickets = models.IntegerField(validators=[MinValueValidator(0)])
     ticket_price = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(0)])
+    sold_tickets = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     tags = models.ManyToManyField('Tag', blank=True, related_name='events')
 
@@ -165,6 +172,11 @@ class Event(models.Model):
     def sold_tickets_count(self):
         return self.tickets.count()
 
+    def check_event_status(self):
+        if timezone.now() > self.end_time:
+            self.is_active = False
+            self.save()
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True, db_index=True)
@@ -177,7 +189,7 @@ class Tag(models.Model):
 class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets')
-    qr_code = models.CharField(max_length=255, unique=True, default=uuid.uuid4)
+    qr_code = CloudinaryField('qr_code', null=True, blank=True)  # Lưu QR code
 
     created_at = models.DateTimeField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)
@@ -193,15 +205,14 @@ class Ticket(models.Model):
         ]
 
     def __str__(self):
-        return f"Vé của {self.user} cho {self.event.title}"
-
-    def clean(self):
-        if self.event.tickets.count() >= self.event.total_tickets:
-            raise ValidationError("Hết vé cho sự kiện này.")
+        return f"Vé của {self.user} - Sự kiện {self.event.title}"
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
-            self.full_clean()
+            if not self.pk:  # Chỉ kiểm tra khi tạo mới
+                # Giả sử event có thuộc tính sold_tickets (tự tính hoặc trường riêng cập nhật)
+                if self.event.sold_tickets >= self.event.total_tickets:
+                    raise ValidationError("Hết vé cho sự kiện này.")
             super().save(*args, **kwargs)
 
     def mark_as_paid(self, paid_at):
@@ -215,9 +226,6 @@ class Ticket(models.Model):
             self.check_in_date = timezone.now()
             self.save()
 
-    def get_display_qr_code(self):
-        return f"****{str(self.qr_code)[-4:]}"  # Hiển thị 4 ký tự cuối để bảo mật
-
 
 # Thanh toán
 class Payment(models.Model):
@@ -227,12 +235,14 @@ class Payment(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
+    tickets = models.ManyToManyField(Ticket, related_name='payments', blank=True)  # Danh sách vé liên quan
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
     transaction_id = models.CharField(max_length=255, unique=True)
-    discount_code = models.ForeignKey('DiscountCode', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
+    discount_code = models.ForeignKey('DiscountCode', on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='payments')
 
     class Meta:
         indexes = [
@@ -240,28 +250,41 @@ class Payment(models.Model):
             models.Index(fields=['transaction_id']),
         ]
 
-    def calculate_amount(self):
-        tickets = Ticket.objects.filter(user=self.user, is_paid=False).select_related('event')
-        total = sum(ticket.event.ticket_price for ticket in tickets)
-        if self.discount_code and self.discount_code.is_valid():
-            discount = total * (self.discount_code.discount_percentage / 100)
-            total -= discount
-        return max(total, 0)
-
     def save(self, *args, **kwargs):
         with transaction.atomic():
-            if not self.amount:
-                self.amount = self.calculate_amount()
-            if self.status and not self.paid_at:
-                self.paid_at = timezone.now()
-            super().save(*args, **kwargs)
-            if self.status:
-                tickets = Ticket.objects.filter(user=self.user, is_paid=False).select_related('event')
-                for ticket in tickets:
-                    ticket.mark_as_paid(self.paid_at)
+            if not self.pk:
+                # Nếu là tạo mới (chưa có id), thì tự động lấy các vé chưa thanh toán
+                unpaid_tickets = Ticket.objects.filter(user=self.user, is_paid=False).select_related('event')
+                total = sum(ticket.event.ticket_price for ticket in unpaid_tickets)
+
+                # Áp dụng giảm giá nếu có
                 if self.discount_code and self.discount_code.is_valid():
-                    self.discount_code.used_count += 1
-                    self.discount_code.save()
+                    discount = total * (self.discount_code.discount_percentage / 100)
+                    total -= discount
+                self.amount = max(total, 0)
+
+                self.status = True  # Giả định là thanh toán thành công (bạn có thể tùy chỉnh)
+                if self.status and not self.paid_at:
+                    self.paid_at = timezone.now()
+
+                super().save(*args, **kwargs)  # Phải save trước khi gọi set() cho ManyToMany
+                self.tickets.set(unpaid_tickets)  # Gắn vé vào payment
+
+            else:
+                # Cập nhật thanh toán (nếu có cập nhật sau này)
+                if self.status and not self.paid_at:
+                    self.paid_at = timezone.now()
+                super().save(*args, **kwargs)
+
+            # Đánh dấu vé là đã thanh toán
+            for ticket in self.tickets.all():
+                if not ticket.is_paid:
+                    ticket.mark_as_paid(self.paid_at)
+
+            # Cập nhật số lần dùng của mã giảm giá
+            if self.discount_code and self.discount_code.is_valid():
+                self.discount_code.used_count += 1
+                self.discount_code.save()
 
     def get_display_transaction_id(self):
         return f"****{self.transaction_id[-4:]}"  # Hiển thị 4 ký tự cuối để bảo mật
@@ -287,7 +310,8 @@ class Review(models.Model):
 # Mã giảm giá
 class DiscountCode(models.Model):
     code = models.CharField(max_length=50, unique=True, db_index=True)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2,
+                                              validators=[MinValueValidator(0), MaxValueValidator(100)])
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     user_group = models.CharField(
@@ -326,8 +350,8 @@ class Notification(models.Model):
         ('reminder', 'Reminder'),
         ('update', 'Event Update'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='event_notifications')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True,
+                              related_name='event_notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
     title = models.CharField(max_length=255)
     message = models.TextField()
@@ -336,7 +360,7 @@ class Notification(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['is_read', ]),
         ]
 
     def __str__(self):
@@ -350,7 +374,6 @@ class ChatMessage(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     message = models.TextField()
     is_from_organizer = models.BooleanField(default=False)
-    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -362,6 +385,8 @@ class ChatMessage(models.Model):
         if self.is_from_organizer and self.sender.role != 'organizer':
             raise ValidationError("Chỉ có người tổ chức mới có thể gửi tin nhắn với tư cách người tổ chức.")
         super().save(*args, **kwargs)
+
+    # Chưa có cơ chế hỗ trợ chat real-time (cần tích hợp WebSocket hoặc Django Channels).
 
 
 class EventTrendingLog(models.Model):
