@@ -5,6 +5,30 @@ from django.utils import timezone
 from .models import Payment, User, Event, Ticket
 
 
+@receiver(post_save, sender=Event)
+def create_notification_for_event_update(sender, instance, created, **kwargs):
+    """Tạo thông báo khi sự kiện được cập nhật."""
+    if not created:  # Chỉ chạy khi sự kiện được cập nhật
+        tickets = Ticket.objects.filter(event=instance)
+        for ticket in tickets:
+            Notification.objects.create(
+                event=instance,
+                message=f"Sự kiện '{instance.title}' đã được cập nhật.",
+                notification_type='update'
+            )
+
+
+@receiver(post_migrate)
+def create_default_tags_and_users(sender, **kwargs):
+    # Tạo các tag mặc định
+    default_tags = [
+        'tech', 'health', 'education', 'religious', 'charity', 'networking',
+        'startup', 'career', 'family', 'kids', 'outdoor', 'indoor',
+        'free', 'paid', 'food', 'drink', 'fashion', 'environment',
+        'art', 'film', 'sports_fan', 'fitness', 'music_band',
+        'political', 'science', 'literature', 'music'
+    ]
+
 # Signal để cập nhật total_spent của User khi Payment được lưu
 @receiver(post_save, sender=Payment)
 def update_user_total_spent(sender, instance, **kwargs):
