@@ -30,7 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
             phone=validated_data.get('phone'),
             role=validated_data.get('role', 'attendee')
         )
-        user.save()
         return user
 
     def update(self, instance, validated_data):
@@ -45,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 # Serializer cho Event
 class EventSerializer(serializers.ModelSerializer):
-    organizer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    organizer = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role='organizer'))
     tags = TagSerializer(many=True, read_only=True)
 
     def to_representation(self, instance):
@@ -53,14 +52,20 @@ class EventSerializer(serializers.ModelSerializer):
         data['poster'] = instance.poster.url if instance.poster else ''
         return data
 
+    def validate_organizer(self, value):
+        if value.role != 'organizer':
+            raise serializers.ValidationError("Chỉ người tổ chức mới có thể tạo sự kiện.")
+        return value
+
     class Meta:
         model = Event
         fields = [
             'id', 'organizer', 'title', 'description', 'category', 'start_time',
             'end_time', 'is_active', 'location', 'latitude', 'longitude',
-            'total_tickets', 'ticket_price', 'tags', 'poster', 'created_at', 'updated_at'
+            'total_tickets', 'ticket_price', 'sold_tickets', 'tags', 'poster',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'sold_tickets']
 
 
 # Serializer cho Ticket
@@ -70,7 +75,13 @@ class TicketSerializer(serializers.ModelSerializer):
     qr_code = serializers.SerializerMethodField()
 
     def get_qr_code(self, obj):
-        return obj.get_display_qr_code()
+        return obj.qr_code.url if obj.qr_code else ''
+
+    def validate(self, attrs):
+        event = attrs.get('event')
+        if event and event.sold_tickets >= event.total_tickets:
+            raise serializers.ValidationError("Hết vé cho sự kiện này.")
+        return attrs
 
     class Meta:
         model = Ticket
@@ -84,6 +95,7 @@ class TicketSerializer(serializers.ModelSerializer):
 # Serializer cho Payment
 class PaymentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    tickets = TicketSerializer(many=True, read_only=True)
     discount_code = serializers.PrimaryKeyRelatedField(queryset=DiscountCode.objects.all(), allow_null=True)
     transaction_id = serializers.SerializerMethodField()
 
@@ -98,16 +110,21 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'user', 'amount', 'payment_method', 'status', 'paid_at',
+            'id', 'user', 'tickets', 'amount', 'payment_method', 'status', 'paid_at',
             'transaction_id', 'discount_code'
         ]
-        read_only_fields = ['created_at', 'paid_at', 'transaction_id']
+        read_only_fields = ['amount', 'paid_at', 'transaction_id']
 
 
 # Serializer cho Review
 class ReviewSerializer(serializers.ModelSerializer):
     event = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    def validate_rating(self, value):
+        if not (1 <= value <= 5):
+            raise serializers.ValidationError("Điểm đánh giá phải từ 1 đến 5.")
+        return value
 
     class Meta:
         model = Review
@@ -148,11 +165,18 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     sender = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     receiver = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
+    def validate(self, attrs):
+        is_from_organizer = attrs.get('is_from_organizer', False)
+        sender = attrs.get('sender')
+        if is_from_organizer and sender.role != 'organizer':
+            raise serializers.ValidationError("Chỉ người tổ chức mới có thể gửi tin nhắn với tư cách người tổ chức.")
+        return attrs
+
     class Meta:
         model = ChatMessage
         fields = [
             'id', 'event', 'sender', 'receiver', 'message',
-            'is_from_organizer', 'is_read', 'created_at'
+            'is_from_organizer', 'created_at'
         ]
         read_only_fields = ['created_at']
 
@@ -193,7 +217,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'organized_events', 'tickets', 'payments', 'event_reviews',
             'notifications', 'sent_messages'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'is_staff', 'is_superuser']
+        read_only_fields = ['created_at', 'updated_at', 'is_staff', 'is_superuser', 'total_spent']
 
 
 # Serializer chi tiết cho Event
@@ -208,7 +232,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['poster'] = instance.poster.url if instance.poster else ''
-        data['sold_tickets_count'] = instance.sold_tickets_count
+        data['sold_tickets'] = instance.sold_tickets
         return data
 
     class Meta:
@@ -216,7 +240,8 @@ class EventDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'organizer', 'title', 'description', 'category', 'start_time',
             'end_time', 'is_active', 'location', 'latitude', 'longitude',
-            'total_tickets', 'ticket_price', 'tags', 'poster', 'created_at', 'updated_at',
-            'tickets', 'reviews', 'event_notifications', 'chat_messages'
+            'total_tickets', 'ticket_price', 'sold_tickets', 'tags', 'poster',
+            'created_at', 'updated_at', 'tickets', 'reviews', 'event_notifications',
+            'chat_messages'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'sold_tickets']
