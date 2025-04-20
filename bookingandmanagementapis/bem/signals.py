@@ -27,7 +27,7 @@ def create_notification_for_event_update(sender, instance, created, **kwargs):
 
 
 @receiver(post_migrate)
-def create_default_tags_and_users(sender, **kwargs):
+def create_default_tags(sender, **kwargs):
     # Tạo các tag mặc định
     default_tags = [
         'tech', 'health', 'education', 'religious', 'charity', 'networking',
