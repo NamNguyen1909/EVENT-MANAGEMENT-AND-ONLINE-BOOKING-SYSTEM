@@ -168,14 +168,11 @@ class Event(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    @property
-    def sold_tickets_count(self):
-        return self.tickets.count()
-
-    def check_event_status(self):
-        if timezone.now() > self.end_time:
-            self.is_active = False
-            self.save()
+    #chuyển sang signals.py update_event_status
+    # def check_event_status(self):
+    #     if timezone.now() > self.end_time:
+    #         self.is_active = False
+    #         self.save()
 
 
 class Tag(models.Model):
