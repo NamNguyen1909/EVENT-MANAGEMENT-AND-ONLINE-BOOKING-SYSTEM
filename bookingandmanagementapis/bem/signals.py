@@ -1,9 +1,17 @@
-from django.db.models.signals import post_save, pre_save, post_delete
-from django.dispatch import receiver
-from django.db import transaction
-from django.utils import timezone
-from .models import Payment, User, Event, Ticket
+# events/signals.py
 
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+from django.contrib.auth import get_user_model
+from .models import Tag,Event,Notification,Ticket,Review,ChatMessage,EventTrendingLog,Payment
+from django.db import transaction
+from django.db.models import F
+from django.utils import timezone
+from django.db.models.signals import pre_save, post_save, post_delete
+
+#tự động tạo thông báo khi sự kiện được cập nhật
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 @receiver(post_save, sender=Event)
 def create_notification_for_event_update(sender, instance, created, **kwargs):
@@ -45,7 +53,6 @@ def update_event_status(sender, instance, **kwargs):
     if instance.end_time < timezone.now():
         instance.is_active = False
 
-
 @receiver(post_save, sender=Ticket)
 def update_sold_tickets_on_save(sender, instance, created, **kwargs):
     if created and instance.is_paid:
@@ -60,7 +67,6 @@ def update_sold_tickets_on_save(sender, instance, created, **kwargs):
             Event.objects.filter(pk=instance.event.pk).update(
                 sold_tickets=F('sold_tickets') + 1
             )
-
 
 
 # Signal để cập nhật sold_tickets của Event khi Ticket bị xóa
