@@ -22,14 +22,21 @@ def update_event_status(sender, instance, **kwargs):
         instance.is_active = False
 
 
-# Signal để cập nhật sold_tickets của Event khi Ticket được tạo
 @receiver(post_save, sender=Ticket)
 def update_sold_tickets_on_save(sender, instance, created, **kwargs):
-    if created:  # Chỉ tăng khi tạo mới Ticket
-        with transaction.atomic():
-            event = instance.event
-            event.sold_tickets = event.tickets.count()  # type: ignore
-            event.save()
+    if created and instance.is_paid:
+        # Nếu tạo mới và đã thanh toán
+        Event.objects.filter(pk=instance.event.pk).update(
+            sold_tickets=F('sold_tickets') + 1
+        )
+    elif not created:
+        # Nếu là update và is_paid vừa chuyển từ False -> True
+        old = Ticket.objects.get(pk=instance.pk)
+        if not old.is_paid and instance.is_paid:
+            Event.objects.filter(pk=instance.event.pk).update(
+                sold_tickets=F('sold_tickets') + 1
+            )
+
 
 
 # Signal để cập nhật sold_tickets của Event khi Ticket bị xóa
