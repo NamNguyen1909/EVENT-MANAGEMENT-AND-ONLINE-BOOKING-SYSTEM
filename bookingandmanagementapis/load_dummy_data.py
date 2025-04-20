@@ -76,6 +76,7 @@ def load_dummy_data():
             organizer=organizer,
             ticket_price=event_data['ticket_price'],
             total_tickets=event_data['total_tickets'],
+            sold_tickets=event_data.get('sold_tickets', 0),
             is_active=event_data.get('is_active', True)
         )
         event.save()
@@ -166,6 +167,10 @@ def load_dummy_data():
                 discount_code=discount_code
             )
             payment.save()
+            # Gắn vé vào payment (many-to-many)
+            ticket_qr_codes = payment_data.get('tickets', [])
+            tickets = Ticket.objects.filter(qr_code__in=ticket_qr_codes)
+            payment.tickets.set(tickets)
             print(f"Đã tạo payment cho user {user.username}")
 
     # 7. Nhập dữ liệu cho Review
@@ -193,13 +198,11 @@ def load_dummy_data():
     print("\nĐang nhập dữ liệu cho Notification...")
     for notif_data in data.get('notifications', []):
         try:
-            user = User.objects.get(username=notif_data['user'])
             event = Event.objects.get(title=notif_data['event']) if notif_data.get('event') else None
-        except (User.DoesNotExist, Event.DoesNotExist) as e:
-            print(f"User {notif_data['user']} hoặc Event {notif_data['event']} không tồn tại, bỏ qua notification...")
+        except Event.DoesNotExist:
+            print(f"Event {notif_data['event']} không tồn tại, bỏ qua notification...")
             continue
         notification = Notification(
-            user=user,
             event=event,
             title=notif_data['title'],
             message=notif_data['message'],
@@ -207,7 +210,7 @@ def load_dummy_data():
             is_read=notif_data.get('is_read', False)
         )
         notification.save()
-        print(f"Đã tạo notification cho user {user.username}")
+        print(f"Đã tạo notification cho event {notif_data.get('event')}")
 
     # 9. Nhập dữ liệu cho ChatMessage
     print("\nĐang nhập dữ liệu cho ChatMessage...")
