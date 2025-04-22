@@ -12,6 +12,10 @@ class IsOrganizerUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.role == 'organizer'
 
+    def has_object_permission(self, request, view, obj):
+        # Cho phép organizer chỉnh sửa sự kiện của chính họ
+        return request.user.is_authenticated and request.user == obj.organizer
+
 
 # Quyền chỉ cho phép người tham gia (role='attendee')
 class IsAttendeeUser(permissions.BasePermission):
