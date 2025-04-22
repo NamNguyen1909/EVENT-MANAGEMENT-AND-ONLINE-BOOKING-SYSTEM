@@ -173,28 +173,36 @@ class EventDetailSerializer(serializers.ModelSerializer):
 
 
 
-# Serializer cho Ticket
+# Đặt vé trực tuyến / Xem thông tin vé
 class TicketSerializer(serializers.ModelSerializer):
-    event = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all())
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    qr_code = serializers.SerializerMethodField()
+    username = serializers.ReadOnlyField(source='user.username')  # Lấy tên người dùng
+    email = serializers.ReadOnlyField(source='user.email')  # Lấy email người dùng
+    event_title = serializers.ReadOnlyField(source='event.title')  # Lấy tiêu đề sự kiện
+    event_start_time = serializers.ReadOnlyField(source='event.start_time')  # Lấy thời gian bắt đầu sự kiện
+    event_location = serializers.ReadOnlyField(source='event.location')  # Lấy địa điểm sự kiện
+    qr_code = serializers.ReadOnlyField()  # Thêm trường qr_code để hiển thị mã QR
 
-    def get_qr_code(self, obj):
-        return obj.qr_code.url if obj.qr_code else ''
-
-    def validate(self, attrs):
-        event = attrs.get('event')
-        if event and event.sold_tickets >= event.total_tickets:
-            raise serializers.ValidationError("Hết vé cho sự kiện này.")
-        return attrs
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['qr_code'] = instance.qr_code.url if instance.qr_code else ''
+        return data
 
     class Meta:
         model = Ticket
         fields = [
-            'id', 'user', 'event', 'qr_code', 'is_paid', 'purchase_date',
-            'is_checked_in', 'check_in_date', 'created_at'
+            'id', 'username', 'email', 'purchase_date', 'qr_code',
+            'event_title', 'event_start_time', 'event_location'
         ]
-        read_only_fields = ['created_at', 'purchase_date', 'check_in_date', 'qr_code']
+        read_only_fields = [
+            'id', 'username', 'email', 'purchase_date', 'qr_code',
+            'event_title', 'event_start_time', 'event_location'
+        ]
+
+    def create(self, validated_data):
+        # Tự động gán user và event từ context
+        user = self.context['request'].user
+        event = self.context['event']
+        return Ticket.objects.create(user=user, event=event, **validated_data)
 
 
 # Serializer cho Payment
