@@ -22,13 +22,6 @@ from . import serializers, perms
 from .paginators import ItemPaginator
 
 
-# Phân trang tùy chỉnh
-class ItemPaginator(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
 # ViewSet cho User
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -88,7 +81,9 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     @action(methods=['get'], detail=True, url_path='notifications')
     def get_notifications(self, request, pk):
         user = self.get_object()
-        notifications = user.notifications.all().select_related('event')
+        # Lọc thông báo dựa trên vé của người dùng
+        tickets = Ticket.objects.filter(user=user).values('event_id')
+        notifications = Notification.objects.filter(event__id__in=tickets).select_related('event')
         page = self.paginate_queryset(notifications)
         serializer = serializers.NotificationSerializer(page or notifications, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
@@ -105,12 +100,16 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
 # ViewSet cho Event
 class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
     queryset = Event.objects.filter(is_active=True)
-    serializer_class = serializers.EventSerializer
     pagination_class = ItemPaginator
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'is_active']
     search_fields = ['title', 'description', 'location']
     ordering_fields = ['start_time', 'ticket_price']
+
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'create', 'update', 'partial_update']:
+            return serializers.EventDetailSerializer
+        return serializers.EventSerializer
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events']:
@@ -126,7 +125,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
-        queryset = self.queryset.select_related('organizer').prefetch_related('tags')
+        queryset = self.queryset.select_related('organizer').prefetch_related('tags', 'reviews', 'event_notifications', 'chat_messages')
         q = self.request.query_params.get('q')
         if q:
             queryset = queryset.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(location__icontains=q))
@@ -191,7 +190,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         hot_events = Event.objects.filter(
             is_active=True,
             start_time__gte=timezone.now()
-        ).annotate(tickets_sold=Count('tickets')).order_by('-tickets_sold')[:5]
+        ).annotate(tickets_sold=Count('tickets', filter=Q(tickets__is_paid=True))).order_by('-tickets_sold')[:5]
         serializer = self.get_serializer(hot_events, many=True)
         return Response(serializer.data)
 
@@ -200,7 +199,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         event = self.get_object()
         if not (request.user == event.organizer or request.user.role == 'admin'):
             return Response({"error": "Không có quyền truy cập."}, status=status.HTTP_403_FORBIDDEN)
-        tickets_sold = event.tickets.count()
+        tickets_sold = event.tickets.filter(is_paid=True).count()
         revenue = sum(ticket.event.ticket_price for ticket in event.tickets.filter(is_paid=True))
         data = {
             'tickets_sold': tickets_sold,
@@ -235,7 +234,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
     def get_permissions(self):
         if self.action in ['book_ticket', 'check_in']:
             return [permissions.IsAuthenticated()]
-        elif self.action in ['update']:
+        elif self.action in ['update', 'destroy']:
             return [perms.IsTicketOwner()]
         return super().get_permissions()
 
@@ -251,7 +250,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         except Event.DoesNotExist:
             return Response({"error": "Sự kiện không tồn tại hoặc không khả dụng."}, status=status.HTTP_404_NOT_FOUND)
 
-        if event.tickets.count() >= event.total_tickets:
+        if event.tickets.filter(is_paid=True).count() >= event.total_tickets:
             return Response({"error": "Hết vé."}, status=status.HTTP_400_BAD_REQUEST)
 
         price = event.ticket_price
@@ -300,9 +299,9 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
             discount_code=discount_obj
         )
         payment.save()
+        payment.tickets.add(ticket)
 
         notification = Notification(
-            user=request.user,
             event=event,
             notification_type='reminder',
             title="Vé Đã Được Đặt",
@@ -313,7 +312,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
 
         send_mail(
             subject=f"Xác Nhận Đặt Vé cho {event.title}",
-            message=f"Kính gửi {request.user.username},\n\nBạn đã đặt vé cho {event.title}.\nMã QR: {ticket.get_display_qr_code()}\nVui lòng thanh toán để hoàn tất.\n\nTrân trọng!",
+            message=f"Kính gửi {request.user.username},\n\nBạn đã đặt vé cho {event.title}.\nMã QR: {qr_code}\nVui lòng thanh toán để hoàn tất.\n\nTrân trọng!",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[request.user.email],
             fail_silently=True
@@ -363,15 +362,17 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         payment.paid_at = timezone.now()
         payment.save()
 
-        notification = Notification(
-            user=request.user,
-            event=Ticket.objects.filter(user=request.user, is_paid=False).select_related('event').first().event,
-            notification_type='reminder',
-            title="Thanh Toán Thành Công",
-            message=f"Thanh toán cho vé sự kiện đã hoàn tất.",
-            is_read=False
-        )
-        notification.save()
+        tickets = payment.tickets.all()
+        if tickets:
+            event = tickets.first().event
+            notification = Notification(
+                event=event,
+                notification_type='reminder',
+                title="Thanh Toán Thành Công",
+                message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
+                is_read=False
+            )
+            notification.save()
 
         return Response({"message": "Thanh toán xác nhận thành công.", "payment": serializers.PaymentSerializer(payment).data})
 
@@ -396,11 +397,12 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
     pagination_class = ItemPaginator
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user).select_related('event')
+        # Lọc thông báo dựa trên vé của người dùng
+        tickets = Ticket.objects.filter(user=self.request.user).values('event_id')
+        return self.queryset.filter(event__id__in=tickets).select_related('event')
 
     @action(detail=False, methods=['post'], url_path='create-notification')
     def create_notification(self, request):
-        user_id = request.data.get('user_id')
         event_id = request.data.get('event_id')
         title = request.data.get('title')
         message = request.data.get('message')
@@ -408,11 +410,6 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         if not (request.user.role in ['admin', 'organizer']):
             return Response({"error": "Không có quyền truy cập."}, status=status.HTTP_403_FORBIDDEN)
-
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "Người dùng không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
 
         event = None
         if event_id:
@@ -422,7 +419,6 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
                 return Response({"error": "Sự kiện không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
 
         notification = Notification(
-            user=user,
             event=event,
             notification_type=notification_type,
             title=title,
@@ -431,13 +427,18 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
         )
         notification.save()
 
-        send_mail(
-            subject=title,
-            message=message,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email],
-            fail_silently=True
-        )
+        # Gửi email cho tất cả người dùng có vé của sự kiện
+        if event:
+            ticket_owners = User.objects.filter(tickets__event=event).distinct()
+            recipient_emails = [user.email for user in ticket_owners if user.email]
+            if recipient_emails:
+                send_mail(
+                    subject=title,
+                    message=message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=recipient_emails,
+                    fail_silently=True
+                )
 
         return Response({
             "message": "Thông báo đã được tạo và email đã được gửi.",
@@ -472,8 +473,12 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
     def get_queryset(self):
         event_id = self.request.query_params.get('event')
         if event_id:
-            return self.queryset.filter(event_id=event_id, receiver=self.request.user) | self.queryset.filter(sender=self.request.user)
-        return self.queryset.filter(receiver=self.request.user) | self.queryset.filter(sender=self.request.user)
+            return self.queryset.filter(event_id=event_id).filter(
+                Q(receiver=self.request.user) | Q(sender=self.request.user)
+            ).select_related('sender', 'receiver')
+        return self.queryset.filter(
+            Q(receiver=self.request.user) | Q(sender=self.request.user)
+        ).select_related('sender', 'receiver')
 
 
 # ViewSet cho EventTrendingLog

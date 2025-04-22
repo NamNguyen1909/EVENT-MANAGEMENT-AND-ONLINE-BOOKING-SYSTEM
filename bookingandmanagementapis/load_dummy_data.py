@@ -76,7 +76,6 @@ def load_dummy_data():
             organizer=organizer,
             ticket_price=event_data['ticket_price'],
             total_tickets=event_data['total_tickets'],
-            sold_tickets=event_data.get('sold_tickets', 0),
             is_active=event_data.get('is_active', True)
         )
         event.save()
@@ -120,7 +119,7 @@ def load_dummy_data():
         except (Event.DoesNotExist, User.DoesNotExist) as e:
             print(f"Event {ticket_data['event']} hoặc User {ticket_data['user']} không tồn tại, bỏ qua ticket...")
             continue
-        if event.tickets.count() >= event.total_tickets:
+        if event.tickets.filter(is_paid=True).count() >= event.total_tickets:
             print(f"Event {event.title} đã hết vé, bỏ qua ticket...")
             continue
         if Ticket.objects.filter(qr_code=ticket_data['qr_code']).exists():
@@ -169,7 +168,7 @@ def load_dummy_data():
             payment.save()
             # Gắn vé vào payment (many-to-many)
             ticket_qr_codes = payment_data.get('tickets', [])
-            tickets = Ticket.objects.filter(qr_code__in=ticket_qr_codes)
+            tickets = Ticket.objects.filter(qr_code__in=ticket_qr_codes, is_paid=True)
             payment.tickets.set(tickets)
             print(f"Đã tạo payment cho user {user.username}")
 
@@ -222,7 +221,6 @@ def load_dummy_data():
         except (Event.DoesNotExist, User.DoesNotExist) as e:
             print(f"Event {chat_data['event']}, Sender {chat_data['sender']} hoặc Receiver {chat_data['receiver']} không tồn tại, bỏ qua chat message...")
             continue
-        # Kiểm tra is_from_organizer trước khi tạo
         is_from_organizer = chat_data.get('is_from_organizer', False)
         if is_from_organizer and sender.role != 'organizer':
             print(f"Sender {sender.username} không phải organizer, không thể đặt is_from_organizer=True, bỏ qua...")
@@ -232,8 +230,7 @@ def load_dummy_data():
             sender=sender,
             receiver=receiver,
             message=chat_data['message'],
-            is_from_organizer=is_from_organizer,
-            is_read=chat_data.get('is_read', False)
+            is_from_organizer=is_from_organizer
         )
         chat_message.save()
         print(f"Đã tạo chat message trong event {event.title} bởi {sender.username}")
@@ -249,7 +246,7 @@ def load_dummy_data():
         trending_log = EventTrendingLog(
             event=event,
             view_count=trending_data.get('view_count', 0),
-            ticket_sold_count=trending_data.get('ticket_sold_count', 0)
+            ticket_sold_count=event.tickets.filter(is_paid=True).count()
         )
         trending_log.save()
         print(f"Đã tạo event trending log cho event {event.title}")

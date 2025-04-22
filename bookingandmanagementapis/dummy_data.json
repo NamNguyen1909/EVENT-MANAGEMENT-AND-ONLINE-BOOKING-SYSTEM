@@ -46,6 +46,20 @@
             "is_superuser": true
         }
     ],
+    "tags": [
+        {
+            "name": "music"
+        },
+        {
+            "name": "tech"
+        },
+        {
+            "name": "conference"
+        },
+        {
+            "name": "sports"
+        }
+    ],
     "events": [
         {
             "title": "Music Festival 2025",
@@ -59,7 +73,6 @@
             "organizer": "alice_brown",
             "ticket_price": 75.00,
             "total_tickets": 5,
-            "sold_tickets": 2,
             "is_active": true,
             "tags": ["music"]
         },
@@ -75,7 +88,6 @@
             "organizer": "alice_brown",
             "ticket_price": 150.00,
             "total_tickets": 3,
-            "sold_tickets": 1,
             "is_active": true,
             "tags": ["tech", "conference"]
         },
@@ -91,7 +103,6 @@
             "organizer": "alice_brown",
             "ticket_price": 40.00,
             "total_tickets": 5,
-            "sold_tickets": 1,
             "is_active": true,
             "tags": ["sports"]
         }
@@ -159,7 +170,7 @@
     "payments": [
         {
             "user": "jane_smith",
-            "amount": 150.00,
+            "amount": 115.00,
             "payment_method": "momo",
             "status": true,
             "transaction_id": "trans_001",
@@ -237,33 +248,28 @@
             "sender": "alice_brown",
             "receiver": "jane_smith",
             "message": "Looking forward to seeing you at the festival!",
-            "is_from_organizer": true,
-            "is_read": false
+            "is_from_organizer": true
         },
         {
             "event": "Tech Conference 2025",
             "sender": "alice_brown",
             "receiver": "john_doe",
             "message": "We have updated the schedule for the conference.",
-            "is_from_organizer": true,
-            "is_read": false
+            "is_from_organizer": true
         }
     ],
     "event_trending_logs": [
         {
             "event": "Music Festival 2025",
-            "view_count": 120,
-            "ticket_sold_count": 3
+            "view_count": 120
         },
         {
             "event": "Tech Conference 2025",
-            "view_count": 80,
-            "ticket_sold_count": 1
+            "view_count": 80
         },
         {
             "event": "Marathon 2025",
-            "view_count": 50,
-            "ticket_sold_count": 1
+            "view_count": 50
         }
     ]
 }

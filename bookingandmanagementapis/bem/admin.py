@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django import forms
@@ -43,28 +43,36 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'email', 'role', 'total_spent', 'is_active', 'created_at']
     search_fields = ['username', 'email', 'phone']
     list_filter = ['role', 'is_active', 'created_at']
-    list_editable = ['role', 'is_active']
-    readonly_fields = ['avatar_view']
+    readonly_fields = ['avatar_view', 'total_spent']
+    list_per_page = 20
 
     def avatar_view(self, user):
         if user.avatar:
             return mark_safe(f"<img src='{user.avatar.url}' width='200' />")
         return "Không có ảnh đại diện"
+    avatar_view.short_description = "Avatar"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tags')
 
 
 # Admin cho Event
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'category', 'start_time', 'organizer', 'is_active', 'total_tickets']
+    list_display = ['id', 'title', 'category', 'start_time', 'organizer', 'is_active', 'total_tickets', 'sold_tickets']
     search_fields = ['title', 'description', 'location']
     list_filter = ['category', 'is_active', 'start_time']
-    list_editable = ['is_active']
-    readonly_fields = ['poster_view']
+    readonly_fields = ['poster_view', 'sold_tickets']
     form = EventForm
+    list_per_page = 20
 
     def poster_view(self, event):
         if event.poster:
             return mark_safe(f"<img src='{event.poster.url}' width='200' />")
         return "Không có poster"
+    poster_view.short_description = "Poster"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('organizer').prefetch_related('tags')
 
     class Media:
         css = {
@@ -76,14 +84,25 @@ class EventAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
     search_fields = ['name']
+    list_per_page = 20
 
 
 # Admin cho Ticket
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'user', 'qr_code', 'is_paid', 'is_checked_in', 'created_at']
+    list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at']
     search_fields = ['event__title', 'user__username', 'qr_code']
     list_filter = ['is_paid', 'is_checked_in', 'created_at']
-    list_editable = ['is_paid', 'is_checked_in']
+    readonly_fields = ['qr_code_view']
+    list_per_page = 20
+
+    def qr_code_view(self, ticket):
+        if ticket.qr_code:
+            return mark_safe(f"<img src='{ticket.qr_code.url}' width='100' />")
+        return "Không có QR code"
+    qr_code_view.short_description = "QR Code"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('event', 'user')
 
 
 # Admin cho Payment
@@ -92,6 +111,10 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'transaction_id']
     list_filter = ['payment_method', 'status', 'paid_at']
     readonly_fields = ['transaction_id']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'discount_code').prefetch_related('tickets')
 
 
 # Admin cho Review
@@ -99,6 +122,10 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ['id', 'event', 'user', 'rating', 'comment', 'created_at']
     search_fields = ['event__title', 'user__username', 'comment']
     list_filter = ['rating', 'created_at']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('event', 'user')
 
 
 # Admin cho DiscountCode
@@ -107,14 +134,26 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     search_fields = ['code']
     list_filter = ['user_group', 'is_active', 'valid_from', 'valid_to']
     list_editable = ['is_active']
+    list_per_page = 20
 
 
 # Admin cho Notification
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'title', 'notification_type', 'is_read', 'created_at']
-    search_fields = ['title', 'message', 'user__username']
+    list_display = ['id', 'event', 'notification_type', 'title', 'is_read', 'created_at', 'get_ticket_owners']
+    search_fields = ['title', 'message']
     list_filter = ['notification_type', 'is_read', 'created_at']
     form = NotificationForm
+    list_per_page = 20
+
+    def get_ticket_owners(self, obj):
+        if obj.event:
+            ticket_owners = Ticket.objects.filter(event=obj.event).values_list('user__username', flat=True).distinct()
+            return ", ".join(ticket_owners) or "No users"
+        return "No event"
+    get_ticket_owners.short_description = "Ticket Owners"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('event')
 
 
 # Admin cho ChatMessage
@@ -123,9 +162,14 @@ class ChatMessageAdmin(admin.ModelAdmin):
     search_fields = ['message', 'sender__username', 'receiver__username', 'event__title']
     list_filter = ['is_from_organizer', 'created_at']
     form = ChatMessageForm
+    list_per_page = 20
 
     def message_preview(self, obj):
         return obj.message[:50] + ('...' if len(obj.message) > 50 else '')
+    message_preview.short_description = "Message Preview"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('event', 'sender', 'receiver')
 
 
 # Admin cho EventTrendingLog
@@ -133,6 +177,10 @@ class EventTrendingLogAdmin(admin.ModelAdmin):
     list_display = ['id', 'event', 'view_count', 'ticket_sold_count', 'last_updated']
     search_fields = ['event__title']
     list_filter = ['last_updated']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('event')
 
 
 # Custom Admin Site
@@ -150,7 +198,9 @@ class MyAdminSite(admin.AdminSite):
         # Thống kê số lượng sự kiện theo danh mục
         event_stats = Event.objects.values('category').annotate(event_count=Count('id')).order_by('category')
         # Thống kê số lượng vé đã bán theo sự kiện
-        ticket_stats = Event.objects.annotate(ticket_count=Count('sold_tickets')).values('title', 'ticket_count')
+        ticket_stats = Event.objects.annotate(
+            ticket_count=Count('tickets', filter=Q(tickets__is_paid=True))
+        ).values('title', 'ticket_count')
         # Thống kê lượt xem và vé bán theo xu hướng
         trending_stats = EventTrendingLog.objects.values('event__title', 'view_count', 'ticket_sold_count')
 
