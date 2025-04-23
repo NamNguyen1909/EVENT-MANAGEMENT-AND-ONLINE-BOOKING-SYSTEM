@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics, status, permissions, filters
+from rest_framework import viewsets, generics, status, permissions, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -210,7 +210,14 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
 
 
 # ViewSet cho Tag
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin
+):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -364,7 +371,27 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
         tickets = payment.tickets.all()
         if tickets:
-            event = tickets.first().event
+            event = tickets.first().event #có vấn đề khi lấy sự kiện từ vé đầu tiên
+            # Vấn đề với việc lấy sự kiện từ vé đầu tiên (tickets.first().event) trong confirm_payment
+            """
+            - **Tính hợp lý**:
+              - **Trường hợp bob_jones và john_doe**:
+                - Mỗi thanh toán chỉ liên quan đến một vé của một sự kiện duy nhất (ticket_002: Music Festival 2025, ticket_003: Tech Conference 2025).
+                - Lấy vé đầu tiên (tickets.first().event) là hợp lý, vì không có vé nào khác để xem xét, và sự kiện được lấy sẽ chính xác.
+              - **Trường hợp jane_smith**:
+                - Thanh toán trans_001 liên quan đến hai vé của hai sự kiện khác nhau: ticket_001 (Music Festival 2025) và ticket_004 (Marathon 2025).
+                - Lấy vé đầu tiên (ticket_001) dẫn đến thông báo chỉ đề cập đến Music Festival 2025, bỏ qua Marathon 2025.
+                - **Vấn đề**: Thông báo không bao quát cả hai sự kiện, có thể gây nhầm lẫn cho người dùng, vì họ mong đợi thông báo đầy đủ.
+
+            - **Hạn chế**:
+              - Logic hiện tại giả định tất cả vé trong một thanh toán thuộc cùng một sự kiện, nhưng dữ liệu cho thấy có thể có nhiều sự kiện (như trans_001).
+              - Không kiểm tra xem các vé có thuộc cùng sự kiện hay không, dẫn đến rủi ro khi hệ thống mở rộng.
+
+            - **Giải pháp đề xuất**:
+              1. Tạo thông báo riêng cho từng sự kiện bằng cách lặp qua các vé và lấy tập hợp sự kiện duy nhất.
+              2. Tạo một thông báo tổng quát liệt kê tất cả các sự kiện trong nội dung.
+              3. Gửi email thông báo để tăng trải nghiệm người dùng.
+            """
             notification = Notification(
                 event=event,
                 notification_type='reminder',
