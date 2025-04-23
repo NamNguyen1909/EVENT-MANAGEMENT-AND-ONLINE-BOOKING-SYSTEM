@@ -34,7 +34,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     def get_permissions(self):
         if self.action in ['get_current_user', 'tickets', 'payments', 'reviews', 'notifications', 'sent_messages']:
             return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+        elif self.action in ['create']:
+            return [permissions.AllowAny()]
 
     def create(self, request, *args, **kwargs):
         role = request.data.get('role', 'attendee')
@@ -98,24 +99,33 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
 
 
 # ViewSet cho Event
-class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
-    queryset = Event.objects.filter(is_active=True)
+#Xem sự kiện
+# Cho phép người dùng xem danh sách sự kiện và chi tiết sự kiện
+# Chỉ admin và organizer mới có quyền tạo và chỉnh sửa sự kiện
+class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView,generics.UpdateAPIView):
+    queryset = Event.objects.all()
     pagination_class = ItemPaginator
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'is_active']
-    search_fields = ['title', 'description', 'location']
+    search_fields = ['title', 'description', 'location','category']
     ordering_fields = ['start_time', 'ticket_price']
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
 
     def get_serializer_class(self):
         if self.action in ['retrieve', 'create', 'update', 'partial_update']:
-            return serializers.EventDetailSerializer
-        return serializers.EventSerializer
+            return EventDetailSerializer
+        return EventSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events']:
+        if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events', 'get_chat_messages']:
             return [permissions.IsAuthenticated()]
-        elif self.action == 'create':
-            return [perms.IsOrganizerUser()]
+        elif self.action in ['create']:
+            return [IsOrganizer()]
+        elif self.action in ['update', 'partial_update', 'my_events']:
+            return [IsOrganizerOwner()]
+        elif self.action == 'manage_reviews':
+            # GET cho phép tất cả, POST yêu cầu xác thực sẽ kiểm tra trong view
+            return [permissions.AllowAny()]
         return [perms.IsAdminOrOrganizer(), perms.IsEventOrganizer()]
 
     def create(self, request, *args, **kwargs):
@@ -124,22 +134,42 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         event = serializer.save(organizer=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def update(self, request, *args, **kwargs):
+        event = self.get_object()
+        serializer = EventDetailSerializer(event, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        event = self.get_object()
+        serializer = EventDetailSerializer(event, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def get_queryset(self):
-        queryset = self.queryset.select_related('organizer').prefetch_related('tags', 'reviews', 'event_notifications', 'chat_messages')
+        user = self.request.user
+        if user.role == 'attendee':
+            queryset = self.queryset.all()  # xem được cả sự kiện đã kết thúc để xem review
+        elif user.role == 'organizer':
+            queryset = self.queryset.filter(organizer=user)
+        elif user.role == 'admin':
+            queryset = self.queryset.all()
+        else:
+            queryset = self.queryset.none()
+
         q = self.request.query_params.get('q')
         if q:
-            queryset = queryset.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(location__icontains=q))
-        category = self.request.query_params.get('category')
-        if category:
-            queryset = queryset.filter(category=category)
+            queryset = queryset.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(location__icontains=q) | Q(category__icontains=q))
         return queryset
 
     @action(methods=['get'], detail=True, url_path='tickets')
     def get_tickets(self, request, pk):
         event = self.get_object()
-        tickets = event.tickets.all().select_related('user')
+        tickets = event.tickets.filter(is_paid=True).select_related('user')
         page = self.paginate_queryset(tickets)
-        serializer = serializers.TicketSerializer(page or tickets, many=True)
+        serializer = TicketSerializer(page or tickets, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(methods=['get', 'post'], detail=True, url_path='reviews')
@@ -148,7 +178,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         if request.method == 'POST':
             if not request.user.is_authenticated:
                 return Response({"detail": "Yêu cầu xác thực."}, status=status.HTTP_401_UNAUTHORIZED)
-            serializer = serializers.ReviewSerializer(data={
+            serializer = ReviewSerializer(data={
                 'user': request.user.pk,
                 'event': pk,
                 'rating': request.data.get('rating'),
@@ -156,10 +186,10 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
             })
             serializer.is_valid(raise_exception=True)
             review = serializer.save()
-            return Response(serializers.ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+            return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
         reviews = event.reviews.all().select_related('user')
         page = self.paginate_queryset(reviews)
-        serializer = serializers.ReviewSerializer(page or reviews, many=True)
+        serializer = ReviewSerializer(page or reviews, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(methods=['get'], detail=True, url_path='chat-messages')
@@ -167,7 +197,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         event = self.get_object()
         messages = event.chat_messages.all().select_related('sender', 'receiver')
         page = self.paginate_queryset(messages)
-        serializer = serializers.ChatMessageSerializer(page or messages, many=True)
+        serializer = ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='suggest')
@@ -207,6 +237,15 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
             'average_rating': event.reviews.aggregate(avg=Avg('rating'))['avg'] or 0
         }
         return Response(data)
+    @action(detail=False, methods=['get'], url_path='my-events')
+    def my_events(self, request):
+        """Trả về danh sách các sự kiện do organizer hiện tại tổ chức."""
+        user = request.user
+        if user.role != 'organizer':
+            return Response({"error": "You do not have permission to view this."}, status=403)
+        events = Event.objects.filter(organizer=user)
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
 
 
 # ViewSet cho Tag
