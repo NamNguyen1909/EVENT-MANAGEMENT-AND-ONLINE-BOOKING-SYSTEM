@@ -260,26 +260,20 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return Response(serializer.data)
 
 
-# ViewSet cho Tag
-class TagViewSet(
-    viewsets.GenericViewSet,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin
-):
+# Hiển thị danh sách các tag để gợi ý sự kiện theo sở thích
+class TagViewSet(viewsets.ViewSet, generics.ListAPIView,generics.CreateAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Tag.objects.all()
-    serializer_class = serializers.TagSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TagSerializer
     pagination_class = ItemPaginator
     filter_backends = [SearchFilter]
     search_fields = ['name']
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [perms.IsAdminOrOrganizer()]
-        return [permissions.IsAuthenticated()]
+        elif self.action == 'destroy':
+            return [perms.IsAdminUser()]
+        return [permissions.AllowAny()]
 
 
 # ViewSet cho Ticket
@@ -469,17 +463,56 @@ class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Creat
         return [permissions.IsAuthenticated()]
 
 
-# ViewSet cho Notification
+# Thông báo và nhắc nhở
+# Hiển thị thông báo và nhắc nhở cho người dùng hiện tại
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Notification.objects.all()
-    serializer_class = serializers.NotificationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
     pagination_class = ItemPaginator
 
+    def get_permissions(self):
+        if self.action == 'my_notifications':
+            permission_classes = [permissions.IsAuthenticated]
+        elif self.action == 'event_notifications':
+            permission_classes = [permissions.AllowAny]
+        elif self.action == 'create_notification':
+            permission_classes = [perms.IsEventOwnerOrAdmin]
+        else:
+            permission_classes = [perms.IsEventOwnerOrAdmin]
+        return [permission() for permission in permission_classes]
+
+    # Ghi đè lại để tránh sử dụng queryset mặc định trong ListAPIView
+    # → nhằm ép buộc các custom action sử dụng filter riêng theo ngữ cảnh.
+    # Tránh rò rỉ toàn bộ danh sách thông báo nếu ai đó vô tình truy cập GET /notification/.
     def get_queryset(self):
-        # Lọc thông báo dựa trên vé của người dùng
-        tickets = Ticket.objects.filter(user=self.request.user).values('event_id')
-        return self.queryset.filter(event__id__in=tickets).select_related('event')
+        return Notification.objects.none()
+
+    # lazy loading / infinite scroll
+
+    # Backend (API) vẫn phân trang bình thường (?page=1, ?page=2, ...)
+    # Frontend (Vue/React/Next.js...) sẽ:
+    # Gọi GET /api/my-notifications/?page=1 khi vừa load
+    # Khi kéo xuống gần cuối danh sách → gọi GET /api/my-notifications/?page=2 để load tiếp
+    # Append (nối thêm) vào danh sách đang hiển thị
+
+    @action(detail=False, methods=['get'], url_path='my-notifications')
+    def my_notifications(self, request):
+        user = request.user
+        events = Event.objects.filter(tickets__user=user, tickets__is_checked_in=False).distinct()
+        notifications = Notification.objects.filter(event__in=events)
+        page = self.paginate_queryset(notifications)
+        serializer = self.get_serializer(page or notifications, many=True)
+        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='event-notifications')
+    def event_notifications(self, request):
+        event_id = request.query_params.get('event_id')
+        if not event_id:
+            return Response({"error": "event_id query parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        notifications = Notification.objects.filter(event_id=event_id)
+        page = self.paginate_queryset(notifications)
+        serializer = self.get_serializer(page or notifications, many=True)
+        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='create-notification')
     def create_notification(self, request):
@@ -508,22 +541,37 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
         notification.save()
 
         # Gửi email cho tất cả người dùng có vé của sự kiện
-        if event:
-            ticket_owners = User.objects.filter(tickets__event=event).distinct()
-            recipient_emails = [user.email for user in ticket_owners if user.email]
-            if recipient_emails:
-                send_mail(
-                    subject=title,
-                    message=message,
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=recipient_emails,
-                    fail_silently=True
-                )
+        # if event:
+        #     ticket_owners = User.objects.filter(tickets__event=event).distinct()
+        #     recipient_emails = [user.email for user in ticket_owners if user.email]
+        #     if recipient_emails:
+        #         send_mail(
+        #             subject=title,
+        #             message=message,
+        #             from_email=settings.EMAIL_HOST_USER,
+        #             recipient_list=recipient_emails,
+        #             fail_silently=True
+        #         )
+        # chưa có chức năng gửi email cho người dùng có vé của sự kiện
 
         return Response({
             "message": "Thông báo đã được tạo và email đã được gửi.",
             "notification": serializers.NotificationSerializer(notification).data
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='mark-as-read')
+    def mark_as_read(self, request, pk=None):
+        try:
+            notification = self.get_object()
+            user_notification, created = UserNotification.objects.get_or_create(
+                user=request.user, notification=notification
+            )
+            user_notification.is_read = True
+            user_notification.read_at = timezone.now()
+            user_notification.save()
+            return Response({'message': 'Thông báo đã được đánh dấu là đã đọc.'})
+        except Notification.DoesNotExist:
+            return Response({'error': 'Không tìm thấy thông báo.'}, status=404)
 
 
 # ViewSet cho ChatMessage
