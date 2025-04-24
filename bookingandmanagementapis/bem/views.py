@@ -22,17 +22,15 @@ from . import serializers, perms
 from .paginators import ItemPaginator
 
 
-# ViewSet cho User
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
-    queryset = User.objects.filter(is_active=True)
-    serializer_class = serializers.UserSerializer
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    serializer_class = UserSerializer
     pagination_class = ItemPaginator
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['username', 'email', 'phone']
     ordering_fields = ['created_at', 'username']
 
     def get_permissions(self):
-        if self.action in ['get_current_user', 'tickets', 'payments', 'reviews', 'notifications', 'sent_messages']:
+        if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate']:
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:
             return [permissions.AllowAny()]
@@ -53,35 +51,48 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
             serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        return Response(self.get_serializer(user).data)
+            return Response(self.get_serializer(user).data)
+        else:
+            serializer = UserDetailSerializer(user)
+            return Response(serializer.data)
 
-    @action(methods=['get'], detail=True, url_path='tickets')
-    def get_tickets(self, request, pk):
-        user = self.get_object()
+    @action(methods=['post'], detail=False, url_path='deactivate')
+    def deactivate(self, request):
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({"detail": "Tài khoản đã bị xóa!."}, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='tickets')
+    def get_tickets(self, request):
+        user = request.user
+
         tickets = user.tickets.all().select_related('event')
         page = self.paginate_queryset(tickets)
         serializer = serializers.TicketSerializer(page or tickets, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(methods=['get'], detail=True, url_path='payments')
-    def get_payments(self, request, pk):
-        user = self.get_object()
+    @action(methods=['get'], detail=False, url_path='payments')
+    def get_payments(self, request):
+        user = request.user
+
         payments = user.payments.all().select_related('discount_code')
         page = self.paginate_queryset(payments)
         serializer = serializers.PaymentSerializer(page or payments, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(methods=['get'], detail=True, url_path='reviews')
-    def get_reviews(self, request, pk):
-        user = self.get_object()
-        reviews = user.event_reviews.all().select_related('event')
-        page = self.paginate_queryset(reviews)
-        serializer = serializers.ReviewSerializer(page or reviews, many=True)
-        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+    # @action(methods=['get'], detail=False, url_path='reviews')
+    # def get_reviews(self, request):
+    #     user = request.user
+    #     reviews = user.event_reviews.all().select_related('event')
+    #     page = self.paginate_queryset(reviews)
+    #     serializer = serializers.ReviewSerializer(page or reviews, many=True)
+    #     return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(methods=['get'], detail=True, url_path='notifications')
-    def get_notifications(self, request, pk):
-        user = self.get_object()
+    @action(methods=['get'], detail=False, url_path='notifications')
+    def get_notifications(self, request):
+        user = request.user
+
         # Lọc thông báo dựa trên vé của người dùng
         tickets = Ticket.objects.filter(user=user).values('event_id')
         notifications = Notification.objects.filter(event__id__in=tickets).select_related('event')
@@ -89,9 +100,10 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         serializer = serializers.NotificationSerializer(page or notifications, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(methods=['get'], detail=True, url_path='sent-messages')
-    def get_sent_messages(self, request, pk):
-        user = self.get_object()
+    @action(methods=['get'], detail=False, url_path='sent-messages')
+    def get_sent_messages(self, request):
+        user = request.user
+
         messages = user.sent_messages.all().select_related('event', 'receiver')
         page = self.paginate_queryset(messages)
         serializer = serializers.ChatMessageSerializer(page or messages, many=True)
@@ -444,6 +456,8 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
 
 # ViewSet cho DiscountCode
+# Mã giảm giá
+# Hiển thị danh sách mã giảm giá đang hoạt động
 class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = DiscountCode.objects.filter(is_active=True)
     serializer_class = serializers.DiscountCodeSerializer
