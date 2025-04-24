@@ -89,11 +89,18 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     #     serializer = serializers.ReviewSerializer(page or reviews, many=True)
     #     return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(methods=['get'], detail=False, url_path='notifications')
-    def get_notifications(self, request):
-        user = request.user
 
-        # Lọc thông báo dựa trên vé của người dùng
+
+    # lazy loading / infinite scroll
+
+    # Backend (API) vẫn phân trang bình thường (?page=1, ?page=2, ...)
+    # Frontend (Vue/React/Next.js...) sẽ:
+    # Gọi GET /api/my-notifications/?page=1 khi vừa load
+    # Khi kéo xuống gần cuối danh sách → gọi GET /api/my-notifications/?page=2 để load tiếp
+    # Append (nối thêm) vào danh sách đang hiển thị
+    @action(detail=False, methods=['get'], url_path='my-notifications')
+    def my_notifications(self, request):
+        user = request.user
         tickets = Ticket.objects.filter(user=user).values('event_id')
         notifications = Notification.objects.filter(event__id__in=tickets).select_related('event')
         page = self.paginate_queryset(notifications)

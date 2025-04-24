@@ -7,6 +7,7 @@ from .models import (
 from django.db import transaction
 from django.utils import timezone
 from django.db.models import F
+from django.db import models
 
 
 # Serializer cho Tag (không phụ thuộc serializer nào khác)
@@ -290,6 +291,6 @@ class EventTrendingLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventTrendingLog
-        fields = ['id', 'event', 'event_title', 'event_poster', 'view_count', 'ticket_sold_count', 'last_updated']
+        fields = ['id', 'event', 'event_title', 'event_poster', 'view_count', 'total_revenue', 'trending_score', 'last_updated']
         read_only_fields = ['id', 'event_title', 'last_updated']
 

@@ -394,13 +394,40 @@ class ChatMessage(models.Model):
     # Chưa có cơ chế hỗ trợ chat real-time (cần tích hợp WebSocket hoặc Django Channels).
 
 
+import math
+from datetime import date
+
 class EventTrendingLog(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='trending_logs')
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='trending_log')
     view_count = models.IntegerField(default=0)
-    ticket_sold_count = models.IntegerField(default=0)
+    total_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    trending_score = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     last_updated = models.DateTimeField(auto_now=True)
+
+    def calculate_trending_score(self):
+        today = date.today()
+        sold_tickets = self.event.sold_tickets
+        total_tickets = self.event.total_tickets
+        sales_start_date = self.event.created_at.date() if self.event.created_at else today
+
+        # Tỷ lệ vé đã bán
+        sold_ratio = sold_tickets / total_tickets if total_tickets else 0
+        # Tốc độ bán
+        days_since_sales_start = (today - sales_start_date).days or 1
+        velocity = sold_tickets / days_since_sales_start
+        views = self.view_count
+
+        # Điểm trending (giả định đã chuẩn hóa các giá trị)
+        score = (
+            (sold_ratio * 0.5) +
+            (velocity * 0.3) +
+            (math.log(views + 1) * 0.2)
+        )
+        self.trending_score = round(score, 4)
+        self.save(update_fields=['trending_score'])
 
     class Meta:
         indexes = [
             models.Index(fields=['event', 'last_updated']),
         ]
+        ordering = ['-trending_score']
