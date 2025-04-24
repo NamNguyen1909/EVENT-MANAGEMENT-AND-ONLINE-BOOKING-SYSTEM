@@ -279,15 +279,15 @@ class EventDetailSerializer(serializers.ModelSerializer):
                             'event_notifications', 'chat_messages', 'organizer']
 
 
-# Thống kê sự kiện nổi bật (Trending Events)
 class EventTrendingLogSerializer(serializers.ModelSerializer):
     event_title = serializers.ReadOnlyField(source='event.title')  # Lấy tiêu đề sự kiện
     event_poster = serializers.ReadOnlyField(source='event.poster.url')  # Lấy poster sự kiện
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['poster'] = instance.event.poster.url if instance.event.poster else ''
-        return data
+    #   dư
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     data['poster'] = instance.event.poster.url if instance.event.poster else ''
+    #     return data
 
     class Meta:
         model = EventTrendingLog

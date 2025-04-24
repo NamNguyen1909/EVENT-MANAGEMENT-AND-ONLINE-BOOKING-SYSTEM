@@ -616,25 +616,22 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
         ).select_related('sender', 'receiver')
 
 
-# ViewSet cho EventTrendingLog
-class EventTrendingLogViewSet(viewsets.ViewSet):
-    queryset = EventTrendingLog.objects.all()
-    serializer_class = serializers.EventTrendingLogSerializer
-    permission_classes = [perms.IsAdminOrOrganizer]
+# View cho EventTrendingLog
+from rest_framework import mixins, viewsets, permissions
+
+
+class EventTrendingLogViewSet(mixins.ListModelMixin,
+                             mixins.RetrieveModelMixin,
+                             viewsets.GenericViewSet):
+    queryset = EventTrendingLog.objects.filter(event__is_active=True)
+    serializer_class = EventTrendingLogSerializer
     pagination_class = ItemPaginator
-    filter_backends = [OrderingFilter]
-    ordering_fields = ['last_updated', 'view_count', 'ticket_sold_count']
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.queryset.select_related('event')
-        for backend in self.filter_backends:
-            queryset = backend().filter_queryset(request, queryset, self)
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(queryset, request)
-        serializer = self.serializer_class(page or queryset, many=True)
-        return paginator.get_paginated_response(serializer.data) if page else Response(serializer.data)
+    permission_classes = [permissions.AllowAny]
 
-    def retrieve(self, request, pk=None, *args, **kwargs):
-        log = get_object_or_404(self.queryset, pk=pk)
-        serializer = self.serializer_class(log)
+    # GET /event-trending-logs/:id/   |||| Trả về chi tiết Event khi click vào
+    def retrieve(self, request, *args, **kwargs):
+        trending_log = self.get_object()
+        event = trending_log.event
+        serializer = EventDetailSerializer(event)
         return Response(serializer.data)
