@@ -279,6 +279,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
                             'event_notifications', 'chat_messages', 'organizer']
 
 
+
 class EventTrendingLogSerializer(serializers.ModelSerializer):
     event_title = serializers.ReadOnlyField(source='event.title')  # Lấy tiêu đề sự kiện
     event_poster = serializers.ReadOnlyField(source='event.poster.url')  # Lấy poster sự kiện
@@ -291,6 +292,7 @@ class EventTrendingLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventTrendingLog
-        fields = ['id', 'event', 'event_title', 'event_poster', 'view_count', 'total_revenue', 'trending_score', 'last_updated']
+        fields = ['id', 'event', 'event_title', 'event_poster', 'view_count', 'total_revenue', 'trending_score', 'interest_score', 'last_updated']
         read_only_fields = ['id', 'event_title', 'last_updated']
+
 
