@@ -116,7 +116,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         serializer = serializers.ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-
 # ViewSet cho Event
 #Xem sự kiện
 # Cho phép người dùng xem danh sách sự kiện và chi tiết sự kiện
@@ -139,12 +138,9 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events', 'get_chat_messages']:
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:
-            return [IsOrganizer()]
+            return [perms.IsOrganizerUser()]
         elif self.action in ['update', 'partial_update', 'my_events']:
-            return [IsOrganizerOwner()]
-        elif self.action == 'manage_reviews':
-            # GET cho phép tất cả, POST yêu cầu xác thực sẽ kiểm tra trong view
-            return [permissions.AllowAny()]
+            return [perms.IsOrganizerOwner()]
         return [perms.IsAdminOrOrganizer(), perms.IsEventOrganizer()]
 
     def create(self, request, *args, **kwargs):
@@ -189,26 +185,6 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         tickets = event.tickets.filter(is_paid=True).select_related('user')
         page = self.paginate_queryset(tickets)
         serializer = TicketSerializer(page or tickets, many=True)
-        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
-
-    @action(methods=['get', 'post'], detail=True, url_path='reviews')
-    def manage_reviews(self, request, pk):
-        event = self.get_object()
-        if request.method == 'POST':
-            if not request.user.is_authenticated:
-                return Response({"detail": "Yêu cầu xác thực."}, status=status.HTTP_401_UNAUTHORIZED)
-            serializer = ReviewSerializer(data={
-                'user': request.user.pk,
-                'event': pk,
-                'rating': request.data.get('rating'),
-                'comment': request.data.get('comment')
-            })
-            serializer.is_valid(raise_exception=True)
-            review = serializer.save()
-            return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
-        reviews = event.reviews.all().select_related('user')
-        page = self.paginate_queryset(reviews)
-        serializer = ReviewSerializer(page or reviews, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(methods=['get'], detail=True, url_path='chat-messages')
@@ -614,6 +590,45 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
         return self.queryset.filter(
             Q(receiver=self.request.user) | Q(sender=self.request.user)
         ).select_related('sender', 'receiver')
+
+# Đánh giá sự kiện
+
+# Override get_permissions để phân quyền: create yêu cầu xác thực, update/partial_update/destroy yêu cầu ReviewOwner,
+# list cho phép tất cả.
+# Override get_queryset để lọc review theo event_id và ưu tiên review của user hiện tại đứng đầu.
+# Override perform_create để kiểm tra user chưa review event mới cho tạo review, nếu đã có thì báo lỗi.
+# Bo vệ quyền sửa/xóa review chỉ cho chủ sở hữu, và đảm bảo mỗi user chỉ được review 1 event 1 lần.
+class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    pagination_class = ItemPaginator
+
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [perms.ReviewOwner()]
+        elif self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def get_queryset(self):
+        """Trả về danh sách review cho sự kiện, ưu tiên review của user hiện tại đứng đầu."""
+        event_id = self.request.query_params.get('event_id')
+        queryset = Review.objects.all()
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
+        user = self.request.user
+        if user.is_authenticated:
+            # Sắp xếp sao cho review của user hiện tại đứng đầu
+            queryset = sorted(queryset, key=lambda r: r.user != user)
+        return queryset
+
+    def perform_create(self, serializer):
+        """Gán người dùng hiện tại khi tạo review, kiểm tra user chưa review event."""
+        user = self.request.user
+        event = serializer.validated_data.get('event')
+        if Review.objects.filter(user=user, event=event).exists():
+            raise serializers.ValidationError("Bạn đã có đánh giá cho sự kiện này.")
+        serializer.save(user=user)
 
 
 # View cho EventTrendingLog
