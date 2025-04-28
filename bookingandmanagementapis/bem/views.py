@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -27,9 +28,10 @@ from .serializers import (
 )
 from .perms import (
     IsAdminUser, IsAdminOrOrganizer, IsEventOrganizer, IsOrganizer, IsOrganizerOwner,
-    IsTicketOwner, IsChatMessageSender, IsEventOwnerOrAdmin
+    IsTicketOwner, IsChatMessageSender, IsEventOwnerOrAdmin,ReviewOwner, IsOrganizerUser
 )
 from .paginators import ItemPaginator
+
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
@@ -138,7 +140,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         tickets = Ticket.objects.filter(user=user).values('event_id')
         notifications = Notification.objects.filter(event__id__in=tickets).select_related('event')
         page = self.paginate_queryset(notifications)
-        serializer = serializers.NotificationSerializer(page or notifications, many=True)
+        serializer = NotificationSerializer(page or notifications, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(methods=['get'], detail=False, url_path='sent-messages')
@@ -147,7 +149,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         messages = user.sent_messages.all().select_related('event', 'receiver')
         page = self.paginate_queryset(messages)
-        serializer = serializers.ChatMessageSerializer(page or messages, many=True)
+        serializer =ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
 # ViewSet cho Event
@@ -172,10 +174,10 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events', 'get_chat_messages']:
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:
-            return [perms.IsOrganizerUser()]
+            return [IsOrganizerUser()]
         elif self.action in ['update', 'partial_update', 'my_events']:
-            return [perms.IsOrganizerOwner()]
-        return [perms.IsAdminOrOrganizer(), perms.IsEventOrganizer()]
+            return [IsOrganizerOwner()]
+        return [IsAdminOrOrganizer(), IsEventOrganizer()]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -542,19 +544,18 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
             event=event,
             notification_type=notification_type,
             title=title,
-            message=message,
-            is_read=False
+            message=message
         )
         notification.save()
 
-        # Tạo UserNotification cho các user có vé
-        if event:
-            ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
-            user_notifications = [
-                UserNotification(user_id=user_id, notification=notification)
-                for user_id in ticket_owners
-            ]
-            UserNotification.objects.bulk_create(user_notifications)
+        # # Tạo UserNotification cho các user có vé
+        # if event:
+        #     ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
+        #     user_notifications = [
+        #         UserNotification(user_id=user_id, notification=notification)
+        #         for user_id in ticket_owners
+        #     ]
+        #     UserNotification.objects.bulk_create(user_notifications)
 
         return Response({
             "message": "Thông báo đã được tạo thành công.",
@@ -623,7 +624,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
-            return [perms.ReviewOwner()]
+            return [ReviewOwner()]
         elif self.action == 'create':
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
@@ -645,7 +646,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         user = self.request.user
         event = serializer.validated_data.get('event')
         if Review.objects.filter(user=user, event=event).exists():
-            raise serializers.ValidationError("Bạn đã có đánh giá cho sự kiện này.")
+            raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
         serializer.save(user=user)
 
 
