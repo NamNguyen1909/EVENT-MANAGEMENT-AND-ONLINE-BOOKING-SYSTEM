@@ -7,9 +7,8 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.urls import path
 from .models import (
     User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification,
-    ChatMessage, EventTrendingLog
+    ChatMessage, EventTrendingLog, UserNotification
 )
-
 
 # Form tùy chỉnh cho Event
 class EventForm(forms.ModelForm):
@@ -19,7 +18,6 @@ class EventForm(forms.ModelForm):
         model = Event
         fields = '__all__'
 
-
 # Form tùy chỉnh cho Notification
 class NotificationForm(forms.ModelForm):
     message = forms.CharField(widget=CKEditorUploadingWidget, required=False)
@@ -28,7 +26,6 @@ class NotificationForm(forms.ModelForm):
         model = Notification
         fields = '__all__'
 
-
 # Form tùy chỉnh cho ChatMessage
 class ChatMessageForm(forms.ModelForm):
     message = forms.CharField(widget=CKEditorUploadingWidget)
@@ -36,7 +33,6 @@ class ChatMessageForm(forms.ModelForm):
     class Meta:
         model = ChatMessage
         fields = '__all__'
-
 
 # Admin cho User
 class UserAdmin(admin.ModelAdmin):
@@ -54,7 +50,6 @@ class UserAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('tags')
-
 
 # Admin cho Event
 class EventAdmin(admin.ModelAdmin):
@@ -79,18 +74,16 @@ class EventAdmin(admin.ModelAdmin):
             'all': ('/static/css/admin_styles.css',)
         }
 
-
 # Admin cho Tag
 class TagAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
     search_fields = ['name']
     list_per_page = 20
 
-
 # Admin cho Ticket
 class TicketAdmin(admin.ModelAdmin):
     list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at']
-    search_fields = ['event__title', 'user__username', 'qr_code']
+    search_fields = ['event__title', 'user__username', 'uuid']
     list_filter = ['is_paid', 'is_checked_in', 'created_at']
     readonly_fields = ['qr_code_view']
     list_per_page = 20
@@ -104,7 +97,6 @@ class TicketAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event', 'user')
 
-
 # Admin cho Payment
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'amount', 'payment_method', 'status', 'paid_at']
@@ -116,7 +108,6 @@ class PaymentAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'discount_code').prefetch_related('tickets')
 
-
 # Admin cho Review
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ['id', 'event', 'user', 'rating', 'comment', 'created_at']
@@ -127,7 +118,6 @@ class ReviewAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event', 'user')
 
-
 # Admin cho DiscountCode
 class DiscountCodeAdmin(admin.ModelAdmin):
     list_display = ['id', 'code', 'discount_percentage', 'user_group', 'is_active', 'valid_from', 'valid_to']
@@ -136,12 +126,11 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
     list_per_page = 20
 
-
 # Admin cho Notification
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'notification_type', 'title', 'is_read', 'created_at', 'get_ticket_owners']
+    list_display = ['id', 'event', 'notification_type', 'title', 'created_at', 'get_ticket_owners', 'get_is_read_status']
     search_fields = ['title', 'message']
-    list_filter = ['notification_type', 'is_read', 'created_at']
+    list_filter = ['notification_type', 'created_at']
     form = NotificationForm
     list_per_page = 20
 
@@ -152,9 +141,21 @@ class NotificationAdmin(admin.ModelAdmin):
         return "No event"
     get_ticket_owners.short_description = "Ticket Owners"
 
+    def get_is_read_status(self, obj):
+        """
+        Hiển thị trạng thái is_read của thông báo dựa trên UserNotification.
+        Nếu có ít nhất một UserNotification liên quan chưa đọc, trả về 'Chưa đọc'.
+        """
+        user_notifications = obj.user_notifications.all()
+        if not user_notifications.exists():
+            return "Không có người nhận"
+        if user_notifications.filter(is_read=False).exists():
+            return "Chưa đọc"
+        return "Đã đọc"
+    get_is_read_status.short_description = "Trạng thái đọc"
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event')
-
 
 # Admin cho ChatMessage
 class ChatMessageAdmin(admin.ModelAdmin):
@@ -171,17 +172,29 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event', 'sender', 'receiver')
 
-
 # Admin cho EventTrendingLog
 class EventTrendingLogAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'view_count', 'ticket_sold_count', 'last_updated']
+    list_display = ['id', 'event', 'view_count', 'get_ticket_sold_count', 'total_revenue', 'trending_score', 'interest_score', 'last_updated']
     search_fields = ['event__title']
     list_filter = ['last_updated']
     list_per_page = 20
 
+    def get_ticket_sold_count(self, obj):
+        return obj.event.sold_tickets
+    get_ticket_sold_count.short_description = "Tickets Sold"
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event')
 
+# Admin cho UserNotification
+class UserNotificationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'notification', 'is_read', 'read_at', 'created_at']
+    search_fields = ['user__username', 'notification__title']
+    list_filter = ['is_read', 'created_at']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'notification')
 
 # Custom Admin Site
 class MyAdminSite(admin.AdminSite):
@@ -201,8 +214,8 @@ class MyAdminSite(admin.AdminSite):
         ticket_stats = Event.objects.annotate(
             ticket_count=Count('tickets', filter=Q(tickets__is_paid=True))
         ).values('title', 'ticket_count')
-        # Thống kê lượt xem và vé bán theo xu hướng
-        trending_stats = EventTrendingLog.objects.values('event__title', 'view_count', 'ticket_sold_count')
+        # Thống kê lượt xem và xu hướng
+        trending_stats = EventTrendingLog.objects.values('event__title', 'view_count', 'total_revenue', 'trending_score', 'interest_score')
 
         return TemplateResponse(request, 'admin/event_stats.html', {
             'event_stats': event_stats,
@@ -210,10 +223,8 @@ class MyAdminSite(admin.AdminSite):
             'trending_stats': trending_stats,
         })
 
-
 # Khởi tạo admin site
 admin_site = MyAdminSite(name='event_admin')
-
 
 # Đăng ký các model
 admin_site.register(User, UserAdmin)
@@ -226,3 +237,4 @@ admin_site.register(DiscountCode, DiscountCodeAdmin)
 admin_site.register(Notification, NotificationAdmin)
 admin_site.register(ChatMessage, ChatMessageAdmin)
 admin_site.register(EventTrendingLog, EventTrendingLogAdmin)
+admin_site.register(UserNotification, UserNotificationAdmin)
