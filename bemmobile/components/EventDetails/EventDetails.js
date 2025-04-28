@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 
-const Profile = () => {
+const EventDetails = ({ route }) => {
+  const { event } = route.params;
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Profile Screen (Placeholder)</Text>
+      <Text>Event Details: {event.title}</Text>
     </View>
   );
 };
 
-export default Profile;
+export default EventDetails;
