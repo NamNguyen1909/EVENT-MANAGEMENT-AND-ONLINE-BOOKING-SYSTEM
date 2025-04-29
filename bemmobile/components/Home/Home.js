@@ -14,58 +14,51 @@ import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints } from '../../configs/Apis';
 
 const Home = () => {
-  const [categories, setCategories] = useState([]);
+  // Danh mục cứng
+  const [categories] = useState([
+    { id: 'music', name: 'Music' },
+    { id: 'conference', name: 'Conference' },
+    { id: 'sports', name: 'Sports' },
+  ]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [cateId, setCateId] = useState(null);
+  const [error, setError] = useState(null);
   const navigation = useNavigation();
-
-  // Lấy danh sách danh mục (tags)
-  const loadCategories = async () => {
-    try {
-      const res = await Apis.get(endpoints['tags']);
-      // Chuyển đổi dữ liệu tags thành định dạng phù hợp
-      const formattedCategories = res.data.map((tag) => ({
-        id: tag.name, // Dùng name làm id
-        name: tag.name,
-      }));
-      setCategories(formattedCategories);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
 
   // Lấy danh sách sự kiện
   const loadEvents = async () => {
     if (page > 0) {
       try {
         setLoading(true);
+        setError(null);
         let url = `${endpoints['events']}?page=${page}`;
         if (q) url += `&q=${q}`;
-        if (cateId) url += `&tag=${cateId}`; // Lọc theo tag
+        if (cateId) url += `&category=${cateId}`; // Lưu ý: API cần hỗ trợ lọc theo category
 
+        console.log('Calling API:', `${Apis.defaults.baseURL}${url}`);
         const res = await Apis.get(url);
+
+        const newEvents = Array.isArray(res.data.results) ? res.data.results : [];
+        console.log('Events data:', newEvents);
+
         setEvents((prevEvents) =>
-          page === 1 ? res.data.results : [...prevEvents, ...res.data.results]
+          page === 1 ? newEvents : [...prevEvents, ...newEvents]
         );
 
-        // Nếu không còn dữ liệu để tải, đặt page = 0
         if (!res.data.next) {
           setPage(0);
         }
       } catch (error) {
-        console.error('Error loading events:', error);
+        console.error('Error loading events:', error.message, error.config?.url);
+        setError(`Failed to load events: ${error.message} (${error.config?.url || 'Unknown URL'})`);
       } finally {
         setLoading(false);
       }
     }
   };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -83,7 +76,7 @@ const Home = () => {
 
   const search = (value, callback) => {
     setPage(1);
-    setEvents([]);
+    setEvents([]); // Xóa dữ liệu cũ khi tìm kiếm
     callback(value);
   };
 
@@ -93,25 +86,32 @@ const Home = () => {
       onPress={() => navigation.navigate('EventDetails', { event: item })}
     >
       <Image
-        source={{ uri: item.image || 'https://via.placeholder.com/60' }}
+        source={{ uri: item.poster || 'https://via.placeholder.com/60' }}
         style={MyStyles.eventImage}
       />
       <View style={MyStyles.eventContent}>
-        <Text style={MyStyles.eventTitle}>{item.title}</Text>
+        <Text style={MyStyles.eventTitle}>{item.title || 'Untitled'}</Text>
         <Text style={MyStyles.eventDetail}>
-          Date: {new Date(item.start_time).toLocaleDateString()}
+          Date: {item.start_time ? new Date(item.start_time).toLocaleDateString() : 'N/A'}
         </Text>
-        <Text style={MyStyles.eventDetail}>Location: {item.location}</Text>
-        <Text style={MyStyles.eventPrice}>
-          Price: ${parseFloat(item.ticket_price).toFixed(2)}
-        </Text>
+        <Text style={MyStyles.eventDetail}>Location: {item.location || 'N/A'}</Text>
       </View>
     </TouchableOpacity>
   );
 
+  // Đảm bảo events là mảng trước khi truyền vào FlatList
+  const safeEvents = Array.isArray(events) ? events : [];
+
   return (
     <SafeAreaView style={MyStyles.container}>
       <View style={MyStyles.scrollContainer}>
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <View style={{ padding: 10, backgroundColor: '#ffcccc', marginBottom: 10 }}>
+            <Text style={{ color: '#ff0000' }}>{error}</Text>
+          </View>
+        )}
+
         {/* Thanh tìm kiếm */}
         <Searchbar
           placeholder="Search events..."
@@ -154,16 +154,22 @@ const Home = () => {
         </View>
 
         {/* Danh sách sự kiện */}
-        <FlatList
-          data={events}
-          renderItem={renderEventItem}
-          keyExtractor={(item) => item.id.toString()}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading && <ActivityIndicator size="large" color="#1a73e8" />
-          }
-        />
+        {loading && page === 1 ? (
+          <ActivityIndicator size="large" color="#1a73e8" />
+        ) : safeEvents.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginTop: 20 }}>No events found</Text>
+        ) : (
+          <FlatList
+            data={safeEvents}
+            renderItem={renderEventItem}
+            keyExtractor={(item) => item.id.toString()}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading && page > 1 && <ActivityIndicator size="large" color="#1a73e8" />
+            }
+          />
+        )}
       </View>
     </SafeAreaView>
   );

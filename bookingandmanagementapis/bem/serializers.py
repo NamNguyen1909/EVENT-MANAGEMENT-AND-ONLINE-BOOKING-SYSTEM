@@ -95,8 +95,8 @@ class EventSerializer(ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['poster', 'title', 'location', 'start_time']
-        read_only_fields = ['poster', 'title', 'location', 'start_time']
+        fields = ['id', 'poster', 'title', 'location', 'start_time', 'category']
+        read_only_fields = ['id', 'poster', 'title', 'location', 'start_time', 'category']
 
 
 # Serializer cho Ticket

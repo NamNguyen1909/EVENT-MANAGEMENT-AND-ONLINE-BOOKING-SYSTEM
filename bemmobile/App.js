@@ -38,7 +38,7 @@ import MyUserReducer from './reducers/MyUserReducer';
 const Stack = createNativeStackNavigator();
 const StackNavigator = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="HomeScreen"
         component={Home}
@@ -64,7 +64,7 @@ const TabNavigator = () => {
         name="events"
         component={StackNavigator}
         options={{
-          title: 'Events',
+          title: 'Home',
           tabBarIcon: () => <Icon size={30} source="calendar" />,
         }}
       />

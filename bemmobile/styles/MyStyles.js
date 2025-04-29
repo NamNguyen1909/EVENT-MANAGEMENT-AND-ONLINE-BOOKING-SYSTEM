@@ -6,6 +6,7 @@ const MyStyles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   scrollContainer: {
+    flex: 1,
     padding: 10,
   },
   loadingContainer: {
