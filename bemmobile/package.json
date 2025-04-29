@@ -20,7 +20,8 @@
     "react-native": "0.76.9",
     "react-native-paper": "^5.13.5",
     "react-native-safe-area-context": "^5.4.0",
-    "react-native-screens": "^4.10.0"
+    "react-native-screens": "^4.10.0",
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
