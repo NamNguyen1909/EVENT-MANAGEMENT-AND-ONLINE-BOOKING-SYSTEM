@@ -156,7 +156,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 #Xem sự kiện
 # Cho phép người dùng xem danh sách sự kiện và chi tiết sự kiện
 # Chỉ admin và organizer mới có quyền tạo và chỉnh sửa sự kiện
-class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView,generics.UpdateAPIView):
+class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Event.objects.all()
     pagination_class = ItemPaginator
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -171,7 +171,11 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return EventSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'suggest_events', 'hot_events', 'get_chat_messages']:
+        if self.action in ['list', 'suggest_events', 'hot_events']:
+            # Không yêu cầu xác thực cho list, suggest_events, hot_events
+            return [permissions.AllowAny()]
+        elif self.action in ['retrieve', 'get_chat_messages']:
+            # Yêu cầu đăng nhập để xem chi tiết sự kiện hoặc tin nhắn chat
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:
             return [IsOrganizerUser()]
@@ -201,14 +205,19 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'attendee':
-            queryset = self.queryset.all()
-        elif user.role == 'organizer':
-            queryset = self.queryset.filter(organizer=user)
-        elif user.role == 'admin':
-            queryset = self.queryset.all()
+        # Nếu người dùng đã đăng nhập, áp dụng logic lọc theo vai trò
+        if self.request.user.is_authenticated:
+            if user.role == 'attendee':
+                queryset = self.queryset.all()
+            elif user.role == 'organizer':
+                queryset = self.queryset.filter(organizer=user)
+            elif user.role == 'admin':
+                queryset = self.queryset.all()
+            else:
+                queryset = self.queryset.none()
         else:
-            queryset = self.queryset.none()
+            # Nếu chưa đăng nhập, chỉ hiển thị các sự kiện công khai (is_active=True)
+            queryset = self.queryset.filter(is_active=True)
 
         q = self.request.query_params.get('q')
         if q:
@@ -234,15 +243,22 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
     @action(detail=False, methods=['get'], url_path='suggest')
     def suggest_events(self, request):
         user = request.user
-        user_tickets = Ticket.objects.filter(user=user).values('event__category').distinct()
-        categories = [ticket['event__category'] for ticket in user_tickets]
-        queryset = Event.objects.filter(
-            is_active=True,
-            start_time__gte=timezone.now()
-        ).select_related('organizer').prefetch_related('tags')
-        if categories:
-            queryset = queryset.filter(category__in=categories)
-        suggested_events = queryset.order_by('start_time')[:5]
+        # Nếu chưa đăng nhập, trả về các sự kiện công khai sắp diễn ra
+        if not user.is_authenticated:
+            suggested_events = Event.objects.filter(
+                is_active=True,
+                start_time__gte=timezone.now()
+            ).order_by('start_time')[:5]
+        else:
+            user_tickets = Ticket.objects.filter(user=user).values('event__category').distinct()
+            categories = [ticket['event__category'] for ticket in user_tickets]
+            queryset = Event.objects.filter(
+                is_active=True,
+                start_time__gte=timezone.now()
+            ).select_related('organizer').prefetch_related('tags')
+            if categories:
+                queryset = queryset.filter(category__in=categories)
+            suggested_events = queryset.order_by('start_time')[:5]
         serializer = self.get_serializer(suggested_events, many=True)
         return Response(serializer.data)
 
@@ -377,7 +393,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
             notification_type='reminder',
             title="Vé Đã Được Đặt",
             message=f"Bạn đã đặt vé cho sự kiện {event.title}. Vui lòng thanh toán để xác nhận!",
-            is_read=False
+            #is_read=False
         )
         notification.save()
 
@@ -444,7 +460,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 notification_type='reminder',
                 title="Thanh Toán Thành Công",
                 message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
-                is_read=False
+                # is_read=False
             )
             notification.save()
             # notification.users.add(request.user)
