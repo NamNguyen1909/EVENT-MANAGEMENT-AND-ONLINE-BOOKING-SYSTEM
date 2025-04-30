@@ -1,16 +1,3 @@
-// import React from 'react';
-// import { View, Text } from 'react-native';
-
-// const Register = () => {
-//   return (
-//     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-//       <Text>Register Screen (Placeholder)</Text>
-//     </View>
-//   );
-// };
-
-// export default Register;
-
 import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
@@ -48,8 +35,8 @@ const Register = () => {
 
   const [user, setUser] = useState({});
   const [avatar, setAvatar] = useState(null);
-  const [tags, setTags] = useState([]); // Lưu danh sách tags đã chọn
-  const [availableTags, setAvailableTags] = useState([]); // Danh sách tags từ API
+  const [tags, setTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
@@ -57,7 +44,6 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
 
-  // Lấy danh sách tags từ API
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -194,15 +180,15 @@ const Register = () => {
       return false;
     }
 
-    if (!avatar) {
-      console.log('Avatar is missing');
-      setMsg('Vui lòng chọn ảnh avatar!');
-      return false;
-    }
-
     if (tags.length === 0) {
       console.log('Tags are missing');
       setMsg('Vui lòng chọn ít nhất một tag!');
+      return false;
+    }
+
+    if (!avatar) {
+      console.log('Avatar is missing');
+      setMsg('Vui lòng chọn ảnh avatar!');
       return false;
     }
 

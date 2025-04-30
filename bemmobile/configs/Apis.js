@@ -1,3 +1,4 @@
+// configs/Apis.js
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
@@ -9,7 +10,7 @@ export const endpoints = {
   refreshToken: "/token/refresh",
 
   // Users
-  register: "/users",
+  register: "/users/",
   currentUser: "/users/current-user",
   userTickets: "/users/tickets",
   userPayments: "/users/payments",
@@ -73,6 +74,18 @@ export const authApis = (token) => {
 };
 
 // Tạo instance axios không cần xác thực
-export default axios.create({
+const Apis = axios.create({
   baseURL: BASE_URL,
 });
+
+// Thêm interceptor để log phương thức
+Apis.interceptors.request.use(
+  (config) => {
+    console.log('Request method:', config.method);
+    console.log('Request URL:', config.url);
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default Apis;

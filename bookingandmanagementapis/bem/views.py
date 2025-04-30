@@ -48,15 +48,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
-    def create(self, request, *args, **kwargs):
-        role = request.data.get('role', 'attendee')
-        if role not in ['admin', 'organizer', 'attendee']:
-            return Response({"error": "Vai trò không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     @action(methods=['get', 'patch'], detail=False, url_path='current-user')
     def get_current_user(self, request):
         user = request.user
@@ -296,7 +287,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
 
 
 class TagViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all().order_by('id')
     serializer_class = TagSerializer
     pagination_class = ItemPaginator
     filter_backends = [SearchFilter]
