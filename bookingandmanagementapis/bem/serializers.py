@@ -153,10 +153,11 @@ class PaymentSerializer(ModelSerializer):
 class UserSerializer(ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, required=False)
+    avatar = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags']
+        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags', 'avatar']
         read_only_fields = ['id']
 
     def validate_tags(self, value):
@@ -169,12 +170,14 @@ class UserSerializer(ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         tags = validated_data.pop('tags', [])
+        avatar = validated_data.pop('avatar', None)
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=password,
             phone=validated_data.get('phone'),
-            role=validated_data.get('role', 'attendee')
+            role=validated_data.get('role', 'attendee'),
+            avatar=avatar
         )
         if tags:
             user.tags.set(tags)
@@ -183,12 +186,15 @@ class UserSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
         tags = validated_data.pop('tags', None)
+        avatar = validated_data.pop('avatar', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:
             instance.set_password(password)
         if tags is not None:
             instance.tags.set(tags)
+        if avatar is not None:
+            instance.avatar = avatar
         instance.save()
         return instance
 

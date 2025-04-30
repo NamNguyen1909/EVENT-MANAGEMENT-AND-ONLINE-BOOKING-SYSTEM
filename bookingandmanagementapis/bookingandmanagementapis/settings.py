@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bem.apps.BemConfig',
+    'cloudinary_storage',
     'cloudinary',
     'ckeditor',
     'ckeditor_uploader',
@@ -71,6 +72,7 @@ cloudinary.config(
     api_secret = "88EDQ7-Ltwzn1oaI4tT_UIb_bWI", # Click 'View API Keys' above to copy your API secret
     secure=True
 )
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
