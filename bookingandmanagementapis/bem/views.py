@@ -320,7 +320,6 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
     @action(detail=False, methods=['post'], url_path='book')
     def book_ticket(self, request):
         event_id = request.data.get('event_id')
-        discount_code_id = request.data.get('discount_code_id')
         try:
             event = Event.objects.get(id=event_id, is_active=True, start_time__gte=timezone.now())
         except Event.DoesNotExist:
@@ -328,28 +327,6 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
 
         if event.tickets.filter(is_paid=True).count() >= event.total_tickets:
             return Response({"error": "Hết vé."}, status=status.HTTP_400_BAD_REQUEST)
-
-        price = event.ticket_price
-        discount = 0
-        discount_obj = None
-        if discount_code_id:
-            try:
-                discount_obj = DiscountCode.objects.get(
-                    id=discount_code_id,
-                    is_active=True,
-                    valid_from__lte=timezone.now(),
-                    valid_to__gte=timezone.now()
-                )
-                if discount_obj.max_uses is not None and discount_obj.used_count >= discount_obj.max_uses:
-                    return Response({"error": "Mã giảm giá đã hết lượt sử dụng."}, status=status.HTTP_400_BAD_REQUEST)
-                if discount_obj.user_group != request.user.get_customer_group().value:
-                    return Response({"error": "Mã giảm giá không áp dụng cho nhóm khách hàng này."}, status=status.HTTP_400_BAD_REQUEST)
-                discount = (price * discount_obj.discount_percentage) / 100
-                price -= discount
-                discount_obj.used_count += 1
-                discount_obj.save()
-            except DiscountCode.DoesNotExist:
-                return Response({"error": "Mã giảm giá không hợp lệ hoặc đã hết hạn."}, status=status.HTTP_400_BAD_REQUEST)
 
         qr_code = str(uuid.uuid4())
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -368,43 +345,10 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         )
         ticket.save()
 
-        payment = Payment(
-            user=request.user,
-            amount=price,
-            payment_method=request.data.get('payment_method', 'momo'),
-            status=False,
-            transaction_id=str(uuid.uuid4()),
-            discount_code=discount_obj
-        )
-        payment.save()
-        payment.tickets.add(ticket)
-
-        notification = Notification(
-            event=event,
-            notification_type='reminder',
-            title="Vé Đã Được Đặt",
-            message=f"Bạn đã đặt vé cho sự kiện {event.title}. Vui lòng thanh toán để xác nhận!",
-            #is_read=False
-        )
-        notification.save()
-
-        #Tham khảo do không tạo UserNotification cho thông báo → User không được liên kết với thông báo.
-        # # Tạo UserNotification để liên kết thông báo với user
-        # UserNotification.objects.create(user=request.user, notification=notification)
-
-        send_mail(
-            subject=f"Xác Nhận Đặt Vé cho {event.title}",
-            message=f"Kính gửi {request.user.username},\n\nBạn đã đặt vé cho {event.title}.\nMã QR: {qr_code}\nVui lòng thanh toán để hoàn tất.\n\nTrân trọng!",
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[request.user.email],
-            fail_silently=True
-        )
-
         return Response({
             "message": "Vé đã được đặt thành công.",
             "ticket": TicketSerializer(ticket).data,
-            "qr_code_image": qr_code_image,
-            "payment_id": payment.id
+            "qr_code_image": qr_code_image
         }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], url_path='check-in')
@@ -454,29 +398,88 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 # is_read=False
             )
             notification.save()
-            # notification.users.add(request.user)
-            # Tham khảo:
-            #
-            # Khi tạo thông báo (Notification), nhìn chung cách làm là phù hợp.
-            # Tuy nhiên có một vấn đề:
-            #
-            # - Dòng `notification.users.add(request.user)` đã bị comment.
-            # - Thực tế model Notification không có field `users`.
-            #   (Field này thuộc về model trung gian UserNotification.)
-            #
-            # → Vì vậy, thay vì dùng `notification.users.add(user)`,
-            #   cần tạo đối tượng UserNotification để liên kết Notification với User.
-            #
-            # Kết luận:
-            # - Hiện tại, logic tạo thông báo đang không gắn kết Notification với từng User cụ thể.
-            # - Thiếu thao tác tạo bản ghi UserNotification.
-
-            # #Giải pháp
-            # # Tạo UserNotification để liên kết thông báo với user
-            # UserNotification.objects.create(user=request.user, notification=notification)
+            # Tạo UserNotification để liên kết Notification với User
+            UserNotification.objects.create(user=request.user, notification=notification)
 
         return Response({
             "message": "Thanh toán xác nhận thành công.",
+            "payment": PaymentSerializer(payment).data
+        })
+
+    @action(detail=False, methods=['post'], url_path='pay-unpaid-tickets-for-event')
+    def pay_unpaid_tickets_for_event(self, request):
+        user = request.user
+        event_id = request.data.get('event_id')
+        discount_code_id = request.data.get('discount_code_id')
+        if not event_id:
+            return Response({"error": "Thiếu event_id."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            return Response({"error": "Sự kiện không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
+
+        #Vé chua thanh toán cho sự kiện này
+        unpaid_tickets = Ticket.objects.filter(user=user, is_paid=False, event=event)
+        if not unpaid_tickets.exists():
+            return Response({"error": "Không có vé chưa thanh toán cho sự kiện này."}, status=status.HTTP_400_BAD_REQUEST)
+
+        total_amount = sum(ticket.event.ticket_price for ticket in unpaid_tickets)
+
+        discount_obj = None
+        discount = 0
+        if discount_code_id:
+            try:
+                discount_obj = DiscountCode.objects.get(
+                    id=discount_code_id,
+                    is_active=True,
+                    valid_from__lte=timezone.now(),
+                    valid_to__gte=timezone.now()
+                )
+                if discount_obj.max_uses is not None and discount_obj.used_count >= discount_obj.max_uses:
+                    return Response({"error": "Mã giảm giá đã hết lượt sử dụng."}, status=status.HTTP_400_BAD_REQUEST)
+                if discount_obj.user_group != user.get_customer_group().value:
+                    return Response({"error": "Mã giảm giá không áp dụng cho nhóm khách hàng này."}, status=status.HTTP_400_BAD_REQUEST)
+                discount = (total_amount * discount_obj.discount_percentage) / 100
+                total_amount -= discount
+                discount_obj.used_count += 1
+                discount_obj.save()
+            except DiscountCode.DoesNotExist:
+                return Response({"error": "Mã giảm giá không hợp lệ hoặc đã hết hạn."}, status=status.HTTP_400_BAD_REQUEST)
+
+        payment = Payment(
+            user=user,
+            amount=total_amount,
+            payment_method=request.data.get('payment_method', 'momo'),
+            status=False,
+            transaction_id=str(uuid.uuid4()),
+            discount_code=discount_obj
+        )
+        payment.save()
+        payment.tickets.set(unpaid_tickets)
+
+        notification = Notification(
+            event=event,
+            notification_type='reminder',
+            title="Thanh Toán Thành Công",
+            message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
+            # is_read=False
+        )
+        notification.save()
+
+        # Tạo UserNotification để liên kết Notification với User
+        UserNotification.objects.create(user=user, notification=notification)
+
+        send_mail(
+            subject=f"Xác Nhận Thanh Toán cho {event.title}",
+            message=f"Kính gửi {user.username},\n\nThanh toán cho vé sự kiện {event.title} đã hoàn tất.\n\nTrân trọng!",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True
+        )
+
+        return Response({
+            "message": "Tạo payment và thanh toán thành công.",
             "payment": PaymentSerializer(payment).data
         })
 
