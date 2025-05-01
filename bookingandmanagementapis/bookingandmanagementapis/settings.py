@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -139,7 +139,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bemdb',
         'USER': 'root',
-        'PASSWORD': 'Admin@123',
+        # 'PASSWORD': 'Admin@123',
+        'PASSWORD': 'ThanhNam*1909',
         'HOST': '' # mặc định localhost
     }
 }
@@ -193,3 +194,4 @@ CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
 CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
 # Aybym0BYHcRDVaI0LQf19UiOaHKjp7
 ALLOWED_HOSTS = ['*']
+

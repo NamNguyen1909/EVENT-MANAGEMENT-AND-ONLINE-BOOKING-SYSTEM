@@ -301,7 +301,7 @@ class TagViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView,
         return [permissions.AllowAny()]
 
 
-class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
+class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIView):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -310,12 +310,22 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
     def get_permissions(self):
         if self.action in ['book_ticket', 'check_in']:
             return [permissions.IsAuthenticated()]
-        elif self.action in ['update', 'destroy']:
+        elif self.action in ['update', 'destroy', 'retrieve']:
             return [IsTicketOwner()]
         return super().get_permissions()
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user).select_related('event')
+
+    #Xem chi tiết vé (xem chi tiết,hiện QR để scan check-in)
+    # Chỉ cho phép người dùng xem vé của mình
+    def retrieve(self, request, pk=None):
+        try:
+            ticket = self.get_queryset().get(pk=pk)
+        except Ticket.DoesNotExist:
+            return Response({"error": "Không tìm thấy vé."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(ticket)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='book')
     def book_ticket(self, request):
@@ -660,7 +670,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         serializer.save(user=user)
 
 
-class EventTrendingLogViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class EventTrendingLogViewSet(viewsets.ViewSet,generics.ListAPIView, generics.RetrieveAPIView):
     queryset = EventTrendingLog.objects.filter(event__is_active=True)
     serializer_class = EventTrendingLogSerializer
     pagination_class = ItemPaginator

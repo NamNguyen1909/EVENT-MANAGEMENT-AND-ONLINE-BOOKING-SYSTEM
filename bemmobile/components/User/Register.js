@@ -323,6 +323,25 @@ const Register = () => {
               />
             ))}
 
+          {/* có vẻ sai /chưa test */}
+          <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Chọn vai trò:</Text>
+            <RadioButton.Group onValueChange={value => setRole(value)} value={role}>
+              <View style={{ flexDirection: 'row', marginBottom: 15 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
+                  <RadioButton value="attendee" />
+                  <Text>Người tham dự</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
+                  <RadioButton value="organizer" />
+                  <Text>Người tổ chức</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <RadioButton value="admin" />
+                  <Text>Quản trị viên</Text>
+                </View>
+              </View>
+            </RadioButton.Group>
+
             <Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn tags (bắt buộc):</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 }}>
               {availableTags.map(tag => (

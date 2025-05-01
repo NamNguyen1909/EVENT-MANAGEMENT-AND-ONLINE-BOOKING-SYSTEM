@@ -50,12 +50,10 @@ class NotificationSerializer(ModelSerializer):
         read_only_fields = ['id', 'event_title', 'created_at']
 
     def get_is_read(self, obj):
-        # Lấy user hiện tại từ context
-        user = self.context.get('request').user if self.context.get('request') else None
-        if user and user.is_authenticated:
-            # Kiểm tra xem user có UserNotification tương ứng với notification này không
-            user_notification = UserNotification.objects.filter(user=user, notification=obj).first()
-            return user_notification.is_read if user_notification else False
+        request = self.context.get('request', None)
+        user = request.user if request and request.user.is_authenticated else None
+        if user:
+            return obj.user_notifications.filter(user=user, is_read=True).exists()
         return False
 
 
