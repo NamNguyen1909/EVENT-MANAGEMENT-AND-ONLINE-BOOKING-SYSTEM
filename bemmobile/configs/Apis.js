@@ -2,16 +2,19 @@
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
-const BASE_URL = "http://192.168.1.5:8000";
+// const BASE_URL = "http://192.168.1.5:8000";
+// const BASE_URL = "http://127.0.0.1:8000/";
+const BASE_URL = "http://192.168.44.105:8000";
+
 
 export const endpoints = {
   // Authentication
-  login: "/token",
-  refreshToken: "/token/refresh",
+  login: "/o/token/",
+  refreshToken: "/token/refresh/",
 
   // Users
   register: "/users/",
-  currentUser: "/users/current-user",
+  currentUser: "/users/current-user/",
   userTickets: "/users/tickets",
   userPayments: "/users/payments",
   userNotifications: "/users/my-notifications",

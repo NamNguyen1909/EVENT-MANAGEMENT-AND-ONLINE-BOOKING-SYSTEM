@@ -17,6 +17,7 @@ import {
   IconButton,
   useTheme,
   Chip,
+  Menu,
 } from 'react-native-paper';
 import MyStyles from '../../styles/MyStyles';
 import { useNavigation } from '@react-navigation/native';
@@ -42,12 +43,14 @@ const Register = () => {
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [role, setRole] = useState('attendee');
+  const [roleMenuVisible, setRoleMenuVisible] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const res = await Apis.get(endpoints['tags']);
+        const res = await Apis.get(endpoints['tags'], { params: { page_size: 100 } });
         setAvailableTags(res.data.results || res.data);
       } catch (ex) {
         console.error('Error fetching tags:', ex);
@@ -192,6 +195,12 @@ const Register = () => {
       return false;
     }
 
+    if (!role) {
+      console.log('Role is missing');
+      setMsg('Vui lòng chọn vai trò!');
+      return false;
+    }
+
     console.log('Validation passed');
     return true;
   };
@@ -207,7 +216,7 @@ const Register = () => {
         formData.append('password', user.password);
         formData.append('email', user.email);
         formData.append('phone', user.phone);
-        formData.append('role', 'attendee');
+        formData.append('role', role);
 
         const uriParts = avatar.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -229,6 +238,11 @@ const Register = () => {
 
         console.log('API response:', res.data);
         setMsg('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+        // Clear form inputs after successful registration
+        setUser({});
+        setTags([]);
+        setAvatar(null);
+        setMsg(null);
         setTimeout(() => navigation.navigate('login'), 2000);
       } catch (ex) {
         console.error('Register error:', ex);
@@ -284,13 +298,14 @@ const Register = () => {
                 <IconButton icon="close" size={20} onPress={removeImage} style={{ position: 'absolute', top: -10, right: -10 }} />
               )}
             </View>
-
+            
             {showImageOptions && (
               <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 20 }}>
                 <Button mode="outlined" onPress={pickImage} style={{ marginRight: 10 }}>Thư viện</Button>
                 <Button mode="outlined" onPress={pickImageFromCamera}>Chụp ảnh</Button>
               </View>
             )}
+
 
             {info.map((i) => (
               <TextInput
@@ -323,24 +338,21 @@ const Register = () => {
               />
             ))}
 
-          {/* có vẻ sai /chưa test */}
-          <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Chọn vai trò:</Text>
-            <RadioButton.Group onValueChange={value => setRole(value)} value={role}>
-              <View style={{ flexDirection: 'row', marginBottom: 15 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
-                  <RadioButton value="attendee" />
-                  <Text>Người tham dự</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
-                  <RadioButton value="organizer" />
-                  <Text>Người tổ chức</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <RadioButton value="admin" />
-                  <Text>Quản trị viên</Text>
-                </View>
-              </View>
-            </RadioButton.Group>
+
+<Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn vai trò:</Text>
+            <Menu
+              visible={roleMenuVisible}
+              onDismiss={() => setRoleMenuVisible(false)}
+              anchor={
+                <Button mode="outlined" onPress={() => setRoleMenuVisible(true)} style={{ marginBottom: 15 }}>
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </Button>
+              }
+            >
+              <Menu.Item onPress={() => { setRole('attendee'); setRoleMenuVisible(false); }} title="Attendee" />
+              <Menu.Item onPress={() => { setRole('organizer'); setRoleMenuVisible(false); }} title="Organizer" />
+              <Menu.Item onPress={() => { setRole('admin'); setRoleMenuVisible(false); }} title="Admin" />
+            </Menu>
 
             <Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn tags (bắt buộc):</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 }}>
