@@ -11,14 +11,14 @@ const Login = () => {
   const navigation = useNavigation();
   const dispatch = useContext(MyDispatchContext);
 
-  const [identifier, setIdentifier] = useState(''); // username or email
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!identifier) {
-      setMsg('Vui lòng nhập tên đăng nhập hoặc email!');
+    if (!username) {
+      setMsg('Vui lòng nhập tên đăng nhập!');
       return false;
     }
     if (!password) {
@@ -34,33 +34,56 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('username', identifier);
-      params.append('password', password);
-      params.append('client_id', 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN');
-      params.append('client_secret', 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V');
-      params.append('grant_type', 'password');
+      const data = {
+        username: username,
+        password: password,
+        client_id: 'DZfpSk3RvuL2Yag7TIQgbKh5BhDN0z8AETa6pOoc',
+        client_secret: '4Q8kTysul4yL35S5Wi7Cpv9lMl9reEG7uCUzMyuYFLkq8fUKpqBxuSYh3JCSO6eLFHMnAwUSBKPWSAYejtqckvQycWDhBoyBE8fnt1Tfy1ERzhlmGYjoO7eF1CFJuluG',
+        grant_type: 'password',
+      };
 
-      const res = await Apis.post(endpoints.login, params.toString(), {
+      console.log('Sending login request with JSON:', data);
+
+      const res = await Apis.post(endpoints.login, data, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       });
 
+      console.log('Login successful, received token:', res.data);
+
       await AsyncStorage.setItem('token', res.data.access_token);
+      await AsyncStorage.setItem('refresh_token', res.data.refresh_token);
 
       const u = await authApis(res.data.access_token).get(endpoints.currentUser);
+      console.log('Current user fetched:', u.data);
 
       dispatch({
         type: 'login',
         payload: u.data,
       });
 
-      navigation.navigate('home');
+      setMsg('Đăng nhập thành công!');
+      // Điều hướng trực tiếp đến tab "events" và màn hình "HomeScreen"
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'events', params: { screen: 'HomeScreen' } }],
+        });
+      }, 1000);
     } catch (error) {
-      console.error('Login error:', error);
       if (error.response && error.response.data) {
-        setMsg('Tên đăng nhập hoặc mật khẩu không đúng!');
+        const errorData = error.response.data;
+        console.log('Login error details:', errorData);
+        if (errorData.error === 'invalid_grant') {
+          setMsg('Tên đăng nhập hoặc mật khẩu không đúng!');
+        } else if (errorData.error === 'unsupported_grant_type') {
+          setMsg('Loại grant không được hỗ trợ. Vui lòng liên hệ quản trị viên!');
+        } else if (errorData.error_description) {
+          setMsg(errorData.error_description);
+        } else {
+          setMsg('Đăng nhập thất bại. Vui lòng thử lại!');
+        }
       } else {
         setMsg('Lỗi kết nối đến server. Vui lòng thử lại!');
       }
@@ -73,10 +96,10 @@ const Login = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Title style={styles.title}>Đăng nhập</Title>
       <TextInput
-        label="Tên đăng nhập hoặc Email"
-        placeholder="Nhập tên đăng nhập hoặc email"
-        value={identifier}
-        onChangeText={setIdentifier}
+        label="Tên đăng nhập"
+        placeholder="Nhập tên đăng nhập"
+        value={username}
+        onChangeText={setUsername}
         style={styles.input}
         mode="outlined"
         autoCapitalize="none"
@@ -91,7 +114,11 @@ const Login = () => {
         secureTextEntry
       />
       {msg && (
-        <HelperText type={msg.includes('thành công') ? 'info' : 'error'} visible={true} style={styles.msg}>
+        <HelperText
+          type={msg.includes('thành công') ? 'info' : 'error'}
+          visible={true}
+          style={[styles.msg, { color: msg.includes('thành công') ? theme.colors.success : theme.colors.error }]}
+        >
           {msg}
         </HelperText>
       )}
@@ -112,6 +139,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     fontWeight: 'bold',
+    fontSize: 24,
   },
   input: {
     marginBottom: 15,
@@ -119,6 +147,7 @@ const styles = StyleSheet.create({
   msg: {
     textAlign: 'center',
     marginBottom: 15,
+    fontSize: 16,
   },
   button: {
     paddingVertical: 6,
