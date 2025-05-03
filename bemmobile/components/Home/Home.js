@@ -87,13 +87,10 @@ const Home = () => {
     // Xử lý poster URL đầy đủ
 
     let posterUrl = item.poster;
-    console.log("Poster URL in Home:", posterUrl);
-
     if (posterUrl && !posterUrl.startsWith('http')) {
       // Đảm bảo có dấu "/" giữa baseURL và poster path
       posterUrl = `${Apis.defaults.baseURL.replace(/\/+$/, '')}/${posterUrl.replace(/^\/+/, '')}`;
     }
-    console.log("Poster URL in Home:", posterUrl);
 
     return (
       <TouchableOpacity

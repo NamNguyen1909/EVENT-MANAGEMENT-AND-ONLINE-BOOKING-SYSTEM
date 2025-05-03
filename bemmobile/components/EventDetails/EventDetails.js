@@ -1,43 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ActivityIndicator, ScrollView,
-  StyleSheet, Image
+  StyleSheet, Image, Linking, Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// thêm bản đồ
+import MapView, { Marker } from 'react-native-maps'; 
+import { useNavigation } from '@react-navigation/native';
 
 const EventDetails = ({ route }) => {
+  const navigation = useNavigation();
   const { event } = route.params;
   const [eventDetail, setEventDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const openInGoogleMaps = (latitude, longitude) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    Linking.openURL(url).catch(err => {
+      Alert.alert('Lỗi', 'Không thể mở Google Maps');
+      console.error(err);
+    });
+  };
+
   useEffect(() => {
     const fetchEventDetail = async () => {
+
+
+
       try {
         setLoading(true);
         setError(null);
         const token = await AsyncStorage.getItem('token');
+
         if (!token) {
           setError('Vui lòng đăng nhập để xem chi tiết sự kiện.');
+          console.log('Token không tồn tại. Chuyển hướng');
           setLoading(false);
+
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'loginStack' }],
+            });
+          }, 2000);
+
           return;
         }
         
         const api = token ? authApis(token) : Apis;
         const res = await api.get(endpoints.eventDetail(event.id));
+
         setEventDetail(res.data);
 
         
       } catch (err) {
+
         setError('Không thể tải chi tiết sự kiện.');
       } finally {
         setLoading(false);
       }
     };
+    
+
     fetchEventDetail();
-  }, [event.id]);
+  }, [event.id, navigation]);
 
   if (loading) {
     return (
@@ -81,6 +110,7 @@ const EventDetails = ({ route }) => {
         <InfoRow icon="currency-usd" text={`Giá vé: ${eventDetail.ticket_price ? eventDetail.ticket_price + ' VND' : 'N/A'}`} />
       </View>
 
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tags</Text>
       <View style={styles.tagsContainer}>
@@ -100,7 +130,38 @@ const EventDetails = ({ route }) => {
         <Text style={styles.sectionTitle}>Mô tả</Text>
         <Text style={styles.description}>{eventDetail.description}</Text>
       </View>
-    </ScrollView>
+
+
+      {eventDetail.latitude && eventDetail.longitude && (
+      <View style={styles.mapContainer}>
+        <View style={styles.mapHeader}>
+          <Text style={styles.sectionTitle}>Vị trí trên bản đồ</Text>
+          <Text style={styles.openMapButton} onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}>
+            Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
+          </Text>
+        </View>
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: eventDetail.latitude,
+            longitude: eventDetail.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        >
+          <Marker
+            coordinate={{
+              latitude: eventDetail.latitude,
+              longitude: eventDetail.longitude,
+            }}
+            title={eventDetail.title}
+            description={eventDetail.location}
+            onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}
+          />
+        </MapView>
+      </View>
+    )}
+      </ScrollView>
   );
 };
 
@@ -137,11 +198,33 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 16,
   },
+  mapContainer: {
+    height: 200,
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  mapHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
+  openMapButton: {
+    color: '#1a73e8',
+    fontWeight: '600',
+    fontSize: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  map: {
+    flex: 1,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
