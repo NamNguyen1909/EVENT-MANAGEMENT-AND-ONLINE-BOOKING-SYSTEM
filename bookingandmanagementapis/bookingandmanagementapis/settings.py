@@ -190,6 +190,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Chưa chạy được lỗi cả đăng nhập bình thường
+# AUTHENTICATION_BACKENDS = [
+#     'bookingandmanagementapis.bem.authentication.EmailOrUsernameModelBackend',
+#     'django.contrib.auth.backends.ModelBackend',
+# ]
+
 CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
 CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
 # Aybym0BYHcRDVaI0LQf19UiOaHKjp7
