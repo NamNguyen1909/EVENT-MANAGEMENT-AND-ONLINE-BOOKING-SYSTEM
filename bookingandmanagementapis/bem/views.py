@@ -42,8 +42,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     ordering_fields = ['created_at', 'username']
 
     def get_permissions(self):
-        if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate']:
-            return [permissions.IsAuthenticated()]
+        if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate', 'list', 'admin_deactivate']:
+            return [IsAdminUser() if self.action in ['list', 'admin_deactivate'] else permissions.IsAuthenticated()]
         elif self.action in ['create']:
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
@@ -66,6 +66,20 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         user.is_active = False
         user.save()
         return Response({"detail": "Tài khoản đã bị xóa!."}, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='list')
+    def list(self, request):
+        users = User.objects.all()
+        page = self.paginate_queryset(users)
+        serializer = UserSerializer(page or users, many=True)
+        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    @action(methods=['post'], detail=True, url_path='admin-deactivate')
+    def admin_deactivate(self, request, pk=None):
+        user = get_object_or_404(User, pk=pk)
+        user.is_active = False
+        user.save()
+        return Response({"detail": f"Tài khoản {user.username} đã bị vô hiệu hóa bởi admin."}, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path='tickets')
     def get_tickets(self, request):
@@ -376,11 +390,16 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         return Response({"message": "Check-in thành công.", "ticket": TicketSerializer(ticket).data})
 
 
-class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView):
+class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = ItemPaginator
+
+    def get_permissions(self):
+        if self.action == 'destroy':
+            return [IsAdminUser()]
+        return super().get_permissions()
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user).select_related('discount_code')
