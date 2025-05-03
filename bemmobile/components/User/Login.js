@@ -123,7 +123,7 @@ const Login = () => {
         placeholder="Nhập mật khẩu"
         value={password}
         onChangeText={setPassword}
-        style={[styles.input, { paddingRight: 40 }]}
+        style={{ marginBottom: 15, backgroundColor: 'white' }}
         mode="outlined"
         secureTextEntry={!showPassword}
         right={

@@ -233,7 +233,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)
     event_notifications = NotificationSerializer(many=True, read_only=True)
     chat_messages = ChatMessageSerializer(many=True, read_only=True)
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, required=False)
+    tags = TagSerializer(many=True, read_only=True)
     discount_codes = serializers.SerializerMethodField()
 
     def get_discount_codes(self, obj):
@@ -252,6 +252,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['poster'] = instance.poster.url if instance.poster else ''
         data['sold_tickets'] = instance.sold_tickets
+        data['ticket_price'] = str(instance.ticket_price) if instance.ticket_price is not None else None
         return data
 
     def create(self, validated_data):

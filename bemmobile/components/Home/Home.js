@@ -83,24 +83,37 @@ const Home = () => {
     callback(value);
   };
 
-  const renderEventItem = ({ item }) => (
-    <TouchableOpacity
-      style={MyStyles.eventItem}
-      onPress={() => navigation.navigate('EventDetails', { event: item })}
-    >
-      <Image
-        source={{ uri: item.poster || 'https://via.placeholder.com/60' }}
-        style={MyStyles.eventImage}
-      />
-      <View style={MyStyles.eventContent}>
-        <Text style={MyStyles.eventTitle}>{item.title || 'Untitled'}</Text>
-        <Text style={MyStyles.eventDetail}>
-          Date: {item.start_time ? new Date(item.start_time).toLocaleDateString() : 'N/A'}
-        </Text>
-        <Text style={MyStyles.eventDetail}>Location: {item.location || 'N/A'}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderEventItem = ({ item }) => {
+    // Xử lý poster URL đầy đủ
+
+    let posterUrl = item.poster;
+    console.log("Poster URL in Home:", posterUrl);
+
+    if (posterUrl && !posterUrl.startsWith('http')) {
+      // Đảm bảo có dấu "/" giữa baseURL và poster path
+      posterUrl = `${Apis.defaults.baseURL.replace(/\/+$/, '')}/${posterUrl.replace(/^\/+/, '')}`;
+    }
+    console.log("Poster URL in Home:", posterUrl);
+
+    return (
+      <TouchableOpacity
+        style={MyStyles.eventItem}
+        onPress={() => navigation.navigate('EventDetails', { event: item })}
+      >
+        <Image
+          source={{ uri: posterUrl || 'https://via.placeholder.com/60' }}
+          style={MyStyles.eventImage}
+        />
+        <View style={MyStyles.eventContent}>
+          <Text style={MyStyles.eventTitle}>{item.title || 'Untitled'}</Text>
+          <Text style={MyStyles.eventDetail}>
+            Date: {item.start_time ? new Date(item.start_time).toLocaleDateString() : 'N/A'}
+          </Text>
+          <Text style={MyStyles.eventDetail}>Location: {item.location || 'N/A'}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   // Đảm bảo events là mảng trước khi truyền vào FlatList
   const safeEvents = Array.isArray(events) ? events : [];

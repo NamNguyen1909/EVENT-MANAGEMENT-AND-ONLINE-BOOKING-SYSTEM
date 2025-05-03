@@ -23,7 +23,7 @@ import MyUserReducer from './reducers/MyUserReducer';
 const EventsStack = createNativeStackNavigator();
 const EventsStackNavigator = () => {
   return (
-    <EventsStack.Navigator screenOptions={{ headerShown: false }}>
+    <EventsStack.Navigator screenOptions={{ headerShown: true }}>
       <EventsStack.Screen
         name="HomeScreen"
         component={Home}
@@ -143,7 +143,7 @@ const UnauthTabNavigator = () => {
     <UnauthTab.Navigator screenOptions={{ headerShown: false }}>
       <UnauthTab.Screen
         name="home"
-        component={Home}
+        component={EventsStackNavigator} // ✅ dùng Stack có cả Home và EventDetails
         options={{
           title: 'Home',
           tabBarIcon: () => <Icon size={30} source="calendar" />,
