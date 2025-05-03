@@ -34,7 +34,7 @@ from .paginators import ItemPaginator
 
 
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     serializer_class = UserSerializer
     pagination_class = ItemPaginator
     filter_backends = [SearchFilter, OrderingFilter]
@@ -42,9 +42,11 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     ordering_fields = ['created_at', 'username']
 
     def get_permissions(self):
-        if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate', 'list', 'admin_deactivate']:
-            return [IsAdminUser() if self.action in ['list', 'admin_deactivate'] else permissions.IsAuthenticated()]
-        elif self.action in ['create']:
+        if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate']:
+            return [permissions.IsAuthenticated()]
+        elif self.action in ['list', 'admin_deactivate']:
+            return [IsAdminUser()]
+        elif self.action == 'create':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
@@ -66,13 +68,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         user.is_active = False
         user.save()
         return Response({"detail": "Tài khoản đã bị xóa!."}, status=status.HTTP_200_OK)
-
-    @action(methods=['get'], detail=False, url_path='list')
-    def list(self, request):
-        users = User.objects.all()
-        page = self.paginate_queryset(users)
-        serializer = UserSerializer(page or users, many=True)
-        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
     @action(methods=['post'], detail=True, url_path='admin-deactivate')
     def admin_deactivate(self, request, pk=None):
@@ -132,30 +127,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
 
 
-    # lazy loading / infinite scroll
-
-    # Backend (API) vẫn phân trang bình thường (?page=1, ?page=2, ...)
-    # Frontend (Vue/React/Next.js...) sẽ:
-    # Gọi GET /api/my-notifications/?page=1 khi vừa load
-    # Khi kéo xuống gần cuối danh sách → gọi GET /api/my-notifications/?page=2 để load tiếp
-    # Append (nối thêm) vào danh sách đang hiển thị
-    @action(detail=False, methods=['get'], url_path='my-notifications')
-    def my_notifications(self, request):
-        user = request.user
-        tickets = Ticket.objects.filter(user=user).values('event_id')
-        notifications = Notification.objects.filter(event__id__in=tickets).select_related('event')
-        page = self.paginate_queryset(notifications)
-        serializer = NotificationSerializer(page or notifications, many=True)
-        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
-
-    @action(methods=['get'], detail=False, url_path='sent-messages')
-    def get_sent_messages(self, request):
-        user = request.user
-
-        messages = user.sent_messages.all().select_related('event', 'receiver')
-        page = self.paginate_queryset(messages)
-        serializer =ChatMessageSerializer(page or messages, many=True)
-        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+ 
 
 # ViewSet cho Event
 #Xem sự kiện
@@ -312,7 +284,7 @@ class TagViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView,
             return [IsAdminOrOrganizer()]
         elif self.action == 'destroy':
             return [IsAdminUser()]
-        return [permissions.AllowAny()]
+        return [permissions.AllowAny()] 
 
 
 class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIView):

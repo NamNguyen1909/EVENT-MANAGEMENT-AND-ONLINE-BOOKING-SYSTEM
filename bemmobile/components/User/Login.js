@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, StyleSheet,Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { TextInput, Button, HelperText, useTheme, Title } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     if (!username) {
@@ -122,9 +123,16 @@ const Login = () => {
         placeholder="Nhập mật khẩu"
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
+        style={[styles.input, { paddingRight: 40 }]}
         mode="outlined"
-        secureTextEntry
+        secureTextEntry={!showPassword}
+        right={
+          <TextInput.Icon
+            icon={showPassword ? 'eye' : 'eye-off'}
+            color="black"
+            onPress={() => setShowPassword(!showPassword)}
+          />
+        }
       />
       {msg && (
         <HelperText
