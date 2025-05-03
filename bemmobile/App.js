@@ -6,6 +6,7 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { Icon } from 'react-native-paper';
 import Home from './components/Home/Home';
 import EventDetails from './components/EventDetails/EventDetails';
+import BookTicket from './components/User/BookTicket';
 import Login from './components/User/Login';
 import Register from './components/User/Register';
 import Profile from './components/User/Profile';
@@ -33,6 +34,11 @@ const EventsStackNavigator = () => {
         name="EventDetails"
         component={EventDetails}
         options={{ title: 'Event Details' }}
+      />
+      <EventsStack.Screen
+        name="BookTicket"
+        component={BookTicket}
+        options={{ title: 'Đặt vé' }}
       />
     </EventsStack.Navigator>
   );

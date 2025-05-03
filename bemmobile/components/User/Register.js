@@ -381,6 +381,7 @@ const Register = () => {
             </View>
           </Card.Content>
         </Card>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );

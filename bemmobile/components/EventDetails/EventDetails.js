@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View, Text, ActivityIndicator, ScrollView,
   StyleSheet, Image, Linking, Alert
 } from 'react-native';
+import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // thêm bản đồ
 import MapView, { Marker } from 'react-native-maps'; 
 import { useNavigation } from '@react-navigation/native';
+import { MyUserContext } from '../../configs/MyContexts';
 
 const EventDetails = ({ route }) => {
   const navigation = useNavigation();
@@ -16,6 +18,7 @@ const EventDetails = ({ route }) => {
   const [eventDetail, setEventDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const user = useContext(MyUserContext);
 
   const openInGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
@@ -27,8 +30,6 @@ const EventDetails = ({ route }) => {
 
   useEffect(() => {
     const fetchEventDetail = async () => {
-
-
 
       try {
         setLoading(true);
@@ -159,6 +160,20 @@ const EventDetails = ({ route }) => {
             onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}
           />
         </MapView>
+
+        <Button
+          mode="contained"
+          onPress={() => {
+            if (!user || !user.username) {
+              navigation.navigate('loginStack');
+            } else {
+              navigation.navigate('BookTicket', { eventId: eventDetail.id, ticketPrice: eventDetail.ticket_price });
+            }
+          }}
+          style={{ marginTop: 20, marginHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+        >
+          Đặt vé ngay!
+        </Button>
       </View>
     )}
       </ScrollView>
@@ -199,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   mapContainer: {
-    height: 200,
+    height: 400,
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
