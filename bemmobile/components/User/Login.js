@@ -53,6 +53,8 @@ const Login = () => {
       console.log('Login successful, received token:', res.data);
 
       await AsyncStorage.setItem('token', res.data.access_token);
+      const storedToken = await AsyncStorage.getItem('token');
+      console.log('Token stored in AsyncStorage:', storedToken);
       await AsyncStorage.setItem('refresh_token', res.data.refresh_token);
 
       const u = await authApis(res.data.access_token).get(endpoints.currentUser);
@@ -64,12 +66,22 @@ const Login = () => {
       });
 
       setMsg('Đăng nhập thành công!');
-      // Điều hướng trực tiếp đến tab "events" và màn hình "HomeScreen"
+
+      // Điều hướng dựa trên vai trò người dùng
       setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'events', params: { screen: 'HomeScreen' } }],
-        });
+        if (u.data.role === 'admin') {
+          // Điều hướng đến tab dashboard
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'dashboard' }],
+          });
+        } else {
+          // Điều hướng đến tab events cho người dùng thường
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'events', params: { screen: 'HomeScreen' } }],
+          });
+        }
       }, 1000);
     } catch (error) {
       if (error.response && error.response.data) {

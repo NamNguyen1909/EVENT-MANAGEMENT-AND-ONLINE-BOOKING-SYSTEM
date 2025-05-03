@@ -15,11 +15,11 @@ export const endpoints = {
   // Users
   register: "/users/",
   currentUser: "/users/current-user/",
-  userTickets: "/users/tickets",
-  userPayments: "/users/payments",
-  userNotifications: "/users/my-notifications",
-  userSentMessages: "/users/sent-messages",
-  deactivateUser: "/users/deactivate",
+  userTickets: "/users/tickets/",
+  userPayments: "/users/payments/",
+  userNotifications: "/users/my-notifications/",
+  userSentMessages: "/users/sent-messages/",
+  deactivateUser: "/users/deactivate/",
 
   // Events
   events: "/events",
