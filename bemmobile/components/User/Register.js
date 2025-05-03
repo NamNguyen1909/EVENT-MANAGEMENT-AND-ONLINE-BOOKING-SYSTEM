@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Text,
+  StyleSheet,
 } from 'react-native';
 import {
   Button,
@@ -339,7 +340,7 @@ const Register = () => {
             ))}
 
 
-<Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn vai trò:</Text>
+            <Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn vai trò:</Text>
             <Menu
               visible={roleMenuVisible}
               onDismiss={() => setRoleMenuVisible(false)}
@@ -371,11 +372,20 @@ const Register = () => {
             <Button onPress={register} disabled={loading} loading={loading} mode="contained" style={{ marginTop: 10, paddingVertical: 6, borderRadius: 8 }}>
               Đăng ký
             </Button>
+
+            <View style={MyStyles.askContainer}>
+              <Text style={MyStyles.askText}>Already have an account?{' '}</Text>
+              <Text style={MyStyles.navigateLink} onPress={() => navigation.navigate('login')}>
+                Login
+              </Text>
+            </View>
           </Card.Content>
         </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
+
+
 
 export default Register;

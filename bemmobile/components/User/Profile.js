@@ -285,7 +285,7 @@ const Profile = () => {
 
         <View style={styles.infoContainer}>
           <Text style={styles.label}>Total Spent:</Text>
-          <Text style={styles.value}>{user.total_spent} USD</Text>
+          <Text style={styles.value}>{user.total_spent} VNĐ</Text>
         </View>
 
         <View style={styles.infoContainer}>

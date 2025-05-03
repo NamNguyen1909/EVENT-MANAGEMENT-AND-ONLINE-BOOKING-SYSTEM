@@ -79,6 +79,19 @@ const MyStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#d32f2f',
     marginTop: 3,
+  },  
+  askContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  askText: {
+    fontSize: 16,
+  },
+  navigateLink: {
+    fontSize: 16,
+    color: '#1e90ff',
+    textDecorationLine: 'underline',
   },
 });
 

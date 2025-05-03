@@ -136,44 +136,63 @@ const ManageEventsStackNavigator = () => {
   );
 };
 
-// Bottom Tab Navigator
+// Bottom Tab Navigator for unauthenticated users (Home and Login tabs)
+const UnauthTab = createBottomTabNavigator();
+const UnauthTabNavigator = () => {
+  return (
+    <UnauthTab.Navigator screenOptions={{ headerShown: false }}>
+      <UnauthTab.Screen
+        name="home"
+        component={Home}
+        options={{
+          title: 'Home',
+          tabBarIcon: () => <Icon size={30} source="calendar" />,
+        }}
+      />
+      <UnauthTab.Screen
+        name="loginStack"
+        component={LoginStackNavigator}
+        options={{
+          title: 'Login',
+          tabBarIcon: () => <Icon size={30} source="account" />,
+        }}
+      />
+    </UnauthTab.Navigator>
+  );
+};
+
+// Stack Navigator for Login and Register screens
+const LoginStack = createNativeStackNavigator();
+const LoginStackNavigator = () => {
+  return (
+    <LoginStack.Navigator screenOptions={{ headerShown: false }}>
+      <LoginStack.Screen
+        name="login"
+        component={Login}
+        options={{ title: 'Login' }}
+      />
+      <LoginStack.Screen
+        name="register"
+        component={Register}
+        options={{ title: 'Register' }}
+      />
+    </LoginStack.Navigator>
+  );
+};
+
+// Bottom Tab Navigator for authenticated users
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
   const user = React.useContext(MyUserContext);
 
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <>
       {user === null ? (
-        // Khi chưa đăng nhập: Home, Login, Register
-        <>
-          <Tab.Screen
-            name="events"
-            component={EventsStackNavigator}
-            options={{
-              title: 'Home',
-              tabBarIcon: () => <Icon size={30} source="calendar" />,
-            }}
-          />
-          <Tab.Screen
-            name="login"
-            component={Login}
-            options={{
-              title: 'Login',
-              tabBarIcon: () => <Icon size={30} source="account" />,
-            }}
-          />
-          <Tab.Screen
-            name="register"
-            component={Register}
-            options={{
-              title: 'Register',
-              tabBarIcon: () => <Icon size={30} source="account-plus" />,
-            }}
-          />
-        </>
+        // Khi chưa đăng nhập: show Home and Login tabs
+        <UnauthTabNavigator />
       ) : user.role === 'attendee' ? (
         // Khách tham gia: Home, My Tickets, Chat, Profile
-        <>
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
           <Tab.Screen
             name="events"
             component={EventsStackNavigator}
@@ -206,10 +225,10 @@ const TabNavigator = () => {
               tabBarIcon: () => <Icon size={30} source="account" />,
             }}
           />
-        </>
+        </Tab.Navigator>
       ) : user.role === 'organizer' ? (
         // Nhà tổ chức: Home, My Events, Create Event, Chat, Profile
-        <>
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
           <Tab.Screen
             name="events"
             component={EventsStackNavigator}
@@ -250,10 +269,10 @@ const TabNavigator = () => {
               tabBarIcon: () => <Icon size={30} source="account" />,
             }}
           />
-        </>
+        </Tab.Navigator>
       ) : user.role === 'admin' ? (
         // Quản trị viên: Dashboard, Manage Users, Manage Events, Profile
-        <>
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
           <Tab.Screen
             name="dashboard"
             component={DashboardStackNavigator}
@@ -286,10 +305,10 @@ const TabNavigator = () => {
               tabBarIcon: () => <Icon size={30} source="account" />,
             }}
           />
-        </>
+        </Tab.Navigator>
       ) : (
         // Trường hợp vai trò không xác định: Chỉ hiển thị Home và Profile
-        <>
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
           <Tab.Screen
             name="events"
             component={EventsStackNavigator}
@@ -306,9 +325,9 @@ const TabNavigator = () => {
               tabBarIcon: () => <Icon size={30} source="account" />,
             }}
           />
-        </>
+        </Tab.Navigator>
       )}
-    </Tab.Navigator>
+    </>
   );
 };
 
