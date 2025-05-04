@@ -6,7 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q,F
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -494,6 +494,25 @@ class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Creat
         if self.action == 'create':
             return [IsAdminOrOrganizer()]
         return [permissions.IsAuthenticated()]
+
+    @action(detail=False, methods=['get'], url_path='user-group-discount-codes')
+    def user_group_discount_codes(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+        user_group = user.get_customer_group().value
+        now = timezone.now()
+        discount_codes = DiscountCode.objects.filter(
+            is_active=True,
+            user_group=user_group,
+            valid_from__lte=now,
+            valid_to__gte=now
+        ).exclude(
+            max_uses__isnull=False,
+            used_count__gte=F('max_uses')
+        )
+        serializer = self.get_serializer(discount_codes, many=True)
+        return Response(serializer.data)
 
 
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
