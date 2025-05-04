@@ -26,42 +26,38 @@ const MyEvents = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('>>> Fetched token:', token);
       if (!token) {
-        Alert.alert('Error', 'No authentication token found! Please log in again.');
+        Alert.alert('Error', 'No authentication token found!');
         setEvents([]);
         return;
       }
 
-      console.log('Token:', token); // Debug token
-      const endpoint = endpoints['myEvents'];
-      if (!endpoint) {
-        Alert.alert('Error', 'Endpoint configuration is missing. Check Apis.js.');
-        return;
-      }
-      console.log('Endpoint value:', endpoint); // Debug giá trị của endpoints['myEvents']
-      const fullUrl = `${Apis.defaults.baseURL}${endpoint}`;
-      console.log('Fetching from:', fullUrl); // Debug URL đầy đủ
-
       const api = authApis(token);
-      console.log('Request headers:', api.defaults.headers); // Debug headers
+      console.log('>>> API config:', api.defaults); // Debug full config
+      console.log('>>> Request headers:', api.defaults.headers); // Debug headers
 
-      const res = await api.get(endpoint);
-      console.log('API response for my-events:', res.data, 'Status:', res.status);
+      const res = await api.get(endpoints.myEvents);
 
       if (Array.isArray(res.data)) {
         setEvents(res.data);
       } else if (res.data && res.data.error) {
-        console.error('API error:', res.data.error);
         Alert.alert('Error', res.data.error);
         setEvents([]);
       } else {
-        console.error('Expected an array but got:', res.data);
         Alert.alert('Error', 'Dữ liệu trả về không đúng định dạng. Vui lòng kiểm tra cấu hình backend (URL hoặc quyền truy cập).');
         setEvents([]);
       }
     } catch (error) {
-      console.error('Fetch my events error:', error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'Failed to fetch your events. Please try again.');
+      console.log('>>> Error fetching my events:', error.response || error);
+      if (error.response && error.response.status === 401) {
+        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('refresh_token');
+        dispatch({ type: 'logout' });
+      } else {
+        Alert.alert('Error', 'Failed to fetch your events. Please try again.');
+      }
       setEvents([]);
     } finally {
       setLoading(false);
@@ -71,16 +67,27 @@ const MyEvents = () => {
   const fetchEventDetails = async (eventId) => {
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('>>> Fetched token for details:', token);
       if (!token) {
-        Alert.alert('Error', 'No authentication token found! Please log in again.');
+        Alert.alert('Error', 'No authentication token found!');
         return null;
       }
+
       const api = authApis(token);
+      console.log('>>> API config for details:', api.defaults);
+
       const res = await api.get(endpoints['eventDetail'](eventId));
       return res.data;
     } catch (error) {
-      console.error('Fetch event details error:', error);
-      Alert.alert('Error', 'Failed to fetch event details. Please try again.');
+      console.log('>>> Error fetching event details:', error.response || error);
+      if (error.response && error.response.status === 401) {
+        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('refresh_token');
+        dispatch({ type: 'logout' });
+      } else {
+        Alert.alert('Error', 'Failed to fetch event details. Please try again.');
+      }
       return null;
     }
   };
@@ -88,16 +95,27 @@ const MyEvents = () => {
   const fetchStatistics = async (eventId) => {
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('>>> Fetched token for statistics:', token);
       if (!token) {
-        Alert.alert('Error', 'No authentication token found! Please log in again.');
+        Alert.alert('Error', 'No authentication token found!');
         return;
       }
+
       const api = authApis(token);
+      console.log('>>> API config for statistics:', api.defaults);
+
       const res = await api.get(endpoints['event-statistics'](eventId));
       setStatistics(res.data);
     } catch (error) {
-      console.error('Fetch statistics error:', error);
-      Alert.alert('Error', 'Failed to fetch statistics. Please try again.');
+      console.log('>>> Error fetching statistics:', error.response || error);
+      if (error.response && error.response.status === 401) {
+        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('refresh_token');
+        dispatch({ type: 'logout' });
+      } else {
+        Alert.alert('Error', 'Failed to fetch statistics. Please try again.');
+      }
     }
   };
 
@@ -119,8 +137,9 @@ const MyEvents = () => {
     setUpdating(true);
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('>>> Fetched token for update:', token);
       if (!token) {
-        Alert.alert('Error', 'No authentication token found! Please log in again.');
+        Alert.alert('Error', 'You are not logged in!');
         return;
       }
 
@@ -137,6 +156,9 @@ const MyEvents = () => {
       };
 
       const api = authApis(token);
+      console.log('>>> API config for update:', api.defaults);
+      console.log('>>> Request headers for update:', api.defaults.headers);
+
       const res = await api.patch(
         `${endpoints['events']}${selectedEvent.id}/`,
         data,
@@ -148,8 +170,13 @@ const MyEvents = () => {
       setSelectedEvent(null);
       setStatistics(null);
     } catch (error) {
-      console.error('Update event error:', error);
-      if (error.response?.data) {
+      console.log('>>> Error updating event:', error.response || error);
+      if (error.response && error.response.status === 401) {
+        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('refresh_token');
+        dispatch({ type: 'logout' });
+      } else if (error.response?.data) {
         const errors = error.response.data;
         Alert.alert('Error', errors.title ? errors.title[0] : 'Failed to update event. Please try again.');
       } else {
