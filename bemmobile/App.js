@@ -167,6 +167,7 @@ const UnauthTabNavigator = () => {
   );
 };
 
+
 // Stack Navigator for Login and Register screens
 const LoginStack = createNativeStackNavigator();
 const LoginStackNavigator = () => {

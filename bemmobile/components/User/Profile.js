@@ -1,12 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { SafeAreaView, View, StyleSheet, Image, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { SafeAreaView, View, StyleSheet, Image, ScrollView, Alert, TouchableOpacity, Modal } from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Notifications from '../../components/Notification/Notifications'; // Import Notifications component
 
 const Profile = () => {
   const theme = useTheme();
@@ -21,6 +22,8 @@ const Profile = () => {
   const [ticketsCount, setTicketsCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [msg, setMsg] = useState(null);
+  const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -42,17 +45,14 @@ const Profile = () => {
 
       const api = authApis(token);
 
-      // Lấy số lượng vé
       const ticketsRes = await api.get(endpoints.userTickets);
       setTicketsCount(ticketsRes.data?.results?.length || ticketsRes.data.length || 0);
 
-      // Lấy số thông báo chưa đọc
       const notificationsRes = await api.get(endpoints.userNotifications);
       const notifications = notificationsRes.data?.results || notificationsRes.data || [];
       const unreadNotifs = notifications.filter(n => !n.is_read).length;
       setUnreadNotifications(unreadNotifs);
 
-      // Lấy số tin nhắn chưa đọc
       const messagesRes = await api.get(endpoints.userSentMessages);
       const messages = messagesRes.data?.results || messagesRes.data || [];
       const unreadMsgs = messages.filter(m => !m.is_read).length;
@@ -64,34 +64,49 @@ const Profile = () => {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'events', params: { screen: 'HomeScreen' } }],
-        });
       } else {
         Alert.alert('Error', 'Failed to fetch user stats. Please try again.');
       }
     }
   };
 
-  const handleSelectAvatar = () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 1,
-    };
+  const handleSelectAvatar = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Error', 'Cần cấp quyền truy cập thư viện ảnh!');
+        return;
+      }
 
-    launchImageLibrary(options, async (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-        Alert.alert('Error', 'Failed to select image. Please try again.');
-      } else {
-        const uri = response.assets[0].uri;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const fileType = uri.split('.').pop().toLowerCase();
+        if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
+          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          return;
+        }
+
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        if (blob.size > 5 * 1024 * 1024) {
+          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          return;
+        }
+
         setAvatar(uri);
         await handleUpdateAvatar(uri);
       }
-    });
+    } catch (error) {
+      console.error('Error selecting image:', error);
+      Alert.alert('Error', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
+    }
   };
 
   const handleUpdateAvatar = async (uri) => {
@@ -102,11 +117,13 @@ const Profile = () => {
         return;
       }
 
+      const uriParts = uri.split('.');
+      const fileType = uriParts[uriParts.length - 1].toLowerCase();
       const formData = new FormData();
       formData.append('avatar', {
         uri: uri,
-        type: 'image/jpeg',
-        name: 'avatar.jpg',
+        name: `avatar.${fileType}`,
+        type: `image/${fileType}`,
       });
 
       const res = await Apis.patch(endpoints.currentUser, formData, {
@@ -124,7 +141,12 @@ const Profile = () => {
       Alert.alert('Success', 'Avatar updated successfully!');
     } catch (error) {
       console.error('Update avatar error:', error);
-      Alert.alert('Error', 'Failed to update avatar. Please try again.');
+      if (error.response?.data) {
+        const errors = error.response.data;
+        Alert.alert('Error', errors.avatar ? errors.avatar[0] : 'Failed to update avatar. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to update avatar. Please try again.');
+      }
     }
   };
 
@@ -156,7 +178,12 @@ const Profile = () => {
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
       console.error('Update error:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      if (error.response?.data) {
+        const errors = error.response.data;
+        Alert.alert('Error', errors.email ? errors.email[0] : errors.phone ? errors.phone[0] : 'Failed to update profile. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to update profile. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -193,10 +220,6 @@ const Profile = () => {
               await AsyncStorage.removeItem('token');
               await AsyncStorage.removeItem('refresh_token');
               dispatch({ type: 'logout' });
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'events', params: { screen: 'HomeScreen' } }],
-              });
             } catch (error) {
               console.error('Deactivate error:', error);
               Alert.alert('Error', 'Failed to deactivate account. Please try again.');
@@ -208,11 +231,15 @@ const Profile = () => {
   };
 
   const handleNotificationsPress = () => {
-    Alert.alert('Notifications', `You have ${unreadNotifications} unread notifications.`);
+    setIsNotificationModalVisible(true);
   };
 
   const handleChatPress = () => {
     navigation.navigate('chat');
+  };
+
+  const closeNotificationModal = () => {
+    setIsNotificationModalVisible(false);
   };
 
   if (!user) {
@@ -338,6 +365,19 @@ const Profile = () => {
           Deactivate Account
         </Button>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isNotificationModalVisible}
+        onRequestClose={closeNotificationModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Notifications unreadNotifications={unreadNotifications} onClose={closeNotificationModal} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -449,6 +489,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'red',
     marginTop: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: '80%',
   },
 });
 
