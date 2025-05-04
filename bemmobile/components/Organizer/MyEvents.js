@@ -280,7 +280,7 @@ const MyEvents = () => {
             onChangeText={(text) => changeEvent('total_tickets', text)}
             style={styles.input}
             mode="outlined"
-            keyboardType="numeric"
+            keyboardType="number-pad"
           />
 
           <TextInput

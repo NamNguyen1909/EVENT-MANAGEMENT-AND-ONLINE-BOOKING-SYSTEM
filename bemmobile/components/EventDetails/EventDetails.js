@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import {
   View, Text, ActivityIndicator, ScrollView,
-  StyleSheet, Image, Linking, Alert
+  StyleSheet, Image, Linking, Alert, TouchableOpacity
 } from 'react-native';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -19,6 +19,7 @@ const EventDetails = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const user = useContext(MyUserContext);
+  const mapRef = useRef(null);
 
   const openInGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
@@ -26,6 +27,17 @@ const EventDetails = ({ route }) => {
       Alert.alert('Lỗi', 'Không thể mở Google Maps');
       console.error(err);
     });
+  };
+
+  const centerMap = () => {
+    if (mapRef.current && eventDetail) {
+      mapRef.current.animateToRegion({
+        latitude: eventDetail.latitude,
+        longitude: eventDetail.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 500);
+    }
   };
 
   useEffect(() => {
@@ -137,11 +149,17 @@ const EventDetails = ({ route }) => {
       <View style={styles.mapContainer}>
         <View style={styles.mapHeader}>
           <Text style={styles.sectionTitle}>Vị trí trên bản đồ</Text>
-          <Text style={styles.openMapButton} onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}>
-            Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.openMapButton} onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}>
+              Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
+            </Text>
+            <TouchableOpacity onPress={centerMap} style={{ marginLeft: 12 }}>
+              <Icon name="crosshairs-gps" size={22} color="#1a73e8" />
+            </TouchableOpacity>
+          </View>
         </View>
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={{
             latitude: eventDetail.latitude,
