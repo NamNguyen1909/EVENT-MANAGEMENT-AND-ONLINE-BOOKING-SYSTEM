@@ -26,6 +26,8 @@ const BookTicket = () => {
   const [selectedDiscountCode, setSelectedDiscountCode] = useState(null);
   const [menuVisible, setMenuVisible] = useState(false);
 
+  const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
+
   useEffect(() => {
     if (eventId) {
       setLoading(true);
@@ -45,10 +47,18 @@ const BookTicket = () => {
     }
   }, [quantity, ticketPrice, selectedDiscountCode]);
 
+const getApiWithToken = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      return null;
+    }
+    return authApis(token);
+  };
+
   const fetchEventDetails = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
+      const api = await getApiWithToken();
+      if (!api) {
         setMsg('Vui lòng đăng nhập để xem thông tin sự kiện.');
         setLoading(false);
         setTimeout(() => {
@@ -59,7 +69,6 @@ const BookTicket = () => {
         }, 2000);
         return;
       }
-      const api = token ? authApis(token) : Apis;
       const res = await api.get(endpoints['eventDetail'](eventId));
       const price = Number(res.data.ticket_price || 0);
       setTicketPrice(price);
@@ -72,12 +81,11 @@ const BookTicket = () => {
 
   const fetchDiscountCodes = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
+      const api = await getApiWithToken();
+      if (!api) {
         return;
       }
-      const api = authApis(token);
-      const res = await api.get(endpoints['discountCodes'] + 'user-group-discount-codes/');
+      const res = await api.get(endpoints.discountCodeDetail);
       setDiscountCodes(res.data);
     } catch (error) {
       console.log('Error fetching discount codes:', error);
@@ -92,6 +100,8 @@ const BookTicket = () => {
     setQuantity(prev => (prev > 0 ? prev - 1 : 0));
   };
 
+  const [paymentMethod, setPaymentMethod] = useState('momo');
+
   const handlePayment = async () => {
     if (quantity <= 0) {
       setMsg('Số lượng vé phải lớn hơn 0.');
@@ -103,11 +113,19 @@ const BookTicket = () => {
       const payload = {
         event_id: eventId,
         quantity: quantity,
+        payment_method: paymentMethod,
       };
       if (selectedDiscountCode) {
         payload.discount_code_id = selectedDiscountCode.id;
       }
-      const res = await Apis.post(endpoints['book_ticket'], payload);
+      const api = await getApiWithToken();
+      if (!api) {
+        setMsg('Vui lòng đăng nhập để đặt vé.');
+        setLoading(false);
+        return;
+      }
+      const res = await api.post(endpoints['book_ticket'], payload);
+
       setMsg('Đặt vé thành công!');
     } catch (error) {
       setMsg('Đặt vé thất bại. Vui lòng thử lại.');
@@ -185,6 +203,42 @@ const BookTicket = () => {
               </TouchableOpacity>
             ))
           )}
+        </Menu>
+      </View>
+
+      {/* Payment Method Dropdown */}
+      <View style={styles.paymentDropdownContainer}>
+        <Text style={styles.paymentDropdownLabel}>Phương thức thanh toán</Text>
+        <Menu
+          visible={paymentMenuVisible}
+          onDismiss={() => setPaymentMenuVisible(false)}
+          anchor={
+            <Button mode="outlined" onPress={() => setPaymentMenuVisible(true)}>
+              {paymentMethod === 'momo' ? 'MoMo' : 'VNPay'}
+            </Button>
+          }
+          contentStyle={{ 
+            width: screenWidth * 0.9,
+          }}
+        >
+          <TouchableOpacity 
+            onPress={() => {
+              setPaymentMethod('momo');
+              setPaymentMenuVisible(false);
+            }}
+            style={styles.menuItem}
+          >
+            <Text style={styles.menuItemCode}>MoMo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => {
+              setPaymentMethod('vnpay');
+              setPaymentMenuVisible(false);
+            }}
+            style={styles.menuItem}
+          >
+            <Text style={styles.menuItemCode}>VNPay</Text>
+          </TouchableOpacity>
         </Menu>
       </View>
 
@@ -272,6 +326,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   discountDropdownLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333',
+  },
+  paymentDropdownContainer: {
+    marginBottom: 20,
+  },
+  paymentDropdownLabel: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,

@@ -313,7 +313,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         serializer = self.get_serializer(ticket)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post'], url_path='book')
+    @action(detail=False, methods=['post'], url_path='book-ticket')
     def book_ticket(self, request):
         event_id = request.data.get('event_id')
         try:
@@ -371,10 +371,20 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
     def get_permissions(self):
         if self.action == 'destroy':
             return [IsAdminUser()]
+        elif self.action =='retrieve':
+            return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user).select_related('discount_code')
+
+    def retrieve(self, request, pk=None):
+        try:
+            payment = self.get_queryset().get(pk=pk)
+        except Payment.DoesNotExist:
+            return Response({"error": "Không tìm thấy thanh toán."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(payment)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='confirm')
     def confirm_payment(self, request, pk):
@@ -407,7 +417,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             "payment": PaymentSerializer(payment).data
         })
 
-    @action(detail=False, methods=['post'], url_path='pay-unpaid-tickets-for-event')
+    @action(detail=False, methods=['post'], url_path='pay-unpaid-tickets')
     def pay_unpaid_tickets_for_event(self, request):
         user = request.user
         event_id = request.data.get('event_id')

@@ -16,7 +16,7 @@ export const endpoints = {
   currentUser: "users/current-user/",
   userTickets: "users/tickets/",
   userPayments: "users/payments/",
-  userNotifications: "users/my-notifications/",
+  userNotifications: "notifications/my-notifications/",
   userSentMessages: "users/sent-messages/",
   deactivateUser: "users/deactivate/",
 
@@ -24,7 +24,7 @@ export const endpoints = {
   events: "events/",
   eventDetail: (eventId) => `events/${eventId}/`,
   eventTickets: (eventId) => `events/${eventId}/tickets/`,
-  eventReviews: (eventId) => `events/${eventId}/reviews/`,
+  eventReviews: "reviews/",
   eventChatMessages: (eventId) => `events/${eventId}/chat-messages/`,
   suggestEvents: "events/suggest/",
   hotEvents: "events/hot/",
@@ -38,21 +38,23 @@ export const endpoints = {
   // Tickets
   tickets: "tickets/",
   ticketDetail: (ticketId) => `tickets/${ticketId}/`,
-  bookTicket: "tickets/book/",
+  bookTicket: "tickets/book-ticket/",
   checkInTicket: "tickets/check-in/",
 
   // Payments
   payments: "payments/",
   paymentDetail: (paymentId) => `payments/${paymentId}/`,
   confirmPayment: (paymentId) => `payments/${paymentId}/confirm/`,
+  payUnpaidTickets: "payments/pay-unpaid-tickets/",
 
   // Discount Codes
   discountCodes: "discount-codes/",
+  discountCodeDetail:"discount-codes/user-group-discount-codes/",
 
   // Notifications
   notifications: "notifications/",
   myNotifications: "notifications/my-notifications/",
-  eventNotifications: (eventId) => `notifications/event-notifications/?event_id=${eventId}/`,
+  eventNotifications: (eventId) => `notifications/event-notifications/?event_id=${eventId}`,
   createNotification: "notifications/create-notification/",
   markNotificationAsRead: (notificationId) => `notifications/${notificationId}/mark-as-read/`,
 
