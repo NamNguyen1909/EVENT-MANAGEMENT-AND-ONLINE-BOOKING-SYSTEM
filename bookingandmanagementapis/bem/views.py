@@ -430,7 +430,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         except Event.DoesNotExist:
             return Response({"error": "Sự kiện không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
 
-        #Vé chua thanh toán cho sự kiện này
+        # Vé chưa thanh toán cho sự kiện này
         unpaid_tickets = Ticket.objects.filter(user=user, is_paid=False, event=event)
         if not unpaid_tickets.exists():
             return Response({"error": "Không có vé chưa thanh toán cho sự kiện này."}, status=status.HTTP_400_BAD_REQUEST)
@@ -472,8 +472,8 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         notification = Notification(
             event=event,
             notification_type='reminder',
-            title="Thanh Toán Thành Công",
-            message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
+            title="Tạo Payment - Vui lòng thanh toán",
+            message=f"Payment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.",
             # is_read=False
         )
         notification.save()
@@ -482,16 +482,20 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         UserNotification.objects.create(user=user, notification=notification)
 
         send_mail(
-            subject=f"Xác Nhận Thanh Toán cho {event.title}",
-            message=f"Kính gửi {user.username},\n\nThanh toán cho vé sự kiện {event.title} đã hoàn tất.\n\nTrân trọng!",
+            subject=f"Xác Nhận Tạo Payment cho {event.title}",
+            message=f"Kính gửi {user.username},\n\nPayment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.\n\nTrân trọng!",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[user.email],
             fail_silently=True
         )
 
+        # Giả lập payment_url cho ví dụ, thực tế cần tích hợp SDK hoặc API cổng thanh toán
+        payment_url = f"https://api.momo.vn/pay?amount={total_amount}&orderId={payment.transaction_id}"
+
         return Response({
-            "message": "Tạo payment và thanh toán thành công.",
-            "payment": PaymentSerializer(payment).data
+            "message": "Tạo payment thành công. Vui lòng thanh toán.",
+            "payment": PaymentSerializer(payment).data,
+            "payment_url": payment_url
         })
 
 

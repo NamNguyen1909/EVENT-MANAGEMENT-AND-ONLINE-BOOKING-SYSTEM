@@ -1,3 +1,4 @@
+from .views import PaymentViewSet
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
@@ -17,4 +18,5 @@ router.register('event-trending-logs', views.EventTrendingLogViewSet, basename='
 # Định nghĩa các URL patterns
 urlpatterns = [
     path('', include(router.urls)),
+    path('payments/webhook/', PaymentViewSet.as_view({'post': 'payment_webhook'}), name='payment-webhook'),
 ]

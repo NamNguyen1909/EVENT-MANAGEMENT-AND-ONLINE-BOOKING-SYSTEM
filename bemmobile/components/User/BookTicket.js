@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity,Linking } from 'react-native';
 import { Button, TextInput, IconButton, useTheme, Menu } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
@@ -102,37 +102,67 @@ const getApiWithToken = async () => {
 
   const [paymentMethod, setPaymentMethod] = useState('momo');
 
-  const handlePayment = async () => {
-    if (quantity <= 0) {
-      setMsg('Số lượng vé phải lớn hơn 0.');
+
+const handlePayment = async () => {
+  if (quantity <= 0) {
+    setMsg('Số lượng vé phải lớn hơn 0.');
+    return;
+  }
+  setLoading(true);
+  setMsg(null);
+  try {
+    const api = await getApiWithToken();
+    if (!api) {
+      setMsg('Vui lòng đăng nhập để đặt vé.');
+      setLoading(false);
       return;
     }
-    setLoading(true);
-    setMsg(null);
-    try {
-      const payload = {
-        event_id: eventId,
-        quantity: quantity,
-        payment_method: paymentMethod,
-      };
-      if (selectedDiscountCode) {
-        payload.discount_code_id = selectedDiscountCode.id;
-      }
-      const api = await getApiWithToken();
-      if (!api) {
-        setMsg('Vui lòng đăng nhập để đặt vé.');
-        setLoading(false);
-        return;
-      }
-      const res = await api.post(endpoints['book_ticket'], payload);
-
-      setMsg('Đặt vé thành công!');
-    } catch (error) {
+    // 1. Đặt vé
+    const bookPayload = {
+      event_id: eventId,
+      quantity: quantity,
+    };
+    const bookRes = await api.post(endpoints['book_ticket'], bookPayload);
+    if (!bookRes || bookRes.status >= 400) {
       setMsg('Đặt vé thất bại. Vui lòng thử lại.');
-    } finally {
       setLoading(false);
+      return;
     }
-  };
+
+    // 2. Tạo payment và lấy payment_url
+    const payPayload = {
+      event_id: eventId,
+      payment_method: paymentMethod,
+    };
+    if (selectedDiscountCode) {
+      payPayload.discount_code_id = selectedDiscountCode.id;
+    }
+    const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
+    if (!payRes || payRes.status >= 400) {
+      setMsg('Tạo payment thất bại. Vui lòng thử lại.');
+      setLoading(false);
+      return;
+    }
+
+    const paymentUrl = payRes.data.payment_url;
+    if (!paymentUrl) {
+      setMsg('Không nhận được đường dẫn thanh toán.');
+      setLoading(false);
+      return;
+    }
+
+    // 3. Mở cổng thanh toán (deep link hoặc url)
+    await Linking.openURL(paymentUrl);
+
+    // 4. Xử lý callback thanh toán (webhook backend sẽ cập nhật trạng thái)
+    setMsg('Vui lòng hoàn tất thanh toán trên cổng thanh toán.');
+
+  } catch (error) {
+    setMsg('Đặt vé thất bại. Vui lòng thử lại.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const openMenu = () => setMenuVisible(true);
   const closeMenu = () => setMenuVisible(false);
