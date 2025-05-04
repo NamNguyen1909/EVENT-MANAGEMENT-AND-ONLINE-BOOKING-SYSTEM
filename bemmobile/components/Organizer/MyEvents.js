@@ -37,7 +37,9 @@ const MyEvents = () => {
       console.log('>>> API config:', api.defaults); // Debug full config
       console.log('>>> Request headers:', api.defaults.headers); // Debug headers
 
+      console.log('Flag');
       const res = await api.get(endpoints.myEvents);
+      console.log('>>> RES:', res);
 
       if (Array.isArray(res.data)) {
         setEvents(res.data);
