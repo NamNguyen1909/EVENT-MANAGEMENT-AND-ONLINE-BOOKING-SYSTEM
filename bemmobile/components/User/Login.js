@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyDispatchContext } from '../../configs/MyContexts';
-import MyStyles from '../../styles/MyStyles';
+import MyStyles ,{colors} from '../../styles/MyStyles';
 
 const Login = () => {
   const theme = useTheme();
@@ -117,6 +117,8 @@ const Login = () => {
         style={styles.input}
         mode="outlined"
         autoCapitalize="none"
+        outlineColor={colors.blueLight}
+        activeOutlineColor={colors.bluePrimary}
       />
       <TextInput
         label="Mật khẩu"
@@ -125,6 +127,8 @@ const Login = () => {
         onChangeText={setPassword}
         style={{ marginBottom: 15, backgroundColor: 'white' }}
         mode="outlined"
+        outlineColor={colors.blueLight}
+        activeOutlineColor={colors.bluePrimary}
         secureTextEntry={!showPassword}
         right={
           <TextInput.Icon
@@ -143,7 +147,7 @@ const Login = () => {
           {msg}
         </HelperText>
       )}
-      <Button mode="contained" onPress={login} loading={loading} disabled={loading} style={styles.button}>
+      <Button mode="contained" onPress={login} loading={loading} disabled={loading} style={styles.button} buttonColor={colors.bluePrimary}>
         Đăng nhập
       </Button>
       <View style={MyStyles.askContainer}>

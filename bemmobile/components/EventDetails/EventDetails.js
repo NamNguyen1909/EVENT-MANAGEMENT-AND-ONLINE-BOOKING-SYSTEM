@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker } from 'react-native-maps'; 
 import { useNavigation } from '@react-navigation/native';
 import { MyUserContext } from '../../configs/MyContexts';
+import MyStyles,{colors} from '../../styles/MyStyles';
 
 const EventDetails = ({ route }) => {
   const navigation = useNavigation();
@@ -46,8 +47,10 @@ const EventDetails = ({ route }) => {
       try {
         setLoading(true);
         setError(null);
-        // Use user context token instead of AsyncStorage directly
-        if (!user || !user.token) {
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token:', token);
+        //Kết hợp kiểm tra token từ asyncStorage và user context
+        if (!user ||!token) {
           setError('Vui lòng đăng nhập để xem chi tiết sự kiện.');
           console.log('User token không tồn tại. Chuyển hướng');
           setLoading(false);
@@ -62,7 +65,7 @@ const EventDetails = ({ route }) => {
           return;
         }
         
-        const api = authApis(user.token);
+        const api = token ? authApis(token) : Apis;
         const res = await api.get(endpoints.eventDetail(event.id));
 
         setEventDetail(res.data);
@@ -78,7 +81,7 @@ const EventDetails = ({ route }) => {
     
 
     fetchEventDetail();
-  }, [event.id, navigation, user]);
+  }, [event.id, navigation]);
 
   if (loading) {
     return (

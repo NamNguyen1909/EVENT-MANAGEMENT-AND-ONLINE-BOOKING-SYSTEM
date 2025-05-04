@@ -345,25 +345,25 @@ const user = React.useContext(MyUserContext);
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  //Xóa token cũ khi ứng dụng khởi động
-  useEffect(() => {
-    const clearTokenOnAppStart = async () => {
-      try {
-        await AsyncStorage.removeItem('auth_token');
-        console.log('Token removed on app start');
+  // //Xóa token cũ khi ứng dụng khởi động
+  // useEffect(() => {
+  //   const clearTokenOnAppStart = async () => {
+  //     try {
+  //       await AsyncStorage.removeItem('auth_token');
+  //       console.log('Token removed on app start');
 
-        // Reset user state in context after token removal
-        dispatch({ type: ACTION_TYPES.LOGOUT });
+  //       // Reset user state in context after token removal
+  //       dispatch({ type: ACTION_TYPES.LOGOUT });
 
-        const stillThere = await AsyncStorage.getItem('auth_token');
-        console.log('Check token after removal:', stillThere);
-      } catch (error) {
-        console.log('Error removing token on start:', error);
-      }
-    };
+  //       const stillThere = await AsyncStorage.getItem('auth_token');
+  //       console.log('Check token after removal:', stillThere);
+  //     } catch (error) {
+  //       console.log('Error removing token on start:', error);
+  //     }
+  //   };
 
-    clearTokenOnAppStart();
-  }, []); // Thêm mảng dependencies rỗng để useEffect chỉ chạy 1 lần khi component mount
+  //   clearTokenOnAppStart();
+  // }, []); // Thêm mảng dependencies rỗng để useEffect chỉ chạy 1 lần khi component mount
 
   return (
     <MyUserContext.Provider value={user}>

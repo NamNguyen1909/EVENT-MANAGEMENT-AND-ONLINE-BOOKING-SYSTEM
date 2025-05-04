@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { Searchbar, Chip } from 'react-native-paper';
-import MyStyles from '../../styles/MyStyles';
+import MyStyles , { colors } from '../../styles/MyStyles';
 import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -122,8 +122,8 @@ const Home = () => {
       <View style={MyStyles.scrollContainer}>
         {/* Hiển thị lỗi nếu có */}
         {error && (
-          <View style={{ padding: 10, backgroundColor: '#ffcccc', marginBottom: 10 }}>
-            <Text style={{ color: '#ff0000' }}>{error}</Text>
+          <View style={{ padding: 10, backgroundColor: colors.blueLight, marginBottom: 10 }}>
+            <Text style={{ color: colors.blue }}>{error}</Text>
           </View>
         )}
 
@@ -170,7 +170,7 @@ const Home = () => {
 
         {/* Danh sách sự kiện */}
         {loading && page === 1 ? (
-          <ActivityIndicator size="large" color="#1a73e8" />
+          <ActivityIndicator size="large" color={colors.bluePrimary} />
         ) : safeEvents.length === 0 ? (
           <Text style={{ textAlign: 'center', marginTop: 20 }}>No events found</Text>
         ) : (
@@ -181,7 +181,7 @@ const Home = () => {
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
-              loading && page > 1 && <ActivityIndicator size="large" color="#1a73e8" />
+              loading && page > 1 && <ActivityIndicator size="large" color={colors.bluePrimary} />
             }
           />
         )}

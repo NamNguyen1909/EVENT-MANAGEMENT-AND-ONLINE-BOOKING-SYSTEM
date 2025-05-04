@@ -1,5 +1,15 @@
 import { StyleSheet } from 'react-native';
 
+export const colors = {
+  bluePrimary: '#1a73e8',     // Màu xanh chính
+  blueDark: '#0d47a1',        // Xanh đậm
+  blueLight: '#90caf9',       // Xanh nhạt
+  blueSky: '#87ceeb',         // Xanh trời
+  blueGray: '#78909c',        // Xanh xám
+  blueAccent: '#448aff',      // Xanh nổi bật
+  navy: '#001f3f',            // Navy
+};
+
 const MyStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -28,7 +38,7 @@ const MyStyles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   chipSelected: {
-    backgroundColor: '#1a73e8',
+    backgroundColor: colors.bluePrimary,
   },
   chipText: {
     color: '#333',
@@ -66,7 +76,7 @@ const MyStyles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a73e8',
+    color: colors.bluePrimary,
     marginBottom: 5,
   },
   eventDetail: {
@@ -90,7 +100,7 @@ const MyStyles = StyleSheet.create({
   },
   navigateLink: {
     fontSize: 16,
-    color: '#1e90ff',
+    color: colors.blueAccent,
     textDecorationLine: 'underline',
   },
 });
