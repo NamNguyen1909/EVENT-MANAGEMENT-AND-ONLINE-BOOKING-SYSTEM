@@ -47,7 +47,7 @@ const EventDetails = ({ route }) => {
         setLoading(true);
         setError(null);
         const token = await AsyncStorage.getItem('token');
-
+        console.log('Token:', token);
         if (!token) {
           setError('Vui lòng đăng nhập để xem chi tiết sự kiện.');
           console.log('Token không tồn tại. Chuyển hướng');

@@ -12,6 +12,7 @@ import { Searchbar, Chip } from 'react-native-paper';
 import MyStyles from '../../styles/MyStyles';
 import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints } from '../../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Home = () => {
   // Danh mục cứng
@@ -27,6 +28,14 @@ const Home = () => {
   const [cateId, setCateId] = useState(null);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
+
+  // Xóa token khi mở app để tránh lưu token cũ
+  useEffect(() => {
+    const clearTokenOnStart = async () => {
+      await AsyncStorage.removeItem('token');
+    };
+    clearTokenOnStart();
+  }, []);
 
   // Lấy danh sách sự kiện
   const loadEvents = async () => {
@@ -133,7 +142,7 @@ const Home = () => {
           style={MyStyles.searchbar}
         />
 
-        {/* Danh sách danh mục */}
+        {/* Danh mục sự kiện */}
         <View style={[MyStyles.row, MyStyles.wrap]}>
           <TouchableOpacity onPress={() => search(null, setCateId)}>
             <Chip
