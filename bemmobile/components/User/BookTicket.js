@@ -15,7 +15,7 @@ const BookTicket = () => {
   const eventId = route.params?.eventId;
   const initialTicketPrice = parseFloat(route.params?.ticketPrice) || 0;
 
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [ticketPrice, setTicketPrice] = useState(initialTicketPrice);
   const [totalPrice, setTotalPrice] = useState(initialTicketPrice);
   const [loading, setLoading] = useState(false);
@@ -31,10 +31,44 @@ const BookTicket = () => {
   useEffect(() => {
     if (eventId) {
       setLoading(true);
+      fetchUnpaidTicketsQuantity();
       fetchEventDetails();
       fetchDiscountCodes();
     }
   }, [eventId]);
+
+  // Fetch số lượng vé chưa thanh toán của user cho event hiện tại
+  const fetchUnpaidTicketsQuantity = async () => {
+    try {
+      const api = await getApiWithToken();
+      if (!api) {
+        setMsg('Vui lòng đăng nhập để xem thông tin vé.');
+        setLoading(false);
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'loginStack' }],
+          });
+        }, 2000);
+        return;
+      }
+      const res = await api.get(endpoints.userTickets);
+      console.log('res.data: ',res.data);
+
+      // Kiểm tra res.data có phải là mảng không, nếu không thì lấy res.data.results
+      const ticketsData = Array.isArray(res.data) ? res.data : (res.data.results || []);
+      console.log('Tickets data:', ticketsData);
+      // Lọc vé chưa thanh toán cho event hiện tại
+      const unpaidTickets = ticketsData.filter(ticket => !ticket.is_paid && ticket.event_id === eventId);
+      // unpaidTickets.forEach(ticket => {
+      //   console.log('Ticket event_id:', ticket.event_id, 'Target eventId:', eventId);
+      // });
+      console.log('Unpaid tickets:', unpaidTickets.length);
+      setQuantity(unpaidTickets.length);
+    } catch (error) {
+      console.log('Error fetching unpaid tickets quantity:', error);
+    }
+  };
 
   useEffect(() => {
     if (ticketPrice > 0 && quantity >= 0) {

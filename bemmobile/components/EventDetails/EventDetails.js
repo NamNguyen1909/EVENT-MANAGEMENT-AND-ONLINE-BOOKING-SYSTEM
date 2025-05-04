@@ -46,11 +46,10 @@ const EventDetails = ({ route }) => {
       try {
         setLoading(true);
         setError(null);
-        const token = await AsyncStorage.getItem('token');
-        console.log('Token:', token);
-        if (!token) {
+        // Use user context token instead of AsyncStorage directly
+        if (!user || !user.token) {
           setError('Vui lòng đăng nhập để xem chi tiết sự kiện.');
-          console.log('Token không tồn tại. Chuyển hướng');
+          console.log('User token không tồn tại. Chuyển hướng');
           setLoading(false);
 
           setTimeout(() => {
@@ -63,7 +62,7 @@ const EventDetails = ({ route }) => {
           return;
         }
         
-        const api = token ? authApis(token) : Apis;
+        const api = authApis(user.token);
         const res = await api.get(endpoints.eventDetail(event.id));
 
         setEventDetail(res.data);
@@ -79,7 +78,7 @@ const EventDetails = ({ route }) => {
     
 
     fetchEventDetail();
-  }, [event.id, navigation]);
+  }, [event.id, navigation, user]);
 
   if (loading) {
     return (

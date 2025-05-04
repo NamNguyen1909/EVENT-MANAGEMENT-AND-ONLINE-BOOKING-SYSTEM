@@ -29,13 +29,6 @@ const Home = () => {
   const [error, setError] = useState(null);
   const navigation = useNavigation();
 
-  // Xóa token khi mở app để tránh lưu token cũ
-  useEffect(() => {
-    const clearTokenOnStart = async () => {
-      await AsyncStorage.removeItem('token');
-    };
-    clearTokenOnStart();
-  }, []);
 
   // Lấy danh sách sự kiện
   const loadEvents = async () => {

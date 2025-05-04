@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer,useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -19,6 +19,7 @@ import ManageUsers from './components/Admin/ManageUsers'; // Giả định màn 
 import ManageEvents from './components/Admin/ManageEvents'; // Giả định màn hình ManageEvents
 import { MyUserContext, MyDispatchContext } from './configs/MyContexts';
 import MyUserReducer from './reducers/MyUserReducer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Stack Navigator cho tab "Events" (danh sách sự kiện toàn hệ thống)
 const EventsStack = createNativeStackNavigator();
@@ -190,7 +191,9 @@ const LoginStackNavigator = () => {
 // Bottom Tab Navigator for authenticated users
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
-  const user = React.useContext(MyUserContext);
+const user = React.useContext(MyUserContext);
+
+
 
   return (
     <>
@@ -341,6 +344,26 @@ const TabNavigator = () => {
 // App chính
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
+
+  //Xóa token cũ khi ứng dụng khởi động
+  useEffect(() => {
+    const clearTokenOnAppStart = async () => {
+      try {
+        await AsyncStorage.removeItem('auth_token');
+        console.log('Token removed on app start');
+
+        // Reset user state in context after token removal
+        dispatch({ type: ACTION_TYPES.LOGOUT });
+
+        const stillThere = await AsyncStorage.getItem('auth_token');
+        console.log('Check token after removal:', stillThere);
+      } catch (error) {
+        console.log('Error removing token on start:', error);
+      }
+    };
+
+    clearTokenOnAppStart();
+  }, []); // Thêm mảng dependencies rỗng để useEffect chỉ chạy 1 lần khi component mount
 
   return (
     <MyUserContext.Provider value={user}>

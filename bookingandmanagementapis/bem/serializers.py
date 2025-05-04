@@ -104,6 +104,7 @@ class TicketSerializer(ModelSerializer):
     event_title = serializers.ReadOnlyField(source='event.title')  # Lấy tiêu đề sự kiện
     event_start_time = serializers.ReadOnlyField(source='event.start_time')  # Lấy thời gian bắt đầu sự kiện
     event_location = serializers.ReadOnlyField(source='event.location')  # Lấy địa điểm sự kiện
+    event_id = serializers.ReadOnlyField(source='event.id')  # Lấy event id
     qr_code = serializers.ReadOnlyField()  # Thêm trường qr_code để hiển thị mã QR
 
     def to_representation(self, instance):
@@ -115,11 +116,11 @@ class TicketSerializer(ModelSerializer):
         model = Ticket
         fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location'
+            'event_title', 'event_start_time', 'event_location', 'event_id'
         ]
         read_only_fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location'
+            'event_title', 'event_start_time', 'event_location', 'event_id'
         ]
 
     def create(self, validated_data):
