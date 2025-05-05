@@ -10,12 +10,13 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
+  Modal,
+  Pressable,
 } from "react-native";
 import { Button } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Apis, { endpoints, authApis } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// thêm bản đồ
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import { MyUserContext } from "../../configs/MyContexts";
@@ -37,6 +38,9 @@ const EventDetails = ({ route }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
 
   const openInGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
@@ -60,7 +64,7 @@ const EventDetails = ({ route }) => {
     }
   };
 
-  const submitReview = async () => {
+    const submitReview = async () => {
     if (rating === 0) {
       Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
       return;
@@ -77,7 +81,7 @@ const EventDetails = ({ route }) => {
       const payload = {
         user: user.id,
         event: parseInt(eventDetail.id),
-        rating: rating, // Đã là number
+        rating: rating,
         comment: comment.trim(),
       };
       console.log("Payload gửi đi:", payload);
@@ -91,13 +95,136 @@ const EventDetails = ({ route }) => {
       Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
     } catch (err) {
       console.error(err);
-      setReviewError("Gửi đánh giá thất bại. Vui lòng thử lại.");
+      // Check if error response contains the specific validation message from backend
+      if (err.response && err.response.data && typeof err.response.data === 'string' && err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")) {
+        setReviewError("Bạn đã review event này rồi.");
+      } else if (err.response && err.response.data && err.response.data.detail && typeof err.response.data.detail === 'string' && err.response.data.detail.includes("Bạn đã có đánh giá cho sự kiện này.")) {
+        setReviewError("Bạn đã review event này rồi.");
+      } else {
+        setReviewError("Gửi đánh giá thất bại. Vui lòng thử lại.");
+      }
     } finally {
       setSubmittingReview(false);
     }
   };
 
-  // Component StarRating
+  const updateReview = async () => {
+    if (rating === 0) {
+      Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
+      return;
+    }
+    
+    setSubmittingReview(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Lỗi", "Bạn cần đăng nhập để chỉnh sửa đánh giá.");
+        return;
+      }
+      
+      const api = authApis(token);
+      const payload = {
+        rating: rating,
+        comment: comment.trim(),
+      };
+      console.log("Payload cập nhật:", payload);
+      console.log('user id',user.id);
+      console.log('userowner id',editingReview.user);
+      
+      const res = await api.patch(endpoints.updateReview(editingReview.id), payload);
+      console.log("resPatch:", res.data);
+      setReviews(prev => prev.map(r => 
+        r.id === editingReview.id ? res.data : r
+      ));
+      
+      setEditingReview(null);
+      setRating(0);
+      setComment("");
+      Alert.alert("Thành công", "Đánh giá đã được cập nhật.");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Lỗi", "Cập nhật đánh giá thất bại. Vui lòng thử lại.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Lỗi", "Bạn cần đăng nhập để thực hiện thao tác này.");
+        return;
+      }
+      
+      const api = authApis(token);
+      await api.delete(endpoints.deleteReview(reviewId));
+      
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      Alert.alert("Thành công", "Đánh giá đã được xóa.");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Lỗi", "Xóa đánh giá thất bại. Vui lòng thử lại.");
+    } finally {
+      setModalVisible(false);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setRating(review.rating);
+    setComment(review.comment);
+  };
+
+  const ReviewMenu = ({ review }) => {
+    if (!user || user.id !== review.user) {
+      return null;
+    }
+
+    return (
+      <View style={styles.menuContainer}>
+        <TouchableOpacity 
+          onPress={() => {
+            setSelectedReview(review);
+            setModalVisible(true);
+          }}
+        >
+          <Icon name="dots-vertical" size={24} color="#666" />
+        </TouchableOpacity>
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible && selectedReview?.id === review.id}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setModalVisible(false)}
+          >
+            <View style={styles.menuModal}>
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => {
+                  handleEditReview(review);
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={styles.menuText}>Sửa đánh giá</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.menuItem, styles.deleteItem]}
+                onPress={() => handleDeleteReview(review.id)}
+              >
+                <Text style={styles.menuText}>Xóa đánh giá</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Modal>
+      </View>
+    );
+  };
+
   const StarRating = ({ rating, onRatingChange }) => {
     return (
       <View style={styles.starContainer}>
@@ -142,12 +269,11 @@ const EventDetails = ({ route }) => {
 
       const api = token ? authApis(token) : Apis;
       const res = await api.get(endpoints.eventDetail(event.id));
-
-      setEventDetail(res.data);
       //Cách 1: Lấy reviews từ eventDetailserializer do có trả reviews về
       // setReviews(res.data.reviews || []);
 
       //Cách 2: Lấy reviews từ API riêng=> có thể áp dụng phân trang đã thiết lập trong ReviewViewSet
+      setEventDetail(res.data);
       const reviewsRes = await api.get(endpoints.getEventReviews(event.id));
       setReviews(reviewsRes.data.results || []);
     } catch (err) {
@@ -302,11 +428,13 @@ const EventDetails = ({ route }) => {
         <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
         {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
         {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
-        {/* Add Review Form */}
+        
+        {/* Add/Edit Review Form */}
         {user && user.username ? (
           <View>
-            <Text style={styles.formLabel}>Thêm đánh giá của bạn</Text>
-            {/* Thay thế TextInput bằng StarRating */}
+            <Text style={styles.formLabel}>
+              {editingReview ? "Chỉnh sửa đánh giá" : "Thêm đánh giá của bạn"}
+            </Text>
             <StarRating rating={rating} onRatingChange={setRating} />
             <TextInput
               style={[styles.input, { height: 80 }]}
@@ -315,16 +443,31 @@ const EventDetails = ({ route }) => {
               value={comment}
               onChangeText={setComment}
             />
-            <Button
-              mode="contained"
-              onPress={submitReview}
-              loading={submittingReview}
-              disabled={submittingReview || rating === 0}
-              buttonColor={colors.blueAccent}
-              style={{ marginBottom: 20 }}
-            >
-                Gửi đánh giá
-            </Button>
+            <View style={styles.buttonGroup}>
+              {editingReview && (
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setEditingReview(null);
+                    setRating(0);
+                    setComment("");
+                  }}
+                  style={styles.cancelButton}
+                >
+                  Hủy
+                </Button>
+              )}
+              <Button
+                mode="contained"
+                onPress={editingReview ? updateReview : submitReview}
+                loading={submittingReview}
+                disabled={submittingReview || rating === 0}
+                buttonColor={colors.blueAccent}
+                style={styles.submitButton}
+              >
+                {editingReview ? "Cập nhật" : "Gửi đánh giá"}
+              </Button>
+            </View>
           </View>
         ) : (
           <Text
@@ -334,12 +477,16 @@ const EventDetails = ({ route }) => {
             Vui lòng đăng nhập để thêm đánh giá.
           </Text>
         )}
-        {/* Review List - Cập nhật hiển thị sao */}
+
+        {/* Review List */}
         {reviews.length === 0 ? (
           <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
         ) : (
           reviews.map((review) => (
-            <View key={review.id} style={styles.reviewItem}>
+            <View key={review.id} style={[
+              styles.reviewItem,
+              user?.id === review.user && styles.myReview // Highlight my review
+            ]}>
               <View style={styles.reviewHeader}>
                 {review.user_infor && review.user_infor.avatar ? (
                   <Image
@@ -365,6 +512,7 @@ const EventDetails = ({ route }) => {
                     ))}
                   </View>
                 </View>
+                <ReviewMenu review={review} />
               </View>
               {review.comment ? (
                 <Text style={styles.reviewComment}>{review.comment}</Text>
@@ -380,7 +528,6 @@ const EventDetails = ({ route }) => {
   );
 };
 
-// Component phụ: Hiển thị dòng icon + nội dung
 const InfoRow = ({ icon, text }) => (
   <View style={styles.row}>
     <Icon name={icon} size={20} color="#555" />
@@ -494,6 +641,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  myReview: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.blueSky,
+  },
   reviewHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -510,14 +661,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
   },
-  //   reviewContent: {
-  //     marginLeft: 50,
-  //     marginTop: 8,
-  //   },
-  //   reviewRating: {
-  //     fontWeight: 'bold',
-  //     color: '#1a73e8',
-  //   },
   reviewComment: {
     marginTop: 4,
     fontSize: 13,
@@ -564,7 +707,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 10,
   },
-
   reviewStars: {
     flexDirection: "row",
     marginTop: 4,
@@ -574,6 +716,46 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 10,
+    flex: 1,
+  },
+  menuContainer: {
+    marginLeft: 'auto',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  menuModal: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    width: 200,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  deleteItem: {
+    borderBottomWidth: 0,
+  },
+  menuText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  submitButton: {
+    flex: 2,
   },
 });
 

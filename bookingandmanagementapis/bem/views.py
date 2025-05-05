@@ -687,7 +687,15 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         user = self.request.user
         if user.is_authenticated:
             # Sắp xếp sao cho review của user hiện tại đứng đầu
-            queryset = sorted(queryset, key=lambda r: r.user != user)
+            # Không dùng sorted để tránh trả về list, dùng order_by với Case expression
+            from django.db.models import Case, When, Value, IntegerField
+            queryset = queryset.annotate(
+                is_current_user=Case(
+                    When(user=user, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by('is_current_user')
         return queryset
 
     def perform_create(self, serializer):
@@ -697,6 +705,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         if Review.objects.filter(user=user, event=event).exists():
             raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
         serializer.save(user=user)
+
 
 
 class EventTrendingLogViewSet(viewsets.ViewSet,generics.ListAPIView, generics.RetrieveAPIView):
