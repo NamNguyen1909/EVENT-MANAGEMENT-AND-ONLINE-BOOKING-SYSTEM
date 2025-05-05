@@ -27,6 +27,8 @@ const BookTicket = () => {
   const [menuVisible, setMenuVisible] = useState(false);
 
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
+  const [unpaidTicketCount, setUnpaidTicketCount] = useState(0);
+
 
   useEffect(() => {
     if (eventId) {
@@ -60,6 +62,7 @@ const BookTicket = () => {
       console.log('Tickets data:', ticketsData);
       // Lọc vé chưa thanh toán cho event hiện tại
       const unpaidTickets = ticketsData.filter(ticket => !ticket.is_paid && ticket.event_id === eventId);
+      setUnpaidTicketCount(unpaidTickets.length);
       // unpaidTickets.forEach(ticket => {
       //   console.log('Ticket event_id:', ticket.event_id, 'Target eventId:', eventId);
       // });
@@ -152,15 +155,33 @@ const handlePayment = async () => {
       return;
     }
     // 1. Đặt vé
-    const bookPayload = {
-      event_id: eventId,
-      quantity: quantity,
-    };
-    const bookRes = await api.post(endpoints['book_ticket'], bookPayload);
-    if (!bookRes || bookRes.status >= 400) {
-      setMsg('Đặt vé thất bại. Vui lòng thử lại.');
-      setLoading(false);
-      return;
+    console.log('Fquantity: ', quantity);
+
+    let actualQuantity;
+    if (quantity > unpaidTicketCount) { //Trường hợp đặt thêm vé mới
+      actualQuantity = quantity - unpaidTicketCount; //Chỉ tạo thêm số lượng vé mới cần đặt
+    } 
+    else if (quantity < unpaidTicketCount) {//Trường hợp giảm số lượng vé đã đặt|| không tạo thêm vé mới|| số vé thanh toán nhỏ hơn vé đã tạo sẵn
+      actualQuantity = 0; // Không cần đặt thêm vé, chỉ cần thanh toán cho vé đã đặt
+    }
+    else {
+      actualQuantity = quantity;
+    }
+    console.log('actualQuantity: ', actualQuantity);
+
+    // Đặt vé nhiều lần tương ứng actualQuantity
+    for (let i = 0; i < actualQuantity; i++) {
+      const bookPayload = {
+        event_id: eventId,
+      };
+      const bookRes = await api.post(endpoints.bookTicket, bookPayload);
+      console.log('bookRes: ',bookRes.data);
+      if (!bookRes || bookRes.status >= 400) {
+        setMsg('Đặt vé thất bại. Vui lòng thử lại.');
+        console.log('Booking error:', bookRes.data);
+        setLoading(false);
+        return;
+      }
     }
 
     // 2. Tạo payment và lấy payment_url
@@ -172,8 +193,10 @@ const handlePayment = async () => {
       payPayload.discount_code_id = selectedDiscountCode.id;
     }
     const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
+    console.log('payRes: ',payRes.data);
     if (!payRes || payRes.status >= 400) {
       setMsg('Tạo payment thất bại. Vui lòng thử lại.');
+      console.log('Payment error:', payRes.data);
       setLoading(false);
       return;
     }
@@ -185,11 +208,11 @@ const handlePayment = async () => {
       return;
     }
 
-    // 3. Mở cổng thanh toán (deep link hoặc url)
-    await Linking.openURL(paymentUrl);
+    // // 3. Mở cổng thanh toán (deep link hoặc url)
+    // await Linking.openURL(paymentUrl);
 
-    // 4. Xử lý callback thanh toán (webhook backend sẽ cập nhật trạng thái)
-    setMsg('Vui lòng hoàn tất thanh toán trên cổng thanh toán.');
+    // // 4. Xử lý callback thanh toán (webhook backend sẽ cập nhật trạng thái)
+    // setMsg('Vui lòng hoàn tất thanh toán trên cổng thanh toán.');
 
   } catch (error) {
     setMsg('Đặt vé thất bại. Vui lòng thử lại.');

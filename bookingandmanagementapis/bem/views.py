@@ -312,7 +312,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
             return Response({"error": "Không tìm thấy vé."}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(ticket)
         return Response(serializer.data)
-
+    #đặt 1 vé cho sự kiện
     @action(detail=False, methods=['post'], url_path='book-ticket')
     def book_ticket(self, request):
         event_id = request.data.get('event_id')
