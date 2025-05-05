@@ -67,6 +67,15 @@ export const endpoints = {
   // Event Trending Logs
   eventTrendingLogs: "event-trending-logs/",
   eventTrendingLogDetail: (logId) => `event-trending-logs/${logId}/`,
+  
+// Reviews
+reviews: "reviews/",
+createReview: "reviews/", // POST
+updateReview: (reviewId) => `reviews/${reviewId}/`, // PUT/PATCH
+deleteReview: (reviewId) => `reviews/${reviewId}/`, // DELETE
+getEventReviews: (eventId) => `reviews/?event_id=${eventId}`, // GET (danh sách review của 1 sự kiện)
+
+
 };
 
 // Tạo instance axios với xác thực

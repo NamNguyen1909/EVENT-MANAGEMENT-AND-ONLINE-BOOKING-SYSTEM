@@ -14,6 +14,7 @@ router.register('discount-codes', views.DiscountCodeViewSet, basename='discount-
 router.register('notifications', views.NotificationViewSet, basename='notification')
 router.register('chat-messages', views.ChatMessageViewSet, basename='chat-message')
 router.register('event-trending-logs', views.EventTrendingLogViewSet, basename='event-trending-log')
+router.register('reviews', views.ReviewViewSet, basename='review')
 
 # Định nghĩa các URL patterns
 urlpatterns = [
