@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import {
   View, Text, ActivityIndicator, ScrollView,
-  StyleSheet, Image, Linking, Alert, TouchableOpacity
+  StyleSheet, Image, Linking, Alert, TouchableOpacity, TextInput
 } from 'react-native';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -21,6 +21,14 @@ const EventDetails = ({ route }) => {
   const [error, setError] = useState(null);
   const user = useContext(MyUserContext);
   const mapRef = useRef(null);
+
+  // New states for reviews
+  const [reviews, setReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+  const [rating, setRating] = useState('');
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const openInGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
@@ -69,7 +77,8 @@ const EventDetails = ({ route }) => {
         const res = await api.get(endpoints.eventDetail(event.id));
 
         setEventDetail(res.data);
-
+        // Set reviews from event detail
+        setReviews(res.data.reviews || []);
         
       } catch (err) {
 
@@ -81,7 +90,40 @@ const EventDetails = ({ route }) => {
     
 
     fetchEventDetail();
-  }, [event.id, navigation]);
+  }, [event.id, navigation, user]);
+
+  const submitReview = async () => {
+    if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
+      Alert.alert('Lỗi', 'Vui lòng nhập điểm đánh giá từ 1 đến 5.');
+      return;
+    }
+    setSubmittingReview(true);
+    setReviewError(null);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Lỗi', 'Bạn cần đăng nhập để gửi đánh giá.');
+        return;
+      }
+      const api = authApis(token);
+      const payload = {
+        event: eventDetail.id,
+        rating: parseInt(rating),
+        comment: comment.trim(),
+      };
+      const res = await api.post(endpoints.eventReviews, payload);
+      // Add new review to list, put current user review on top
+      setReviews(prev => [res.data, ...prev.filter(r => r.id !== res.data.id)]);
+      setRating('');
+      setComment('');
+      Alert.alert('Thành công', 'Đánh giá của bạn đã được gửi.');
+    } catch (err) {
+      console.error(err);
+      setReviewError('Gửi đánh giá thất bại. Vui lòng thử lại.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -194,9 +236,77 @@ const EventDetails = ({ route }) => {
         >
           Đặt vé ngay!
         </Button>
+
+        {/* Review Section */}
+        <View style={styles.reviewSection}>
+          <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
+
+          {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
+          {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
+
+                    {/* Add Review Form */}
+                    {user && user.username ? (
+            <View style={styles.addReviewForm}>
+              <Text style={styles.formLabel}>Thêm đánh giá của bạn</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Điểm (1-5)"
+                keyboardType="numeric"
+                value={rating}
+                onChangeText={setRating}
+                maxLength={1}
+              />
+              <TextInput
+                style={[styles.input, { height: 80 }]}
+                placeholder="Bình luận (tùy chọn)"
+                multiline
+                value={comment}
+                onChangeText={setComment}
+              />
+              <Button
+                mode="contained"
+                onPress={submitReview}
+                loading={submittingReview}
+                disabled={submittingReview}
+                style={{ marginBottom: 20 }}
+              >
+                Gửi đánh giá
+              </Button>
+            </View>
+          ) : (
+            <Text style={styles.loginPrompt} onPress={() => navigation.navigate('loginStack')}>
+              Vui lòng đăng nhập để thêm đánh giá.
+            </Text>
+          )}
+
+          {/* Review List */}
+          {reviews.length === 0 ? (
+            <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
+          ) : (
+            reviews.map((review) => (
+              <View key={review.id} style={styles.reviewItem}>
+                <View style={styles.reviewHeader}>
+                  {review.user_infor && review.user_infor.avatar ? (
+                    <Image source={{ uri: review.user_infor.avatar }} style={styles.avatar} />
+                  ) : (
+                    <Icon name="account-circle" size={40} color="#888" />
+                  )}
+                  <Text style={styles.reviewUsername}>{review.user_infor?.username || 'Người dùng'}</Text>
+                </View>
+                <View style={styles.reviewContent}>
+                  <Text style={styles.reviewRating}>Điểm: {review.rating} / 5</Text>
+                  {review.comment ? <Text style={styles.reviewComment}>{review.comment}</Text> : null}
+                  <Text style={styles.reviewDate}>{new Date(review.created_at).toLocaleDateString()}</Text>
+                </View>
+              </View>
+            ))
+          )}
+
+
+        </View>
       </View>
     )}
-      </ScrollView>
+    </ScrollView>
   );
 };
 
@@ -234,7 +344,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   mapContainer: {
-    height: 400,
+    height: 700,
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
@@ -295,6 +405,89 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#444',
     lineHeight: 22,
+  },
+  reviewSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+  },
+  reviewItem: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  reviewUsername: {
+    fontWeight: '600',
+    fontSize: 16,
+    color: '#333',
+  },
+  reviewContent: {
+    marginLeft: 50,
+  },
+  reviewRating: {
+    fontWeight: 'bold',
+    color: '#1a73e8',
+  },
+  reviewComment: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#555',
+  },
+  reviewDate: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#999',
+  },
+  addReviewForm: {
+    marginTop: 10,
+  },
+  formLabel: {
+    fontWeight: '600',
+    marginBottom: 6,
+    fontSize: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  noReviewsText: {
+    fontStyle: 'italic',
+    color: '#666',
+    marginBottom: 10,
+  },
+  loginPrompt: {
+    marginTop: 10,
+    color: '#1a73e8',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });
 
