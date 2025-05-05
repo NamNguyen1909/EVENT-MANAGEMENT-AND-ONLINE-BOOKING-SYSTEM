@@ -20,7 +20,7 @@ import {
   Chip,
   Menu,
 } from 'react-native-paper';
-import MyStyles from '../../styles/MyStyles';
+import MyStyles,{colors} from '../../styles/MyStyles';
 import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
@@ -314,6 +314,8 @@ const Register = () => {
                 label={i.label}
                 value={user[i.field] || ''}
                 onChangeText={(t) => setState(t, i.field)}
+                outlineColor={colors.bluePrimary}
+                activeOutlineColor={colors.blueDark}
                 secureTextEntry={
                   i.field === 'password' ? !showPassword :
                   i.field === 'confirmPassword' ? !showConfirmPassword :
@@ -345,14 +347,14 @@ const Register = () => {
               visible={roleMenuVisible}
               onDismiss={() => setRoleMenuVisible(false)}
               anchor={
-                <Button mode="outlined" onPress={() => setRoleMenuVisible(true)} style={{ marginBottom: 15 }}>
+                <Button mode="outlined" onPress={() => setRoleMenuVisible(true)} style={{ marginBottom: 15}} labelStyle={{ color: colors.blueDark }}>
                   {role.charAt(0).toUpperCase() + role.slice(1)}
                 </Button>
               }
             >
-              <Menu.Item onPress={() => { setRole('attendee'); setRoleMenuVisible(false); }} title="Attendee" />
-              <Menu.Item onPress={() => { setRole('organizer'); setRoleMenuVisible(false); }} title="Organizer" />
-              <Menu.Item onPress={() => { setRole('admin'); setRoleMenuVisible(false); }} title="Admin" />
+              <Menu.Item onPress={() => { setRole('attendee'); setRoleMenuVisible(false); }} title="Attendee" titleStyle={{ color: role === 'attendee' ? colors.blueAccent : 'black' }}/>
+              <Menu.Item onPress={() => { setRole('organizer'); setRoleMenuVisible(false); }} title="Organizer" titleStyle={{ color: role === 'organizer' ? colors.blueAccent : 'black' }}/>
+              <Menu.Item onPress={() => { setRole('admin'); setRoleMenuVisible(false); }} title="Admin" titleStyle={{ color: role === 'admin' ? colors.blueAccent : 'black' }}/>
             </Menu>
 
             <Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn tags (bắt buộc):</Text>
@@ -362,14 +364,15 @@ const Register = () => {
                   key={tag.id}
                   onPress={() => toggleTag(tag.id)}
                   selected={tags.includes(tag.id)}
-                  style={{ margin: 4 }}
+                  style={{ margin: 4 ,backgroundColor: tags.includes(tag.id) ? colors.bluePrimary : '#e0e0e0'} }
+
                 >
-                  {tag.name}
+                {tag.name}
                 </Chip>
               ))}
             </View>
 
-            <Button onPress={register} disabled={loading} loading={loading} mode="contained" style={{ marginTop: 10, paddingVertical: 6, borderRadius: 8 }}>
+            <Button onPress={register} disabled={loading} loading={loading} mode="contained" style={{ marginTop: 10, paddingVertical: 6, borderRadius: 8 }} buttonColor={colors.blueDark}>
               Đăng ký
             </Button>
 

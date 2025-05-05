@@ -18,8 +18,14 @@ const Home = () => {
   // Danh mục cứng
   const [categories] = useState([
     { id: 'music', name: 'Music' },
-    { id: 'conference', name: 'Conference' },
     { id: 'sports', name: 'Sports' },
+    { id: 'seminar', name: 'Seminar' },
+    { id: 'conference', name: 'Conference' },
+    { id: 'festival', name: 'Festival' },
+    { id: 'workshop', name: 'Workshop' },
+    { id: 'party', name: 'Party' },
+    { id: 'competition', name: 'Competition' },
+    { id: 'other', name: 'Other' },
   ]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
