@@ -8,6 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.db.models import F
 from django.db import models
+from decimal import Decimal
+
 
 
 # Serializer cho Tag
@@ -85,7 +87,7 @@ class DiscountCodeSerializer(ModelSerializer):
 
 
 # Serializer cho Event
-class EventSerializer(ModelSerializer):
+class EventSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['poster'] = instance.poster.url if instance.poster else ''
@@ -93,8 +95,40 @@ class EventSerializer(ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['id', 'poster', 'title', 'location', 'latitude', 'longitude' , 'start_time', 'category']
-        read_only_fields = ['id', 'poster', 'title', 'location', 'latitude', 'longitude' , 'start_time', 'category']
+        fields = [
+            'id', 'organizer', 'title', 'description', 'category', 'start_time', 'end_time',
+            'is_active', 'location', 'latitude', 'longitude', 'total_tickets', 'ticket_price',
+            'sold_tickets', 'tags', 'poster', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'organizer', 'sold_tickets', 'created_at', 'updated_at']
+
+        # Đảm bảo các trường không bắt buộc khi cập nhật (partial update)
+        extra_kwargs = {
+            'title': {'required': False},
+            'description': {'required': False},
+            'category': {'required': False},
+            'start_time': {'required': False},
+            'end_time': {'required': False},
+            'is_active': {'required': False},
+            'location': {'required': False},
+            'latitude': {'required': False},
+            'longitude': {'required': False},
+            'total_tickets': {'required': False},
+            'ticket_price': {'required': False},
+            'poster': {'required': False},
+            'tags': {'required': False},
+        }
+
+    # Xử lý ticket_price dưới dạng DecimalField để đảm bảo validate đúng
+    ticket_price = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        min_value=Decimal('0'),
+        required=False
+    )
+    total_tickets = serializers.IntegerField(min_value=0, required=False)
+    latitude = serializers.FloatField(min_value=-90, max_value=90, required=False)
+    longitude = serializers.FloatField(min_value=-180, max_value=180, required=False)
 
 
 # Serializer cho Ticket

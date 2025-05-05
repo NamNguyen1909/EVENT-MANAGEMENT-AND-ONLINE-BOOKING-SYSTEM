@@ -148,7 +148,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return EventSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'suggest_events', 'hot_events']:
+        if self.action in ['list', 'suggest_events', 'hot_events', 'categories']:
             # Không yêu cầu xác thực cho list, suggest_events, hot_events
             return [permissions.AllowAny()]
         elif self.action in ['retrieve', 'get_chat_messages']:
@@ -270,6 +270,11 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         events = Event.objects.filter(organizer=user)
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='categories')
+    def categories(self, request):
+        categories = dict(Event.CATEGORY_CHOICES)
+        return Response(categories)
 
 
 class TagViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
