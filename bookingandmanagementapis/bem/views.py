@@ -1,4 +1,5 @@
 from django.forms import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -676,6 +677,8 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
             return [ReviewOwner()]
         elif self.action == 'create':
             return [permissions.IsAuthenticated()]
+        elif self.action == 'event_reviews_for_organizer':
+            return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
     def get_queryset(self):
@@ -705,6 +708,39 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         if Review.objects.filter(user=user, event=event).exists():
             raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
         serializer.save(user=user)
+
+    @action(detail=False, methods=['get'], url_path='event-reviews-organizer')
+    def event_reviews_for_organizer(self, request):
+        """
+        Lấy danh sách review của một sự kiện, yêu cầu người dùng là organizer của sự kiện.
+        Query param: event_id (bắt buộc)
+        """
+        event_id = request.query_params.get('event_id')
+        if not event_id:
+            raise ValidationError("Tham số event_id là bắt buộc.")
+
+        # Kiểm tra sự kiện tồn tại
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            raise ValidationError("Sự kiện không tồn tại.")
+
+        # Kiểm tra người dùng có phải là organizer của sự kiện
+        user = request.user
+        if not user.is_authenticated:
+            raise PermissionDenied("Bạn cần đăng nhập để thực hiện hành động này.")
+        if user.role != 'organizer' or event.organizer != user:
+            raise PermissionDenied("Bạn không có quyền xem đánh giá của sự kiện này.")
+
+        # Lấy danh sách review của sự kiện
+        reviews = Review.objects.filter(event=event)
+        page = self.paginate_queryset(reviews)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(reviews, many=True)
+        return Response(serializer.data)
 
 
 
