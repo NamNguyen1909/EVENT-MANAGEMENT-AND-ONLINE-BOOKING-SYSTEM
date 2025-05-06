@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
 import uuid
+from decimal import Decimal
 
 # pip install qrcode[pil]
 import qrcode
@@ -131,7 +132,7 @@ class Event(models.Model):
     longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
 
     total_tickets = models.IntegerField(validators=[MinValueValidator(0)])
-    ticket_price = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(0)])
+    ticket_price = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     sold_tickets = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     tags = models.ManyToManyField('Tag', blank=True, related_name='events')

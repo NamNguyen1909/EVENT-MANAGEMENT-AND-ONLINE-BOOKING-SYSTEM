@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image } from 'react-native';
-import { TextInput, Button, Title, Card, useTheme } from 'react-native-paper';
+import { TextInput, Button, Title, Card, useTheme, IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
@@ -32,6 +32,7 @@ const MyEvents = () => {
   const [reviews, setReviews] = useState([]);
   const [visibleReviews, setVisibleReviews] = useState(3);
   const [fetchingReviews, setFetchingReviews] = useState(false);
+  const [showImageOptions, setShowImageOptions] = useState(false);
 
   useEffect(() => {
     if (user && user.role === 'organizer') {
@@ -187,22 +188,78 @@ const MyEvents = () => {
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Error', 'Permission to access camera roll is required!');
-      return;
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Error', 'Cần cấp quyền truy cập thư viện ảnh!');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const fileType = uri.split('.').pop().toLowerCase();
+        if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
+          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          return;
+        }
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        if (blob.size > 5 * 1024 * 1024) {
+          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          return;
+        }
+        setPoster(uri);
+        setShowImageOptions(false);
+      }
+    } catch (error) {
+      console.error('Error picking image from library:', error);
+      Alert.alert('Error', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
     }
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setPoster(result.assets[0].uri);
+  const pickImageFromCamera = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Error', 'Cần cấp quyền truy cập camera!');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const fileType = uri.split('.').pop().toLowerCase();
+        if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
+          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          return;
+        }
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        if (blob.size > 5 * 1024 * 1024) {
+          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          return;
+        }
+        setPoster(uri);
+        setShowImageOptions(false);
+      }
+    } catch (error) {
+      console.error('Error picking image from camera:', error);
+      Alert.alert('Error', 'Có lỗi khi chụp ảnh. Vui lòng thử lại!');
     }
+  };
+
+  const removeImage = () => {
+    setPoster(null);
+    setShowImageOptions(false);
   };
 
   const selectCategory = (category) => {
@@ -302,11 +359,11 @@ const MyEvents = () => {
       formData.append('latitude', selectedEvent.latitude ? parseFloat(selectedEvent.latitude).toString() : '');
       formData.append('longitude', selectedEvent.longitude ? parseFloat(selectedEvent.longitude).toString() : '');
 
-      if (poster) {
-        const response = await fetch(poster);
-        const blob = await response.blob();
+      if (poster && !poster.startsWith('http')) {
         const uriParts = poster.split('.');
         const fileType = uriParts[uriParts.length - 1].toLowerCase();
+        const response = await fetch(poster);
+        const blob = await response.blob();
         formData.append('poster', {
           uri: poster,
           name: `poster.${fileType}`,
@@ -315,7 +372,7 @@ const MyEvents = () => {
       }
 
       for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof Blob ? 'File/Blob' : value.toString()}`);
+        console.log(`${key}: ${value instanceof Blob ? `File/Blob (size: ${value.size})` : value.toString()}`);
       }
 
       const api = authApis(token);
@@ -335,6 +392,7 @@ const MyEvents = () => {
       setSelectedEvent(null);
       setStatistics(null);
       setPoster(null);
+      setShowImageOptions(false);
       setShowEditModal(false);
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -355,7 +413,6 @@ const MyEvents = () => {
     }
   };
 
-  // Dữ liệu cho FlatList trong modal
   const modalData = [
     {
       type: 'title',
@@ -439,17 +496,36 @@ const MyEvents = () => {
       type: 'upload',
       content: (
         <View style={styles.uploadContainer}>
-          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-            <Text style={styles.uploadButtonText}>
-              {poster ? 'Thay đổi ảnh poster' : 'Tải lên ảnh poster'}
-            </Text>
+          <TouchableOpacity onPress={() => setShowImageOptions(!showImageOptions)}>
+            {poster ? (
+              <Image
+                source={{ uri: poster }}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>Chọn ảnh poster</Text>
+              </View>
+            )}
           </TouchableOpacity>
           {poster && (
-            <Image
-              source={{ uri: poster }}
-              style={styles.previewImage}
-              resizeMode="contain"
+            <IconButton
+              icon="close"
+              size= {20}
+              onPress={removeImage}
+              style={styles.removeImageButton}
             />
+          )}
+          {showImageOptions && (
+            <View style={styles.imageOptionsContainer}>
+              <Button mode="outlined" onPress={pickImage} style={styles.imageOptionButton}>
+                Thư viện
+              </Button>
+              <Button mode="outlined" onPress={pickImageFromCamera} style={styles.imageOptionButton}>
+                Chụp ảnh
+              </Button>
+            </View>
           )}
         </View>
       ),
@@ -782,7 +858,11 @@ const MyEvents = () => {
           </Button>
           <Button
             mode="outlined"
-            onPress={() => setShowEditModal(false)}
+            onPress={() => {
+              setShowEditModal(false);
+              setPoster(null);
+              setShowImageOptions(false);
+            }}
             style={styles.closeButton}
             labelStyle={styles.buttonLabel}
             contentStyle={styles.buttonContent}
@@ -923,21 +1003,39 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     alignItems: 'center',
   },
-  uploadButton: {
-    padding: 12,
-    backgroundColor: '#6200ea',
+  placeholderImage: {
+    width: 200,
+    height: 150,
     borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  uploadButtonText: {
-    color: '#fff',
+  placeholderText: {
+    color: '#666',
     fontSize: 14,
     fontWeight: '600',
   },
   previewImage: {
     width: 200,
     height: 150,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#6200ea',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#fff',
+  },
+  imageOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 10,
+  },
+  imageOptionButton: {
+    marginHorizontal: 5,
     borderRadius: 8,
   },
   categoryContainer: {
