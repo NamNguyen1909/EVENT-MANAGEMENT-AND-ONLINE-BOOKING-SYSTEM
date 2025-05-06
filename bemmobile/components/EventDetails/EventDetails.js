@@ -250,7 +250,7 @@ const EventDetails = ({ route }) => {
       setLoading(true);
       setError(null);
       const token = await AsyncStorage.getItem("token");
-      console.log("Token:", token);
+      console.log("Token in eventdetail:", token);
       //Kết hợp kiểm tra token từ asyncStorage và user context
       if (!user || !token) {
         setError("Vui lòng đăng nhập để xem chi tiết sự kiện.");

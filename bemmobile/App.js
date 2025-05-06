@@ -20,6 +20,7 @@ import ManageEvents from './components/Admin/ManageEvents'; // Giả định mà
 import { MyUserContext, MyDispatchContext } from './configs/MyContexts';
 import MyUserReducer from './reducers/MyUserReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TicketDetails from './components/User/TicketDetails';
 
 // Stack Navigator cho tab "Events" (danh sách sự kiện toàn hệ thống)
 const EventsStack = createNativeStackNavigator();
@@ -49,11 +50,16 @@ const EventsStackNavigator = () => {
 const MyTicketsStack = createNativeStackNavigator();
 const MyTicketsStackNavigator = () => {
   return (
-    <MyTicketsStack.Navigator screenOptions={{ headerShown: false }}>
+    <MyTicketsStack.Navigator screenOptions={{ headerShown: true }}>
       <MyTicketsStack.Screen
         name="MyTicketsScreen"
         component={MyTickets}
         options={{ title: 'My Tickets' }}
+      />
+      <MyTicketsStack.Screen
+        name="MyTicketDetails"
+        component={TicketDetails}
+        options={{ title: 'Ticket detail' }}
       />
     </MyTicketsStack.Navigator>
   );
