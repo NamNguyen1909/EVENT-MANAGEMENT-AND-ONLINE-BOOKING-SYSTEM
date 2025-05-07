@@ -295,15 +295,21 @@ class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_reviews')
     rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(null=True, blank=True)
+    
+    # Thêm dòng này để cho phép phản hồi review khác
+    parent_review = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['event', 'user']),
+            models.Index(fields=['parent_review']),
         ]
 
     def __str__(self):
-        return f"Đánh giá {self.rating} - {self.event.title}"
+        return f"{self.user} - {self.rating} sao cho {self.event}"
+
 
 
 # Mã giảm giá
@@ -399,7 +405,8 @@ import math
 from datetime import date
 
 class EventTrendingLog(models.Model):
-    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='trending_log')
+    # EventTrendingLog dùng chung khóa chính với Event (tức là cùng một ID, kiểu như extension của bảng Event)
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='trending_log', primary_key=True)
     view_count = models.IntegerField(default=0)
     total_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     trending_score = models.DecimalField(max_digits=10, decimal_places=4, default=0)
