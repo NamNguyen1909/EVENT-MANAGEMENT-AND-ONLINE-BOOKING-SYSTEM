@@ -232,6 +232,8 @@ const Profile = () => {
 
   const handleNotificationsPress = () => {
     setIsNotificationModalVisible(true);
+    // Refresh notification counts when opening modal
+    fetchUserStats();
   };
 
   const handleChatPress = () => {
@@ -367,17 +369,21 @@ const Profile = () => {
       </ScrollView>
 
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isNotificationModalVisible}
-        onRequestClose={closeNotificationModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Notifications unreadNotifications={unreadNotifications} onClose={closeNotificationModal} />
-          </View>
-        </View>
-      </Modal>
+    animationType="slide"
+    transparent={true}
+    visible={isNotificationModalVisible}
+    onRequestClose={closeNotificationModal}
+  >
+    <SafeAreaView style={styles.modalContainer}>
+      <View style={styles.notificationModalContent}>
+        <Notifications 
+          unreadNotifications={unreadNotifications} 
+          onClose={closeNotificationModal} 
+          onUpdateUnreadCount={fetchUserStats} 
+        />
+      </View>
+    </SafeAreaView>
+  </Modal>
     </SafeAreaView>
   );
 };
@@ -492,16 +498,15 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
+  notificationModalContent: {
+    flex: 1,
     backgroundColor: 'white',
-    padding: 20,
     borderRadius: 10,
-    width: '80%',
-    maxHeight: '80%',
+    margin: 10,
+    marginTop: 40,
+    overflow: 'hidden',
   },
 });
 

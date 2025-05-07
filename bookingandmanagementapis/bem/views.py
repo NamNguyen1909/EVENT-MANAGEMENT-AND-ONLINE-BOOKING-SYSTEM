@@ -535,10 +535,20 @@ class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Creat
         return Response(serializer.data)
 
 
-class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
+class NotificationViewSet(viewsets.GenericViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     pagination_class = ItemPaginator
+
+    def get_object(self):
+        # Lấy pk từ URL và tìm đối tượng Notification
+        pk = self.kwargs.get('pk')
+        if pk is None:
+            raise ValueError("No 'pk' parameter provided in URL")
+        try:
+            return Notification.objects.get(pk=pk)
+        except Notification.DoesNotExist:
+            raise Notification.DoesNotExist
 
     def get_permissions(self):
         if self.action == 'my_notifications':
@@ -553,8 +563,8 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
             permission_classes = [IsEventOwnerOrAdmin]
         return [permission() for permission in permission_classes]
 
-    def get_queryset(self):
-        return Notification.objects.none()
+    # def get_queryset(self):
+    #     return Notification.objects.none()
 
     @action(detail=False, methods=['get'], url_path='my-notifications')
     def my_notifications(self, request):
@@ -568,7 +578,7 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
     @action(detail=False, methods=['get'], url_path='event-notifications')
     def event_notifications(self, request):
         event_id = request.query_params.get('event_id')
-        notifications = Notification.objects.filter(event_id=event_id)
+        notifications = Notification.objects.filter(event_id=event_id).order_by('id')
         page = self.paginate_queryset(notifications)
         serializer = self.get_serializer(page or notifications, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
