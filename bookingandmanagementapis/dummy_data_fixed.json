@@ -1,550 +1,644 @@
 {
-  "users": [
-    {
-      "username": "admin",
-      "email": "admin@gmail.com",
-      "password": "password123",
-      "role": "admin",
-      "phone": null,
-      "is_active": true,
-      "is_staff": true,
-      "is_superuser": true
-    },
-    {
-      "username": "nguyenvan_a",
-      "email": "nguyenvan_a@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "0901234567",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "lethi_b",
-      "email": "lethi_b@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "0912345678",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "phamthanh_c",
-      "email": "phamthanh_c@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "0923456789",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "tranthien_d",
-      "email": "tranthien_d@example.com",
-      "password": "password123",
-      "role": "organizer",
-      "phone": "0934567890",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "vuongminh_e",
-      "email": "vuongminh_e@example.com",
-      "password": "password123",
-      "role": "organizer",
-      "phone": "0945678901",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    },
-    {
-      "username": "admin_user",
-      "email": "admin@example.com",
-      "password": "password123",
-      "role": "admin",
-      "phone": "0956789012",
-      "is_active": true,
-      "is_staff": true,
-      "is_superuser": true
-    },
-    {
-      "username": "duylo",
-      "email": "lo@example.com",
-      "password": "password123",
-      "role": "attendee",
-      "phone": "0192837465",
-      "is_active": true,
-      "is_staff": false,
-      "is_superuser": false
-    }
-  ],
-  "tags": [
-    {"name": "art"},
-    {"name": "career"},
-    {"name": "charity"},
-    {"name": "drink"},
-    {"name": "education"},
-    {"name": "environment"},
-    {"name": "family"},
-    {"name": "fashion"},
-    {"name": "film"},
-    {"name": "fitness"},
-    {"name": "food"},
-    {"name": "free"},
-    {"name": "health"},
-    {"name": "indoor"},
-    {"name": "kids"},
-    {"name": "literature"},
-    {"name": "music"},
-    {"name": "music_band"},
-    {"name": "networking"},
-    {"name": "outdoor"},
-    {"name": "paid"},
-    {"name": "political"},
-    {"name": "religious"},
-    {"name": "science"},
-    {"name": "sports_fan"},
-    {"name": "startup"},
-    {"name": "tech"}
-  ],
-  "events": [
-    {
-      "title": "Hanoi Music Festival 2025",
-      "description": "The biggest music festival of the year with participation from top Vietnamese and international artists.",
-      "category": "music",
-      "start_time": "2025-05-01T18:00:00",
-      "end_time": "2025-05-01T23:00:00",
-      "location": "Thong Nhat Park, Hanoi",
-      "latitude": 21.012245,
-      "longitude": 105.841984,
-      "organizer": "tranthien_d",
-      "ticket_price": 350000.0,
-      "total_tickets": 2000,
-      "is_active": false,
-      "tags": ["music"]
-    },
-    {
-      "title": "Vietnam Tech Summit 2025",
-      "description": "Vietnam's largest technology conference with leading speakers in the tech industry.",
-      "category": "conference",
-      "start_time": "2025-06-15T08:00:00",
-      "end_time": "2025-06-16T17:00:00",
-      "location": "National Convention Center, Hanoi",
-      "latitude": 21.004856,
-      "longitude": 105.804417,
-      "organizer": "tranthien_d",
-      "ticket_price": 500000.0,
-      "total_tickets": 1000,
-      "is_active": true,
-      "tags": ["tech", "education"]
-    },
-    {
-      "title": "Ho Chi Minh City Marathon 2025",
-      "description": "The annual marathon event in Ho Chi Minh City with thousands of participating athletes.",
-      "category": "sports",
-      "start_time": "2025-07-20T05:00:00",
-      "end_time": "2025-07-20T12:00:00",
-      "location": "Nguyen Hue Walking Street, Ho Chi Minh City",
-      "latitude": 10.772558,
-      "longitude": 106.702897,
-      "organizer": "vuongminh_e",
-      "ticket_price": 200000.0,
-      "total_tickets": 5000,
-      "is_active": true,
-      "tags": ["sports_fan"]
-    },
-    {
-      "title": "UI/UX Design Workshop 2025",
-      "description": "An in-depth workshop on user interface and user experience design.",
-      "category": "workshop",
-      "start_time": "2025-08-10T09:00:00",
-      "end_time": "2025-08-10T17:00:00",
-      "location": "Dreamplex, District 1, Ho Chi Minh City",
-      "latitude": 10.769444,
-      "longitude": 106.693056,
-      "organizer": "vuongminh_e",
-      "ticket_price": 250000.0,
-      "total_tickets": 100,
-      "is_active": true,
-      "tags": ["tech", "education"]
-    },
-    {
-      "title": "Da Nang Food Festival 2025",
-      "description": "A culinary festival featuring specialties from across Vietnam and around the world.",
-      "category": "festival",
-      "start_time": "2025-09-05T10:00:00",
-      "end_time": "2025-09-07T22:00:00",
-      "location": "My Khe Beach, Da Nang",
-      "latitude": 16.056588,
-      "longitude": 108.243544,
-      "organizer": "tranthien_d",
-      "ticket_price": 150000.0,
-      "total_tickets": 3000,
-      "is_active": true,
-      "tags": ["food"]
-    }
-  ],
-  "discount_codes": [
-    {
-      "code": "WELCOME10",
-      "discount_percentage": 10.0,
-      "user_group": "new",
-      "is_active": true,
-      "valid_from": "2025-01-01T00:00:00",
-      "valid_to": "2025-12-31T23:59:59",
-      "max_uses": 500,
-      "used_count": 156
-    },
-    {
-      "code": "VIP20",
-      "discount_percentage": 20.0,
-      "user_group": "vip",
-      "is_active": true,
-      "valid_from": "2025-01-01T00:00:00",
-      "valid_to": "2025-12-31T23:59:59",
-      "max_uses": 200,
-      "used_count": 50
-    },
-    {
-      "code": "SUPERVIP30",
-      "discount_percentage": 30.0,
-      "user_group": "super_vip",
-      "is_active": true,
-      "valid_from": "2025-01-01T00:00:00",
-      "valid_to": "2025-12-31T23:59:59",
-      "max_uses": 100,
-      "used_count": 20
-    },
-    {
-      "code": "TETHOLIDAY25",
-      "discount_percentage": 25.0,
-      "user_group": "regular",
-      "is_active": false,
-      "valid_from": "2025-01-20T00:00:00",
-      "valid_to": "2025-02-10T23:59:59",
-      "max_uses": 1000,
-      "used_count": 300
-    }
-  ],
-  "tickets": [
-    {
-      "event": "Hanoi Music Festival 2025",
-      "user": "nguyenvan_a",
-      "is_paid": true,
-      "is_checked_in": true
-    },
-    {
-      "event": "Hanoi Music Festival 2025",
-      "user": "lethi_b",
-      "is_paid": true,
-      "is_checked_in": true
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "user": "nguyenvan_a",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "user": "phamthanh_c",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "user": "lethi_b",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "user": "nguyenvan_a",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "user": "phamthanh_c",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "Da Nang Food Festival 2025",
-      "user": "lethi_b",
-      "is_paid": true,
-      "is_checked_in": false
-    },
-    {
-      "event": "Da Nang Food Festival 2025",
-      "user": "phamthanh_c",
-      "is_paid": true,
-      "is_checked_in": false
-    }
-  ],
-  "payments": [
-    {
-      "user": "nguyenvan_a",
-      "amount": 225000.0,
-      "payment_method": "momo",
-      "status": true,
-      "transaction_id": "momo_12345678",
-      "paid_at": "2025-01-15T14:30:00",
-      "discount_code": "WELCOME10",
-      "tickets": [
-        ["Hanoi Music Festival 2025", "nguyenvan_a"]
-      ]
-    },
-    {
-      "user": "nguyenvan_a",
-      "amount": 0.0,
-      "payment_method": "vnpay",
-      "status": true,
-      "transaction_id": "vnpay_23456789",
-      "paid_at": "2025-02-10T09:45:00",
-      "discount_code": "WELCOME10",
-      "tickets": [
-        ["Vietnam Tech Summit 2025", "nguyenvan_a"]
-      ]
-    },
-    {
-      "user": "lethi_b",
-      "amount": 135000.0,
-      "payment_method": "momo",
-      "status": true,
-      "transaction_id": "momo_34567890",
-      "paid_at": "2025-01-20T11:20:00",
-      "discount_code": "WELCOME10",
-      "tickets": [
-        ["Hanoi Music Festival 2025", "lethi_b"]
-      ]
-    },
-    {
-      "user": "lethi_b",
-      "amount": 0.0,
-      "payment_method": "vnpay",
-      "status": true,
-      "transaction_id": "vnpay_45678901",
-      "paid_at": "2025-03-05T16:15:00",
-      "discount_code": "TETHOLIDAY25",
-      "tickets": [
-        ["Ho Chi Minh City Marathon 2025", "lethi_b"]
-      ]
-    },
-    {
-      "user": "phamthanh_c",
-      "amount": 150000.0,
-      "payment_method": "vnpay",
-      "status": true,
-      "transaction_id": "vnpay_56789012",
-      "paid_at": "2025-02-05T10:00:00",
-      "discount_code": null,
-      "tickets": [
-        ["Vietnam Tech Summit 2025", "phamthanh_c"]
-      ]
-    },
-    {
-      "user": "phamthanh_c",
-      "amount": 0.0,
-      "payment_method": "momo",
-      "status": true,
-      "transaction_id": "momo_67890123",
-      "paid_at": "2025-03-10T14:30:00",
-      "discount_code": null,
-      "tickets": [
-        ["UI/UX Design Workshop 2025", "phamthanh_c"]
-      ]
-    }
-  ],
-  "reviews": [
-    {
-      "event": "Hanoi Music Festival 2025",
-      "user": "nguyenvan_a",
-      "rating": 5,
-      "comment": "Amazing music event! I had an unforgettable evening."
-    },
-    {
-      "event": "Hanoi Music Festival 2025",
-      "user": "lethi_b",
-      "rating": 4,
-      "comment": "Great music, vibrant atmosphere, but a bit crowded."
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "user": "nguyenvan_a",
-      "rating": 5,
-      "comment": "Professionally organized conference, outstanding speakers."
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "user": "phamthanh_c",
-      "rating": 3,
-      "comment": "Useful content but break times were too short."
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "user": "lethi_b",
-      "rating": 5,
-      "comment": "Very professionally organized, beautiful and safe running route."
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "user": "nguyenvan_a",
-      "rating": 4,
-      "comment": "Hot weather but sufficient water stations. Good job!"
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "user": "phamthanh_c",
-      "rating": 5,
-      "comment": "Very practical and useful workshop, learned many new skills."
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "user": "nguyenvan_a",
-      "rating": 4,
-      "comment": "Great content but the duration was a bit short for the amount of knowledge."
-    }
-  ],
-  "notifications": [
-    {
-      "event": "Hanoi Music Festival 2025",
-      "title": "Reminder: Hanoi Music Festival 2025",
-      "message": "The event will start tomorrow at 18:00. Don't forget to bring your ticket!",
-      "notification_type": "reminder",
-      "is_read": false
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "title": "Update: Vietnam Tech Summit 2025",
-      "message": "We have updated the conference schedule. Please check your email!",
-      "notification_type": "update",
-      "is_read": false
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "title": "Reminder: UI/UX Design Workshop 2025",
-      "message": "Your ticket for the UI/UX Design Workshop 2025 has not been paid yet. Please complete the payment before 01/08/2025.",
-      "notification_type": "reminder",
-      "is_read": false
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "title": "Update: Ho Chi Minh City Marathon 2025",
-      "message": "The registration and bib pick-up location has changed. Please check your email for details.",
-      "notification_type": "update",
-      "is_read": false
-    },
-    {
-      "event": "Da Nang Food Festival 2025",
-      "title": "Reminder: Da Nang Food Festival 2025",
-      "message": "Your ticket for the Da Nang Food Festival 2025 has not been paid yet. Please complete the payment before 01/09/2025.",
-      "notification_type": "reminder",
-      "is_read": false
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "title": "Reminder: Vietnam Tech Summit 2025",
-      "message": "The event will take place next week. Don't forget to prepare necessary devices!",
-      "notification_type": "reminder",
-      "is_read": false
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "title": "Update: UI/UX Design Workshop 2025",
-      "message": "We have added a new section on Figma to the workshop program.",
-      "notification_type": "update",
-      "is_read": false
-    }
-  ],
-  "chat_messages": [
-    {
-      "event": "Hanoi Music Festival 2025",
-      "sender": "tranthien_d",
-      "receiver": "nguyenvan_a",
-      "message": "Hello! Thank you for purchasing a ticket to the Hanoi Music Festival 2025. Do you have any questions about the event?",
-      "is_from_organizer": true
-    },
-    {
-      "event": "Hanoi Music Festival 2025",
-      "sender": "nguyenvan_a",
-      "receiver": "tranthien_d",
-      "message": "Hello! Can I know the specific schedule of the performing artists?",
-      "is_from_organizer": false
-    },
-    {
-      "event": "Hanoi Music Festival 2025",
-      "sender": "tranthien_d",
-      "receiver": "nguyenvan_a",
-      "message": "Yes, of course! We will send the detailed schedule to your email next week. You can also check preliminary information on the event's official website.",
-      "is_from_organizer": true
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "sender": "tranthien_d",
-      "receiver": "phamthanh_c",
-      "message": "Hello! Thank you for registering for the Vietnam Tech Summit 2025. We look forward to seeing you at the event!",
-      "is_from_organizer": true
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "sender": "phamthanh_c",
-      "receiver": "tranthien_d",
-      "message": "Thank you! Can I bring a laptop for hands-on practice during the workshop sessions?",
-      "is_from_organizer": false
-    },
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "sender": "tranthien_d",
-      "receiver": "phamthanh_c",
-      "message": "Yes, you can bring a laptop. We have power outlets and free Wi-Fi available for all attendees. Please charge your battery fully and pre-install any necessary software.",
-      "is_from_organizer": true
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "sender": "vuongminh_e",
-      "receiver": "lethi_b",
-      "message": "Hello! Thank you for registering for the Ho Chi Minh City Marathon 2025. Are you ready?",
-      "is_from_organizer": true
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "sender": "lethi_b",
-      "receiver": "vuongminh_e",
-      "message": "Hello! I'm training every day. Are there any specific regulations regarding clothing and running shoes?",
-      "is_from_organizer": false
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "sender": "vuongminh_e",
-      "receiver": "lethi_b",
-      "message": "You can wear comfortable sportswear. We recommend specialized running shoes for safety. Don't forget to wear your bib number on the front for easy identification!",
-      "is_from_organizer": true
-    }
-  ],
-  "event_trending_logs": [
-    {
-      "event": "Vietnam Tech Summit 2025",
-      "view_count": 0
-    },
-    {
-      "event": "Hanoi Music Festival 2025",
-      "view_count": 0
-    },
-    {
-      "event": "UI/UX Design Workshop 2025",
-      "view_count": 0
-    },
-    {
-      "event": "Ho Chi Minh City Marathon 2025",
-      "view_count": 0
-    },
-    {
-      "event": "Da Nang Food Festival 2025",
-      "view_count": 0
-    }
-  ]
+    "users": [
+        {
+            "username": "admin",
+            "email": "admin@gmail.com",
+            "password": "password123",
+            "role": "admin",
+            "phone": null,
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true
+        },
+        {
+            "username": "nguyenvan_a",
+            "email": "nguyenvan_a@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0901234567",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "lethi_b",
+            "email": "lethi_b@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0912345678",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "phamthanh_c",
+            "email": "phamthanh_c@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0923456789",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "tranthien_d",
+            "email": "tranthien_d@example.com",
+            "password": "password123",
+            "role": "organizer",
+            "phone": "0934567890",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "vuongminh_e",
+            "email": "vuongminh_e@example.com",
+            "password": "password123",
+            "role": "organizer",
+            "phone": "0945678901",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "admin_user",
+            "email": "admin@example.com",
+            "password": "password123",
+            "role": "admin",
+            "phone": "0956789012",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true
+        },
+        {
+            "username": "duylo",
+            "email": "lo@example.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0192837465",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        },
+        {
+            "username": "nam",
+            "email": "nam@gmail.com",
+            "password": "password123",
+            "role": "attendee",
+            "phone": "0332620408",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false
+        }
+    ],
+    "tags": [
+        {
+            "name": "art"
+        },
+        {
+            "name": "career"
+        },
+        {
+            "name": "charity"
+        },
+        {
+            "name": "drink"
+        },
+        {
+            "name": "education"
+        },
+        {
+            "name": "environment"
+        },
+        {
+            "name": "family"
+        },
+        {
+            "name": "fashion"
+        },
+        {
+            "name": "film"
+        },
+        {
+            "name": "fitness"
+        },
+        {
+            "name": "food"
+        },
+        {
+            "name": "free"
+        },
+        {
+            "name": "health"
+        },
+        {
+            "name": "indoor"
+        },
+        {
+            "name": "kids"
+        },
+        {
+            "name": "literature"
+        },
+        {
+            "name": "music"
+        },
+        {
+            "name": "music_band"
+        },
+        {
+            "name": "networking"
+        },
+        {
+            "name": "outdoor"
+        },
+        {
+            "name": "paid"
+        },
+        {
+            "name": "political"
+        },
+        {
+            "name": "religious"
+        },
+        {
+            "name": "science"
+        },
+        {
+            "name": "sports_fan"
+        },
+        {
+            "name": "startup"
+        },
+        {
+            "name": "tech"
+        }
+    ],
+    "events": [
+        {
+            "title": "Hanoi Music Festival 2025",
+            "description": "The biggest music festival of the year with participation from top Vietnamese and international artists.",
+            "category": "music",
+            "start_time": "2025-05-01T18:00:00",
+            "end_time": "2025-05-01T23:00:00",
+            "location": "Thong Nhat Park, Hanoi",
+            "latitude": 21.012245,
+            "longitude": 105.841984,
+            "organizer": "tranthien_d",
+            "ticket_price": 350000.0,
+            "total_tickets": 2000,
+            "is_active": false,
+            "tags": [
+                "music"
+            ]
+        },
+        {
+            "title": "Vietnam Tech Summit 2025",
+            "description": "Vietnam's largest technology conference with leading speakers in the tech industry.",
+            "category": "conference",
+            "start_time": "2025-06-15T08:00:00",
+            "end_time": "2025-06-16T17:00:00",
+            "location": "National Convention Center, Hanoi",
+            "latitude": 21.004856,
+            "longitude": 105.804417,
+            "organizer": "tranthien_d",
+            "ticket_price": 500000.0,
+            "total_tickets": 1000,
+            "is_active": true,
+            "tags": [
+                "tech",
+                "education"
+            ]
+        },
+        {
+            "title": "Ho Chi Minh City Marathon 2025",
+            "description": "The annual marathon event in Ho Chi Minh City with thousands of participating athletes.",
+            "category": "sports",
+            "start_time": "2025-07-20T05:00:00",
+            "end_time": "2025-07-20T12:00:00",
+            "location": "Nguyen Hue Walking Street, Ho Chi Minh City",
+            "latitude": 10.772558,
+            "longitude": 106.702897,
+            "organizer": "vuongminh_e",
+            "ticket_price": 200000.0,
+            "total_tickets": 5000,
+            "is_active": true,
+            "tags": [
+                "sports_fan"
+            ]
+        },
+        {
+            "title": "UI/UX Design Workshop 2025",
+            "description": "An in-depth workshop on user interface and user experience design.",
+            "category": "workshop",
+            "start_time": "2025-08-10T09:00:00",
+            "end_time": "2025-08-10T17:00:00",
+            "location": "Dreamplex, District 1, Ho Chi Minh City",
+            "latitude": 10.769444,
+            "longitude": 106.693056,
+            "organizer": "vuongminh_e",
+            "ticket_price": 250000.0,
+            "total_tickets": 100,
+            "is_active": true,
+            "tags": [
+                "tech",
+                "education"
+            ]
+        },
+        {
+            "title": "Da Nang Food Festival 2025",
+            "description": "A culinary festival featuring specialties from across Vietnam and around the world.",
+            "category": "festival",
+            "start_time": "2025-09-05T10:00:00",
+            "end_time": "2025-09-07T22:00:00",
+            "location": "My Khe Beach, Da Nang",
+            "latitude": 16.056588,
+            "longitude": 108.243544,
+            "organizer": "tranthien_d",
+            "ticket_price": 150000.0,
+            "total_tickets": 3000,
+            "is_active": true,
+            "tags": [
+                "food"
+            ]
+        }
+    ],
+    "discount_codes": [
+        {
+            "code": "WELCOME10",
+            "discount_percentage": 10.0,
+            "user_group": "new",
+            "is_active": true,
+            "valid_from": "2025-01-01T00:00:00",
+            "valid_to": "2025-12-31T23:59:59",
+            "max_uses": 500,
+            "used_count": 162
+        },
+        {
+            "code": "VIP20",
+            "discount_percentage": 20.0,
+            "user_group": "vip",
+            "is_active": true,
+            "valid_from": "2025-01-01T00:00:00",
+            "valid_to": "2025-12-31T23:59:59",
+            "max_uses": 200,
+            "used_count": 50
+        },
+        {
+            "code": "SUPERVIP30",
+            "discount_percentage": 30.0,
+            "user_group": "super_vip",
+            "is_active": true,
+            "valid_from": "2025-01-01T00:00:00",
+            "valid_to": "2025-12-31T23:59:59",
+            "max_uses": 100,
+            "used_count": 20
+        },
+        {
+            "code": "TETHOLIDAY25",
+            "discount_percentage": 25.0,
+            "user_group": "regular",
+            "is_active": false,
+            "valid_from": "2025-01-20T00:00:00",
+            "valid_to": "2025-02-10T23:59:59",
+            "max_uses": 1000,
+            "used_count": 300
+        }
+    ],
+    "tickets": [
+        {
+            "event": "Hanoi Music Festival 2025",
+            "user": "nguyenvan_a",
+            "is_paid": true,
+            "is_checked_in": true
+        },
+        {
+            "event": "Hanoi Music Festival 2025",
+            "user": "lethi_b",
+            "is_paid": true,
+            "is_checked_in": true
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "user": "nguyenvan_a",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "user": "phamthanh_c",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "user": "lethi_b",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "user": "nguyenvan_a",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "user": "phamthanh_c",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "Da Nang Food Festival 2025",
+            "user": "lethi_b",
+            "is_paid": true,
+            "is_checked_in": false
+        },
+        {
+            "event": "Da Nang Food Festival 2025",
+            "user": "phamthanh_c",
+            "is_paid": true,
+            "is_checked_in": false
+        }
+    ],
+    "payments": [
+        {
+            "user": "nguyenvan_a",
+            "amount": 0.0,
+            "payment_method": "momo",
+            "status": true,
+            "transaction_id": "momo_12345678",
+            "paid_at": "2025-01-15T14:30:00",
+            "discount_code": "WELCOME10",
+            "tickets": [
+                "Hanoi Music Festival 2025",
+                "nguyenvan_a",
+                true,
+                true
+            ]
+        },
+        {
+            "user": "nguyenvan_a",
+            "amount": 0.0,
+            "payment_method": "vnpay",
+            "status": true,
+            "transaction_id": "vnpay_23456789",
+            "paid_at": "2025-02-10T09:45:00",
+            "discount_code": "WELCOME10",
+            "tickets": [
+                "Vietnam Tech Summit 2025",
+                "nguyenvan_a",
+                true,
+                false
+            ]
+        },
+        {
+            "user": "lethi_b",
+            "amount": 0.0,
+            "payment_method": "momo",
+            "status": true,
+            "transaction_id": "momo_34567890",
+            "paid_at": "2025-01-20T11:20:00",
+            "discount_code": "WELCOME10",
+            "tickets": [
+                "Hanoi Music Festival 2025",
+                "lethi_b",
+                true,
+                true
+            ]
+        },
+        {
+            "user": "lethi_b",
+            "amount": 0.0,
+            "payment_method": "vnpay",
+            "status": true,
+            "transaction_id": "vnpay_45678901",
+            "paid_at": "2025-03-05T16:15:00",
+            "discount_code": "TETHOLIDAY25",
+            "tickets": [
+                "Ho Chi Minh City Marathon 2025",
+                "lethi_b",
+                true,
+                false
+            ]
+        },
+        {
+            "user": "phamthanh_c",
+            "amount": 0.0,
+            "payment_method": "vnpay",
+            "status": true,
+            "transaction_id": "vnpay_56789012",
+            "paid_at": "2025-02-05T10:00:00",
+            "discount_code": null,
+            "tickets": [
+                "Vietnam Tech Summit 2025",
+                "phamthanh_c",
+                true,
+                false
+            ]
+        },
+        {
+            "user": "phamthanh_c",
+            "amount": 0.0,
+            "payment_method": "momo",
+            "status": true,
+            "transaction_id": "momo_67890123",
+            "paid_at": "2025-03-10T14:30:00",
+            "discount_code": null,
+            "tickets": [
+                "UI/UX Design Workshop 2025",
+                "phamthanh_c",
+                true,
+                false
+            ]
+        }
+    ],
+    "reviews": [
+        {
+            "event": "Hanoi Music Festival 2025",
+            "user": "nguyenvan_a",
+            "rating": 5,
+            "comment": "Amazing music event! I had an unforgettable evening."
+        },
+        {
+            "event": "Hanoi Music Festival 2025",
+            "user": "lethi_b",
+            "rating": 4,
+            "comment": "Great music, vibrant atmosphere, but a bit crowded."
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "user": "nguyenvan_a",
+            "rating": 5,
+            "comment": "Professionally organized conference, outstanding speakers."
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "user": "phamthanh_c",
+            "rating": 3,
+            "comment": "Useful content but break times were too short."
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "user": "lethi_b",
+            "rating": 5,
+            "comment": "Very professionally organized, beautiful and safe running route."
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "user": "nguyenvan_a",
+            "rating": 4,
+            "comment": "Hot weather but sufficient water stations. Good job!"
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "user": "phamthanh_c",
+            "rating": 5,
+            "comment": "Very practical and useful workshop, learned many new skills."
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "user": "nguyenvan_a",
+            "rating": 4,
+            "comment": "Great content but the duration was a bit short for the amount of knowledge."
+        }
+    ],
+    "notifications": [
+        {
+            "event": "Hanoi Music Festival 2025",
+            "title": "Reminder: Hanoi Music Festival 2025",
+            "message": "The event will start tomorrow at 18:00. Don't forget to bring your ticket!",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "title": "Update: Vietnam Tech Summit 2025",
+            "message": "We have updated the conference schedule. Please check your email!",
+            "notification_type": "update",
+            "is_read": false
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "title": "Reminder: UI/UX Design Workshop 2025",
+            "message": "Your ticket for the UI/UX Design Workshop 2025 has not been paid yet. Please complete the payment before 01/08/2025.",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "title": "Update: Ho Chi Minh City Marathon 2025",
+            "message": "The registration and bib pick-up location has changed. Please check your email for details.",
+            "notification_type": "update",
+            "is_read": false
+        },
+        {
+            "event": "Da Nang Food Festival 2025",
+            "title": "Reminder: Da Nang Food Festival 2025",
+            "message": "Your ticket for the Da Nang Food Festival 2025 has not been paid yet. Please complete the payment before 01/09/2025.",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "title": "Reminder: Vietnam Tech Summit 2025",
+            "message": "The event will take place next week. Don't forget to prepare necessary devices!",
+            "notification_type": "reminder",
+            "is_read": false
+        },
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "title": "Update: UI/UX Design Workshop 2025",
+            "message": "We have added a new section on Figma to the workshop program.",
+            "notification_type": "update",
+            "is_read": false
+        }
+    ],
+    "chat_messages": [
+        {
+            "event": "Hanoi Music Festival 2025",
+            "sender": "tranthien_d",
+            "receiver": "nguyenvan_a",
+            "message": "Hello! Thank you for purchasing a ticket to the Hanoi Music Festival 2025. Do you have any questions about the event?",
+            "is_from_organizer": true
+        },
+        {
+            "event": "Hanoi Music Festival 2025",
+            "sender": "nguyenvan_a",
+            "receiver": "tranthien_d",
+            "message": "Hello! Can I know the specific schedule of the performing artists?",
+            "is_from_organizer": false
+        },
+        {
+            "event": "Hanoi Music Festival 2025",
+            "sender": "tranthien_d",
+            "receiver": "nguyenvan_a",
+            "message": "Yes, of course! We will send the detailed schedule to your email next week. You can also check preliminary information on the event's official website.",
+            "is_from_organizer": true
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "sender": "tranthien_d",
+            "receiver": "phamthanh_c",
+            "message": "Hello! Thank you for registering for the Vietnam Tech Summit 2025. We look forward to seeing you at the event!",
+            "is_from_organizer": true
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "sender": "phamthanh_c",
+            "receiver": "tranthien_d",
+            "message": "Thank you! Can I bring a laptop for hands-on practice during the workshop sessions?",
+            "is_from_organizer": false
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "sender": "tranthien_d",
+            "receiver": "phamthanh_c",
+            "message": "Yes, you can bring a laptop. We have power outlets and free Wi-Fi available for all attendees. Please charge your battery fully and pre-install any necessary software.",
+            "is_from_organizer": true
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "sender": "vuongminh_e",
+            "receiver": "lethi_b",
+            "message": "Hello! Thank you for registering for the Ho Chi Minh City Marathon 2025. Are you ready?",
+            "is_from_organizer": true
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "sender": "lethi_b",
+            "receiver": "vuongminh_e",
+            "message": "Hello! I'm training every day. Are there any specific regulations regarding clothing and running shoes?",
+            "is_from_organizer": false
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "sender": "vuongminh_e",
+            "receiver": "lethi_b",
+            "message": "You can wear comfortable sportswear. We recommend specialized running shoes for safety. Don't forget to wear your bib number on the front for easy identification!",
+            "is_from_organizer": true
+        }
+    ],
+    "event_trending_logs": [
+        {
+            "event": "UI/UX Design Workshop 2025",
+            "view_count": 0
+        },
+        {
+            "event": "Vietnam Tech Summit 2025",
+            "view_count": 0
+        },
+        {
+            "event": "Hanoi Music Festival 2025",
+            "view_count": 0
+        },
+        {
+            "event": "Da Nang Food Festival 2025",
+            "view_count": 0
+        },
+        {
+            "event": "Ho Chi Minh City Marathon 2025",
+            "view_count": 0
+        }
+    ]
 }
