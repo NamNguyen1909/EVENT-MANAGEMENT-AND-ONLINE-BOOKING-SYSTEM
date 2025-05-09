@@ -45,7 +45,7 @@ def load_dummy_data():
     print("Bắt đầu nhập dữ liệu...")
     try:
         # Đọc file JSON
-        with open('dummy_data.json', 'r', encoding='utf-8') as f:
+        with open('dummy_data_fixed.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
         print("Không tìm thấy file dummy_data.json")
@@ -321,7 +321,8 @@ def load_dummy_data():
             try:
                 notification.full_clean()
                 notification.save()
-                notifications_map[notif_data['id']] = notification
+                # Thay đổi: không dùng notif_data['id'] làm key vì không có trường id trong dữ liệu
+                notifications_map[notification.id] = notification
                 # Create UserNotification for ticket owners
                 if event:
                     ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()

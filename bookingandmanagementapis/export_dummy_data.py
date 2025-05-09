@@ -12,7 +12,7 @@ django.setup()
 # Import các model từ app bem
 from bem.models import User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification, ChatMessage, EventTrendingLog, UserNotification
 
-def export_dummy_data(output_file='dummy_data.json'):
+def export_dummy_data(output_file='dummy_data_fixed.json'):
     """
     Xuất dữ liệu từ cơ sở dữ liệu MySQL sang file dummy_data.json
     """
