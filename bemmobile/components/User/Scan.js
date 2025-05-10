@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Camera } from 'expo-camera';
+import Camera from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../../configs/Apis';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -9,7 +10,15 @@ import { useFocusEffect } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 const qrSize = width * 0.7;
 
+// A: Define these constants at the top of the file
+const CAMERA_TYPE_BACK = 1;
+const CAMERA_TYPE_FRONT = 2;
+const FLASH_MODE_OFF = 0;
+const FLASH_MODE_TORCH = 3;
+const BARCODE_TYPE_QR = 'qr';
+
 const Scan = ({ navigation }) => {
+  // B: Replace state initialization to use constants
   const [scanned, setScanned] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [token, setToken] = useState(null);
@@ -17,17 +26,17 @@ const Scan = ({ navigation }) => {
   const [cameraType, setCameraType] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastScanTime, setLastScanTime] = useState(0);
-  const [flashMode, setFlashMode] = useState(Camera?.Constants?.FlashMode?.off);
+  const [flashMode, setFlashMode] = useState(FLASH_MODE_OFF);
 
-  // Kiểm tra và yêu cầu quyền camera
+  // B: Replace permission request to set cameraType and flashMode using constants
   const requestCameraPermission = useCallback(async () => {
     try {
-      const { status } = await Camera.requestCameraPermissionsAsync();
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
       
-      if (status === 'granted' && Camera?.Constants) {
-        setCameraType(Camera.Constants.Type.back);
-        setFlashMode(Camera.Constants.FlashMode.off);
+      if (status === 'granted') {
+        setCameraType(CAMERA_TYPE_BACK);
+        setFlashMode(FLASH_MODE_OFF);
       }
       
       if (status !== 'granted') {
@@ -54,7 +63,6 @@ const Scan = ({ navigation }) => {
     }
   }, []);
 
-  // Lấy token từ AsyncStorage
   const getToken = useCallback(async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
@@ -69,7 +77,6 @@ const Scan = ({ navigation }) => {
     }
   }, [navigation]);
 
-  // Reset trạng thái scan khi quay lại màn hình
   useFocusEffect(
     useCallback(() => {
       setScanned(false);
@@ -82,6 +89,7 @@ const Scan = ({ navigation }) => {
     requestCameraPermission();
   }, [getToken, requestCameraPermission]);
 
+  // B: Replace flash effect to use constants
   const handleBarCodeScanned = async ({ data }) => {
     const now = Date.now();
     if (scanned || !token || !cameraReady || isLoading || (now - lastScanTime < 2000)) {
@@ -93,7 +101,7 @@ const Scan = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      const response = await authApis.post(endpoints.checkInTicket, {
+      await authApis.post(endpoints.checkInTicket, {
         uuid: data,
       }, {
         headers: {
@@ -101,11 +109,8 @@ const Scan = ({ navigation }) => {
         }
       });
 
-      // Hiệu ứng flash khi scan thành công
-      if (Camera?.Constants) {
-        setFlashMode(Camera.Constants.FlashMode.torch);
-        setTimeout(() => setFlashMode(Camera.Constants.FlashMode.off), 300);
-      }
+      setFlashMode(FLASH_MODE_TORCH);
+      setTimeout(() => setFlashMode(FLASH_MODE_OFF), 300);
 
       Alert.alert('Thành công', 'Check-in thành công!', [
         {
@@ -121,7 +126,6 @@ const Scan = ({ navigation }) => {
       
       if (error.response) {
         if (error.response.status === 401) {
-          // Token hết hạn
           await AsyncStorage.removeItem('token');
           navigation.navigate('Login');
           return;
@@ -149,27 +153,25 @@ const Scan = ({ navigation }) => {
     setCameraReady(true);
   };
 
+  // B: Replace toggle functions to use constants
   const toggleCameraType = () => {
-    if (!Camera?.Constants) return;
-    
     setCameraType(
-      cameraType === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
+      cameraType === CAMERA_TYPE_BACK
+        ? CAMERA_TYPE_FRONT
+        : CAMERA_TYPE_BACK
     );
   };
 
   const toggleFlash = () => {
-    if (!Camera?.Constants) return;
-    
     setFlashMode(
-      flashMode === Camera.Constants.FlashMode.off
-        ? Camera.Constants.FlashMode.torch
-        : Camera.Constants.FlashMode.off
+      flashMode === FLASH_MODE_OFF
+        ? FLASH_MODE_TORCH
+        : FLASH_MODE_OFF
     );
   };
 
-  if (!Camera || !Camera.Constants) {
+  // B: Remove check for Camera.Constants, only check Camera
+  if (!Camera) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
@@ -205,6 +207,7 @@ const Scan = ({ navigation }) => {
     );
   }
 
+  // B: Replace barCodeScannerSettings to use constant
   return (
     <View style={styles.container}>
       <Camera
@@ -214,7 +217,7 @@ const Scan = ({ navigation }) => {
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         onCameraReady={handleCameraReady}
         barCodeScannerSettings={{
-          barCodeTypes: [Camera.Constants.BarCodeType.qr],
+          barCodeTypes: [BARCODE_TYPE_QR],
         }}
         ratio="16:9"
       >
@@ -254,7 +257,7 @@ const Scan = ({ navigation }) => {
           onPress={toggleFlash}
         >
           <Text style={styles.controlButtonText}>
-            {flashMode === Camera.Constants.FlashMode.torch ? 'Tắt đèn' : 'Bật đèn'}
+            {flashMode === FLASH_MODE_TORCH ? 'Tắt đèn' : 'Bật đèn'}
           </Text>
         </TouchableOpacity>
         
@@ -268,7 +271,6 @@ const Scan = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
