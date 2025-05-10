@@ -27,11 +27,10 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
         setNotifications([]);
         setPage(1);
         setHasMore(true);
-        // Gọi fetchNotifications ngay khi component mount nếu có user
         if (user) {
             fetchNotifications(1);
         }
-    }, [user]); // Chỉ chạy khi user thay đổi hoặc component mount
+    }, [user]);
 
     // Hàm lấy danh sách thông báo cá nhân
     const fetchNotifications = async (pageNum) => {
@@ -53,24 +52,17 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            // Debug: Log dữ liệu trả về từ API
             console.log('>>> Notifications.js - API Response:', response.data);
 
-            // Xử lý dữ liệu linh hoạt: hỗ trợ cả { results: [...] } và [...]
             const newNotifications = response.data.results || response.data || [];
-            
-            // Thêm pageNum vào log để theo dõi quá trình phân trang
             console.log(`>>> Notifications.js - Trang ${pageNum} - Nhận được ${newNotifications.length} thông báo`);
             
             if (pageNum === 1) {
-                // Nếu là trang đầu tiên, thiết lập lại notifications
                 setNotifications(newNotifications);
             } else {
-                // Nếu không, thêm vào danh sách hiện tại
                 setNotifications(prev => [...prev, ...newNotifications]);
             }
             
-            // Kiểm tra xem có trang tiếp theo không
             setHasMore(!!response.data.next);
             setErrorMsg(null);
         } catch (err) {
@@ -104,7 +96,6 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                 return;
             }
 
-            // Debug: Log notificationId và URL trước khi gọi API
             const url = endpoints.markNotificationAsRead(notificationId);
             console.log('>>> Notifications.js - Marking notification with ID:', notificationId);
             console.log('>>> Notifications.js - Request URL:', url);
@@ -115,17 +106,14 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            // Debug: Log response từ API
             console.log('>>> Notifications.js - Mark as read response:', response.data);
 
-            // Cập nhật trạng thái is_read trong state
             setNotifications((prev) =>
                 prev.map((n) =>
                     n.id === notificationId ? { ...n, is_read: true } : n
                 )
             );
             
-            // Gọi hàm cập nhật số lượng thông báo chưa đọc (nếu có)
             if (typeof onUpdateUnreadCount === 'function') {
                 console.log('>>> Notifications.js - Calling onUpdateUnreadCount');
                 onUpdateUnreadCount();
@@ -135,6 +123,58 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
         } catch (err) {
             setErrorMsg('Không thể đánh dấu thông báo là đã đọc.');
             console.error('>>> Notifications.js - Lỗi khi đánh dấu thông báo:', {
+                status: err.response?.status,
+                data: err.response?.data,
+                message: err.message
+            });
+            if (err.response?.status === 401) {
+                console.error('Lỗi: Xác thực thất bại. Vui lòng đăng nhập lại.');
+                AsyncStorage.removeItem('token');
+                dispatch({ type: 'logout' });
+            }
+        }
+    };
+
+    // Hàm đánh dấu tất cả thông báo hiển thị là đã đọc
+    const markAllAsRead = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                setErrorMsg('Không tìm thấy token xác thực!');
+                return;
+            }
+
+            console.log('>>> Notifications.js - Marking all displayed notifications as read');
+            const api = authApis(token);
+            const unreadNotifications = notifications.filter(n => !n.is_read);
+            
+            if (unreadNotifications.length === 0) {
+                console.log('>>> Notifications.js - No unread notifications to mark');
+                return;
+            }
+
+            const markPromises = unreadNotifications.map(n =>
+                api.post(endpoints.markNotificationAsRead(n.id), {}, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                })
+            );
+
+            const responses = await Promise.all(markPromises);
+            console.log('>>> Notifications.js - Mark all as read responses:', responses);
+
+            setNotifications((prev) =>
+                prev.map((n) => !n.is_read ? { ...n, is_read: true } : n)
+            );
+            
+            if (typeof onUpdateUnreadCount === 'function') {
+                console.log('>>> Notifications.js - Calling onUpdateUnreadCount');
+                onUpdateUnreadCount();
+            }
+            
+            setErrorMsg(null);
+        } catch (err) {
+            setErrorMsg('Không thể đánh dấu tất cả thông báo là đã đọc.');
+            console.error('>>> Notifications.js - Lỗi khi đánh dấu tất cả thông báo:', {
                 status: err.response?.status,
                 data: err.response?.data,
                 message: err.message
@@ -226,9 +266,22 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                     <Icon name="bell" size={24} color="#4f46e5" style={styles.headerIcon} />
                     <Text style={styles.headerText}>Thông Báo</Text>
                 </View>
-                <TouchableOpacity onPress={onClose}>
-                    <Icon name="close" size={24} color="#6b7280" />
-                </TouchableOpacity>
+                <View style={styles.headerActions}>
+                    {unreadNotifications > 0 && (
+                        <Button
+                            mode="text"
+                            onPress={markAllAsRead}
+                            style={styles.markAllButton}
+                            icon="check-circle-outline"
+                            contentStyle={styles.markAllButtonContent}
+                        >
+                            Đánh Dấu Tất Cả
+                        </Button>
+                    )}
+                    <TouchableOpacity onPress={onClose}>
+                        <Icon name="close" size={24} color="#6b7280" />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {unreadNotifications > 0 && (
@@ -310,6 +363,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     headerIcon: {
         marginRight: 8,
     },
@@ -317,6 +374,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#111827',
+    },
+    markAllButton: {
+        marginRight: 8,
+    },
+    markAllButtonContent: {
+        flexDirection: 'row-reverse',
     },
     unreadBanner: {
         flexDirection: 'row',

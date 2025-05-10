@@ -42,9 +42,9 @@ class ReviewSerializer(ModelSerializer):
 
 
 # Serializer cho Notification
-class NotificationSerializer(ModelSerializer):
-    event_title = serializers.ReadOnlyField(source='event.title')  # Lấy tiêu đề sự kiện nếu có
-    is_read = serializers.SerializerMethodField()  # Thêm field tùy chỉnh để lấy trạng thái đọc
+class NotificationSerializer(serializers.ModelSerializer):
+    event_title = serializers.ReadOnlyField(source='event.title', allow_null=True)
+    is_read = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -52,11 +52,15 @@ class NotificationSerializer(ModelSerializer):
         read_only_fields = ['id', 'event_title', 'created_at']
 
     def get_is_read(self, obj):
-        request = self.context.get('request', None)
-        user = request.user if request and request.user.is_authenticated else None
-        if user:
-            return obj.user_notifications.filter(user=user, is_read=True).exists()
-        return False
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        # Sử dụng filter().first() để tránh truy vấn không cần thiết
+        user_notification = UserNotification.objects.filter(
+            user=request.user,
+            notification=obj
+        ).first()
+        return user_notification.is_read if user_notification else False
 
 
 # Serializer cho ChatMessage
