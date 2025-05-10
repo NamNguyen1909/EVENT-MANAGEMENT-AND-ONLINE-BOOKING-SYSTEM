@@ -234,7 +234,7 @@ const user = React.useContext(MyUserContext);
       {user === null ? (
         // Khi chưa đăng nhập: show Home and Login tabs
         <UnauthTabNavigator />
-      ) : user.is_staff === true ? (
+      ) : user.is_staff === true && user.role==='attendee' ? (
         // Staff user: Scan and Profile tabs
         <StaffTabNavigator />
         

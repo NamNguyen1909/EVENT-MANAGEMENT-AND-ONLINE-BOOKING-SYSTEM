@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Alert, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Camera } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../../configs/Apis';
+import * as IntentLauncher from 'expo-intent-launcher';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const qrSize = width * 0.7;
@@ -13,92 +15,164 @@ const Scan = ({ navigation }) => {
   const [token, setToken] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraType, setCameraType] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastScanTime, setLastScanTime] = useState(0);
+  const [flashMode, setFlashMode] = useState(Camera?.Constants?.FlashMode?.off);
 
-  useEffect(() => {
-    const getToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        console.log('Token in Scan.js:', token);
-        setToken(token);
-      } catch (error) {
-        console.error('Error retrieving token:', error);
-      }
-    };
-
-    getToken();
-
-    (async () => {
+  // Kiểm tra và yêu cầu quyền camera
+  const requestCameraPermission = useCallback(async () => {
+    try {
       const { status } = await Camera.requestCameraPermissionsAsync();
-      console.log('Camera permission status:', status);
       setHasPermission(status === 'granted');
-      console.log('Camera permission granted:', status === 'granted');
-      if (Camera?.Constants?.Type?.back) {
+      
+      if (status === 'granted' && Camera?.Constants) {
         setCameraType(Camera.Constants.Type.back);
-        console.log('Camera type set to back');
+        setFlashMode(Camera.Constants.FlashMode.off);
       }
-    })();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Yêu cầu quyền truy cập',
+          'Ứng dụng cần quyền truy cập camera để quét mã QR',
+          [
+            {
+              text: 'Hủy',
+              style: 'cancel'
+            },
+            {
+              text: 'Mở cài đặt',
+              onPress: () => IntentLauncher.startActivityAsync(
+                IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS
+              )
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Lỗi khi yêu cầu quyền camera:', error);
+      setHasPermission(false);
+    }
   }, []);
 
-  const handleBarCodeScanned = async ({ data }) => {
-  console.log('Scanned data:', data);
-  console.log('scanned:', scanned, '| token:', token, '| cameraReady:', cameraReady);
-    if (!scanned && token && cameraReady) {
-      setScanned(true);
-
-      try {
-        const response = await authApis.post(endpoints.checkInTicket, {
-          uuid: data,
-        });
-
-        console.log('Check-in response:', response.data);
-
-        Alert.alert('Success', 'Check-in successful!', [
-          {
-            text: 'OK',
-            onPress: () => setScanned(false),
-          },
-        ]);
-      } catch (error) {
-        let errorMessage = 'Failed to process check-in';
-
-        if (error.response) {
-          errorMessage =
-            error.response.data?.detail ||
-            error.response.data?.error ||
-            'Check-in failed';
-        }
-
-        Alert.alert('Error', errorMessage, [
-          {
-            text: 'OK',
-            onPress: () => setScanned(false),
-          },
-        ]);
+  // Lấy token từ AsyncStorage
+  const getToken = useCallback(async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      if (!storedToken) {
+        navigation.navigate('Login');
+        return;
       }
-    } else if (!token) {
-      Alert.alert('Error', 'Authentication required. Please login again.');
+      setToken(storedToken);
+    } catch (error) {
+      console.error('Lỗi khi lấy token:', error);
+      navigation.navigate('Login');
+    }
+  }, [navigation]);
+
+  // Reset trạng thái scan khi quay lại màn hình
+  useFocusEffect(
+    useCallback(() => {
+      setScanned(false);
+      setIsLoading(false);
+    }, [])
+  );
+
+  useEffect(() => {
+    getToken();
+    requestCameraPermission();
+  }, [getToken, requestCameraPermission]);
+
+  const handleBarCodeScanned = async ({ data }) => {
+    const now = Date.now();
+    if (scanned || !token || !cameraReady || isLoading || (now - lastScanTime < 2000)) {
+      return;
+    }
+
+    setLastScanTime(now);
+    setScanned(true);
+    setIsLoading(true);
+
+    try {
+      const response = await authApis.post(endpoints.checkInTicket, {
+        uuid: data,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Hiệu ứng flash khi scan thành công
+      if (Camera?.Constants) {
+        setFlashMode(Camera.Constants.FlashMode.torch);
+        setTimeout(() => setFlashMode(Camera.Constants.FlashMode.off), 300);
+      }
+
+      Alert.alert('Thành công', 'Check-in thành công!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            setScanned(false);
+            setIsLoading(false);
+          },
+        },
+      ]);
+    } catch (error) {
+      let errorMessage = 'Không thể xử lý check-in';
+      
+      if (error.response) {
+        if (error.response.status === 401) {
+          // Token hết hạn
+          await AsyncStorage.removeItem('token');
+          navigation.navigate('Login');
+          return;
+        }
+        errorMessage = error.response.data?.detail || 
+                      error.response.data?.error || 
+                      'Check-in thất bại';
+      } else if (error.request) {
+        errorMessage = 'Lỗi kết nối - Vui lòng kiểm tra mạng';
+      }
+
+      Alert.alert('Lỗi', errorMessage, [
+        {
+          text: 'OK',
+          onPress: () => {
+            setScanned(false);
+            setIsLoading(false);
+          },
+        },
+      ]);
     }
   };
 
   const handleCameraReady = () => {
-    console.log('Camera is ready');
     setCameraReady(true);
   };
 
   const toggleCameraType = () => {
-    if (!Camera?.Constants?.Type) return;
-
-    setCameraType((prevType) =>
-      prevType === Camera.Constants.Type.back
+    if (!Camera?.Constants) return;
+    
+    setCameraType(
+      cameraType === Camera.Constants.Type.back
         ? Camera.Constants.Type.front
         : Camera.Constants.Type.back
     );
   };
 
-  if (!Camera?.Constants?.Type) {
+  const toggleFlash = () => {
+    if (!Camera?.Constants) return;
+    
+    setFlashMode(
+      flashMode === Camera.Constants.FlashMode.off
+        ? Camera.Constants.FlashMode.torch
+        : Camera.Constants.FlashMode.off
+    );
+  };
+
+  if (!Camera || !Camera.Constants) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading camera constants...</Text>
+        <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
       </View>
     );
   }
@@ -106,6 +180,7 @@ const Scan = ({ navigation }) => {
   if (hasPermission === null || cameraType === null) {
     return (
       <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ffffff" />
         <Text style={styles.loadingText}>Đang yêu cầu quyền truy cập camera...</Text>
       </View>
     );
@@ -115,10 +190,16 @@ const Scan = ({ navigation }) => {
     return (
       <View style={styles.permissionContainer}>
         <Text style={styles.permissionText}>
-          Camera permission is required to scan QR codes
+          Ứng dụng cần quyền truy cập camera để quét mã QR
         </Text>
+        <TouchableOpacity 
+          style={styles.permissionButton}
+          onPress={requestCameraPermission}
+        >
+          <Text style={styles.permissionButtonText}>Thử lại</Text>
+        </TouchableOpacity>
         <Text style={styles.permissionHelp}>
-          Please enable camera access in your device settings
+          Hoặc bật quyền camera trong cài đặt thiết bị
         </Text>
       </View>
     );
@@ -129,6 +210,7 @@ const Scan = ({ navigation }) => {
       <Camera
         style={styles.camera}
         type={cameraType}
+        flashMode={flashMode}
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         onCameraReady={handleCameraReady}
         barCodeScannerSettings={{
@@ -152,22 +234,41 @@ const Scan = ({ navigation }) => {
         </View>
       </Camera>
 
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={styles.loadingText}>Đang xử lý...</Text>
+        </View>
+      )}
+
       <View style={styles.bottomContainer}>
-        <Text style={styles.instruction}>Align QR code within the frame to scan</Text>
+        <Text style={styles.instruction}>Đặt mã QR vào khung để quét</Text>
         {scanned && (
-          <Text style={styles.scanAgainText}>Scanning another code? Tap anywhere</Text>
+          <Text style={styles.scanAgainText}>Chờ xử lý...</Text>
         )}
-        <Text
-          style={styles.switchCameraText}
-          onPress={toggleCameraType}
-          accessibilityRole="button"
+      </View>
+
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={toggleFlash}
         >
-          Switch Camera
-        </Text>
+          <Text style={styles.controlButtonText}>
+            {flashMode === Camera.Constants.FlashMode.torch ? 'Tắt đèn' : 'Bật đèn'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={toggleCameraType}
+        >
+          <Text style={styles.controlButtonText}>Đổi camera</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -183,6 +284,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: '#fff',
     fontSize: 18,
+    marginTop: 20,
   },
   permissionContainer: {
     flex: 1,
@@ -195,13 +297,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   permissionHelp: {
     color: '#fff',
     fontSize: 14,
     textAlign: 'center',
     opacity: 0.8,
+    marginTop: 20,
+  },
+  permissionButton: {
+    backgroundColor: '#3498db',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   camera: {
     flex: 1,
@@ -268,7 +382,7 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 100,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -286,11 +400,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  switchCameraText: {
-    color: '#00f',
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 15,
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    zIndex: 100,
+  },
+  controlsContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+  },
+  controlButton: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  controlButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 
