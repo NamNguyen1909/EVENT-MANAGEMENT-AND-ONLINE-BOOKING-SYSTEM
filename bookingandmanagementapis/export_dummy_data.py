@@ -112,13 +112,11 @@ def export_dummy_data(output_file='dummy_data.json'):
     print("\nĐang xuất dữ liệu Payment...")
     payments = Payment.objects.prefetch_related('tickets').select_related('user', 'discount_code')
     for payment in payments:
-        ticket_keys = []
+        ticket_pairs = []
         for ticket in payment.tickets.all():
-            ticket_keys.extend([
+            ticket_pairs.append([
                 ticket.event.title,
-                ticket.user.username,
-                ticket.is_paid,
-                ticket.is_checked_in
+                ticket.user.username
             ])
         payment_data = {
             'user': payment.user.username,
@@ -128,7 +126,7 @@ def export_dummy_data(output_file='dummy_data.json'):
             'transaction_id': payment.transaction_id,
             'paid_at': payment.paid_at.strftime('%Y-%m-%dT%H:%M:%S') if payment.paid_at else None,
             'discount_code': payment.discount_code.code if payment.discount_code else None,
-            'tickets': ticket_keys
+            'tickets': ticket_pairs
         }
         data['payments'].append(payment_data)
         print(f"Đã xuất payment với transaction_id {payment.transaction_id}")
