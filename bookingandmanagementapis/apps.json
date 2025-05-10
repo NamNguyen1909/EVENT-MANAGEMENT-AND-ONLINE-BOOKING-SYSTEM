@@ -1,1 +1,22 @@
-[{"model": "oauth2_provider.application", "pk": 1, "fields": {"client_id": "maJLNnk9DCneCowGxWvzZWar8PwhPluLB9D8pFK8", "user": 7, "redirect_uris": "", "post_logout_redirect_uris": "", "client_type": "confidential", "authorization_grant_type": "password", "client_secret": "pbkdf2_sha256$870000$6IkvUuXVgsFf9cMAyYwx40$hxxNB3I811zIPt3p+SLvGFMENcC18ov6viuV/6icvAg=", "hash_client_secret": true, "name": "bemdb", "skip_authorization": false, "created": "2025-05-10T07:28:18.001Z", "updated": "2025-05-10T07:28:18.001Z", "algorithm": "", "allowed_origins": ""}}]
+[
+    {
+        "model": "oauth2_provider.application",
+        "pk": 1,
+        "fields": {
+            "client_id": "maJLNnk9DCneCowGxWvzZWar8PwhPluLB9D8pFK8",
+            "user": 7,
+            "redirect_uris": "",
+            "post_logout_redirect_uris": "",
+            "client_type": "confidential",
+            "authorization_grant_type": "password",
+            "client_secret": "pbkdf2_sha256$870000$6IkvUuXVgsFf9cMAyYwx40$hxxNB3I811zIPt3p+SLvGFMENcC18ov6viuV/6icvAg=",
+            "hash_client_secret": true,
+            "name": "bemdb",
+            "skip_authorization": false,
+            "created": "2025-05-10T07:28:18.001Z",
+            "updated": "2025-05-10T07:28:18.001Z",
+            "algorithm": "",
+            "allowed_origins": ""
+        }
+    }
+]
