@@ -75,7 +75,7 @@ const Login = () => {
           // Điều hướng đến tab staff (Scan và Profile)
           navigation.reset({
             index: 0,
-            routes: [{ name: 'StaffTab' }], // Corrected route name to match App.js
+            routes: [{ name: 'scan' }], // Corrected route name to match App.js
           });
         } else if (u.data.role === 'admin') {
           // Điều hướng đến tab dashboard

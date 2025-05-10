@@ -210,14 +210,14 @@ const StaffTabNavigator = () => {
           tabBarIcon: () => <Icon size={30} source="qrcode-scan" />,
         }}
       />
-      {/* <StaffTab.Screen
+      <StaffTab.Screen
         name="profile"
         component={Profile}
         options={{
           title: 'Profile',
           tabBarIcon: () => <Icon size={30} source="account" />,
         }}
-      /> */}
+      />
     </StaffTab.Navigator>
   );
 };
