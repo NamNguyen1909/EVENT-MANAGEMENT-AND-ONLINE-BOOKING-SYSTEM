@@ -6,6 +6,10 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
+  Modal,
+  ScrollView,
+  Pressable,
+  Image
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,6 +26,13 @@ const MyTickets = () => {
   const [error, setError] = useState(null);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const user = useContext(MyUserContext);
+
+  // New states for modal and ticket detail
+  const [isTicketModalVisible, setIsTicketModalVisible] = useState(false);
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [ticketDetail, setTicketDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [errorDetail, setErrorDetail] = useState(null);
 
   const fetchTickets = async (url = endpoints.userTickets, append = false) => {
     try {
@@ -62,6 +73,29 @@ const MyTickets = () => {
     }
   };
 
+  // Fetch ticket detail for modal
+  const fetchTicketDetail = async (ticketId) => {
+    try {
+      setLoadingDetail(true);
+      setErrorDetail(null);
+      setTicketDetail(null);
+      const token = await AsyncStorage.getItem("token");
+      if (!user || !token) {
+        setErrorDetail("Vui lòng đăng nhập để xem chi tiết vé.");
+        setLoadingDetail(false);
+        return;
+      }
+      const api = authApis(token);
+      const res = await api.get(endpoints.ticketDetail(ticketId));
+      setTicketDetail(res.data);
+    } catch (err) {
+      console.error("Error fetching ticket detail:", err);
+      setErrorDetail("Không thể tải chi tiết vé.");
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       fetchTickets();
@@ -75,12 +109,25 @@ const MyTickets = () => {
     }
   };
 
+  // Handle ticket press to open modal
+  const handleTicketPress = (ticketId) => {
+    setSelectedTicketId(ticketId);
+    setIsTicketModalVisible(true);
+    fetchTicketDetail(ticketId);
+  };
+
+  // Close modal handler
+  const closeTicketModal = () => {
+    setIsTicketModalVisible(false);
+    setSelectedTicketId(null);
+    setTicketDetail(null);
+    setErrorDetail(null);
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.ticketItem}
-      onPress={() =>
-        navigation.navigate("MyTicketDetails", { ticketId: item.id })
-      }
+      onPress={() => handleTicketPress(item.id)}
     >
       <Text style={styles.eventTitle}>
         {item.event_title || item.event?.title || "Không có tiêu đề"}
@@ -126,51 +173,114 @@ const MyTickets = () => {
     </TouchableOpacity>
   );
 
-  if (loading && tickets.length === 0) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (tickets.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text>Bạn chưa có vé nào.</Text>
-      </View>
-    );
-  }
-
-  const renderFooter = () => {
-    if (!loadingMore) return null;
-    return (
-      <View style={{ paddingVertical: 20 }}>
-        <ActivityIndicator size="small" color="#0000ff" />
-      </View>
-    );
-  };
-
   return (
-    <FlatList
-      data={tickets}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={renderItem}
-      contentContainerStyle={styles.listContainer}
-      refreshing={loading}
-      onRefresh={() => fetchTickets()}
-      onEndReached={fetchMoreTickets}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={renderFooter}
-    />
+    <>
+      <FlatList
+        data={tickets}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContainer}
+        refreshing={loading}
+        onRefresh={() => fetchTickets()}
+        onEndReached={fetchMoreTickets}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={() =>
+          loadingMore ? (
+            <View style={{ paddingVertical: 20 }}>
+              <ActivityIndicator size="small" color="#0000ff" />
+            </View>
+          ) : null
+        }
+      />
+
+      <Modal
+        visible={isTicketModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeTicketModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Pressable style={styles.modalCloseButton} onPress={closeTicketModal}>
+              <Text style={styles.modalCloseText}>Đóng</Text>
+            </Pressable>
+            {loadingDetail ? (
+              <ActivityIndicator size="large" color={colors.bluePrimary} />
+            ) : errorDetail ? (
+              <Text style={{ color: "red", textAlign: "center" }}>{errorDetail}</Text>
+            ) : ticketDetail ? (
+              <ScrollView>
+{ticketDetail.qr_code ? (
+  <Image
+    source={{ uri: ticketDetail.qr_code }}
+    style={styles.qrCode}
+  />
+) : (
+  <Text style={{ textAlign: "center", marginBottom: 20 }}>
+    Không có mã QR.
+  </Text>
+)}
+                <Text style={styles.title}>{ticketDetail.event_title || "Chi tiết vé"}</Text>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Username: <Text style={styles.value}>{ticketDetail.username || "N/A"}</Text>
+                  </Text>
+                </View>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Email: <Text style={styles.value}>{ticketDetail.email || "N/A"}</Text>
+                  </Text>
+                </View>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Ngày mua:{" "}
+                    <Text style={styles.value}>
+                      {ticketDetail.purchase_date
+                        ? new Date(ticketDetail.purchase_date).toLocaleString()
+                        : "N/A"}
+                    </Text>
+                  </Text>
+                </View>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Địa điểm: <Text style={styles.value}>{ticketDetail.event_location || "N/A"}</Text>
+                  </Text>
+                </View>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Thời gian bắt đầu:{" "}
+                    <Text style={styles.value}>
+                      {ticketDetail.event_start_time
+                        ? new Date(ticketDetail.event_start_time).toLocaleString()
+                        : "N/A"}
+                    </Text>
+                  </Text>
+                </View>
+                <View style={styles.section}>
+                  <Text style={styles.labelValue}>
+                    Trạng thái:{" "}
+                    <Text
+                      style={[
+                        styles.value,
+                        { color: ticketDetail.is_paid ? colors.blueDark : "red" },
+                      ]}
+                    >
+                      {ticketDetail.is_paid ? "Đã thanh toán" : "Chưa thanh toán"}
+                    </Text>
+                    {"  "}
+                    {ticketDetail.is_paid ? (
+                      <FontAwesome name="check-circle" size={16} color={colors.blueDark} />
+                    ) : (
+                      <FontAwesome name="times-circle" size={16} color="red" />
+                    )}
+                  </Text>
+                </View>
+              </ScrollView>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -193,7 +303,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // paddingBottom:500 //Làm cho item to ra để test lazy loading
   },
   eventTitle: {
     fontSize: 16,
@@ -211,6 +320,52 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+    maxHeight: "80%",
+  },
+  modalCloseButton: {
+    alignSelf: "flex-end",
+    marginBottom: 10,
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: colors.bluePrimary,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  section: {
+    marginBottom: 12,
+  },
+  labelValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  value: {
+    fontSize: 16,
+    color: "#555",
+    marginTop: 4,
+  },
+  qrCode: {
+    width: 250,
+    height: 250,
+    alignSelf: "center",
+    marginBottom: 20,
   },
 });
 
