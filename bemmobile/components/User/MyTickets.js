@@ -173,6 +173,39 @@ const MyTickets = () => {
     </TouchableOpacity>
   );
 
+   if (loading && tickets.length === 0) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (tickets.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text>Bạn chưa có vé nào.</Text>
+      </View>
+    );
+  }
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={{ paddingVertical: 20 }}>
+        <ActivityIndicator size="small" color="#0000ff" />
+      </View>
+    );
+  };
+
   return (
     <>
       <FlatList
