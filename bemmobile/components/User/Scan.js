@@ -17,8 +17,9 @@ const Scan = ({ navigation }) => {
   useEffect(() => {
     const getToken = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('auth_token');
-        setToken(storedToken);
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token in Scan.js:', token);
+        setToken(token);
       } catch (error) {
         console.error('Error retrieving token:', error);
       }
@@ -28,15 +29,19 @@ const Scan = ({ navigation }) => {
 
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
+      console.log('Camera permission status:', status);
       setHasPermission(status === 'granted');
-
+      console.log('Camera permission granted:', status === 'granted');
       if (Camera?.Constants?.Type?.back) {
         setCameraType(Camera.Constants.Type.back);
+        console.log('Camera type set to back');
       }
     })();
   }, []);
 
   const handleBarCodeScanned = async ({ data }) => {
+  console.log('Scanned data:', data);
+  console.log('scanned:', scanned, '| token:', token, '| cameraReady:', cameraReady);
     if (!scanned && token && cameraReady) {
       setScanned(true);
 
@@ -76,6 +81,7 @@ const Scan = ({ navigation }) => {
   };
 
   const handleCameraReady = () => {
+    console.log('Camera is ready');
     setCameraReady(true);
   };
 
