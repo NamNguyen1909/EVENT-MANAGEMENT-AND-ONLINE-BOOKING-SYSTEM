@@ -39,8 +39,8 @@ const Login = () => {
       const data = {
         username: username,
         password: password,
-        client_id: 'maJLNnk9DCneCowGxWvzZWar8PwhPluLB9D8pFK8',
-        client_secret: 'pbkdf2_sha256$870000$6IkvUuXVgsFf9cMAyYwx40$hxxNB3I811zIPt3p+SLvGFMENcC18ov6viuV/6icvAg=',
+        client_id: 'SJ61STYu3n0mTxWaOWpgaaGp2DA7Ray7OHUGmLgE',
+        client_secret: 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010beM5QFCmVyrDcSfJMQlpUiycVx6wkS3e0MFfViHBHTa2mrKlM9ut4BikkU1y2cjwo',
         grant_type: 'password',
       };
 
