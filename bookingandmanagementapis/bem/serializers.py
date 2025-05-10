@@ -194,8 +194,8 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags', 'avatar']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags', 'avatar','is_staff']
+        read_only_fields = ['id','is_staff']
 
     def validate_tags(self, value):
         if value:
@@ -336,5 +336,5 @@ class EventTrendingLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventTrendingLog
-        fields = ['id', 'event', 'event_title', 'event_poster', 'view_count', 'total_revenue', 'trending_score', 'interest_score', 'last_updated']
-        read_only_fields = ['id', 'event_title', 'last_updated']
+        fields = [ 'event', 'event_title', 'event_poster', 'view_count', 'total_revenue', 'trending_score', 'interest_score', 'last_updated']
+        read_only_fields = ['event_title', 'last_updated']

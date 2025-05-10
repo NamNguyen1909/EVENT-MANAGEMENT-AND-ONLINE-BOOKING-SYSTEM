@@ -69,9 +69,15 @@ const Login = () => {
 
       setMsg('Đăng nhập thành công!');
 
-      // Điều hướng dựa trên vai trò người dùng
+      // Điều hướng dựa trên vai trò người dùng và is_staff
       setTimeout(() => {
-        if (u.data.role === 'admin') {
+        if (u.data.is_staff === true) {
+          // Điều hướng đến tab staff (Scan và Profile)
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'StaffTab' }], // Corrected route name to match App.js
+          });
+        } else if (u.data.role === 'admin') {
           // Điều hướng đến tab dashboard
           navigation.reset({
             index: 0,

@@ -330,34 +330,37 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         if event.tickets.filter(is_paid=True).count() >= event.total_tickets:
             return Response({"error": "Hết vé."}, status=status.HTTP_400_BAD_REQUEST)
 
-        qr_code = str(uuid.uuid4())
+        # B1: Tạo vé nhưng chưa lưu ảnh QR
+        ticket = Ticket(event=event, user=request.user)
+        ticket.save()
+
+        # B2: Dùng ticket.uuid để tạo mã QR
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(qr_code)
+        qr.add_data(str(ticket.uuid))
         qr.make(fit=True)
         img = qr.make_image(fill='black', back_color='white')
         buffer = io.BytesIO()
         img.save(buffer, format="PNG")
-        qr_code_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.seek(0)
 
-        ticket = Ticket(
-            event=event,
-            user=request.user,
-            qr_code=qr_code,
-            is_paid=False
-        )
+        # B3: Lưu ảnh QR lên Cloudinary
+        from cloudinary.uploader import upload
+        upload_result = upload(buffer, folder="ticket_qr_codes")  # hoặc tuỳ theo folder bạn chọn
+        ticket.qr_code = upload_result['secure_url']
         ticket.save()
 
         return Response({
             "message": "Vé đã được đặt thành công.",
             "ticket": TicketSerializer(ticket).data,
-            "qr_code_image": qr_code_image
+            "qr_code_url": ticket.qr_code
         }, status=status.HTTP_201_CREATED)
+
 
     @action(detail=False, methods=['post'], url_path='check-in')
     def check_in(self, request):
-        qr_code = request.data.get('qr_code')
+        ticket_uuid = request.data.get('uuid')
         try:
-            ticket = Ticket.objects.get(qr_code=qr_code, is_paid=True)
+            ticket = Ticket.objects.get(uuid=ticket_uuid, is_paid=True)
         except Ticket.DoesNotExist:
             return Response({"error": "Vé không hợp lệ hoặc chưa thanh toán."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -366,6 +369,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
 
         ticket.check_in()
         return Response({"message": "Check-in thành công.", "ticket": TicketSerializer(ticket).data})
+
 
 
 class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
@@ -382,6 +386,9 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         return super().get_permissions()
 
     def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Payment.objects.none()
         return self.queryset.filter(user=self.request.user).select_related('discount_code')
 
     def retrieve(self, request, pk=None):

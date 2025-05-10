@@ -17,6 +17,7 @@ import CreateEvent from './components/Organizer/CreateEvent'; // Giả định m
 import Dashboard from './components/Admin/Dashboard'; // Giả định màn hình Dashboard
 import ManageUsers from './components/Admin/ManageUsers'; // Giả định màn hình ManageUsers
 import ManageEvents from './components/Admin/ManageEvents'; // Giả định màn hình ManageEvents
+import Scan from './components/User/Scan'; // New Scan component for staff
 import { MyUserContext, MyDispatchContext } from './configs/MyContexts';
 import MyUserReducer from './reducers/MyUserReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -194,6 +195,33 @@ const LoginStackNavigator = () => {
   );
 };
 
+const StaffTab = createBottomTabNavigator();
+const StaffTabNavigator = () => {
+  return (
+    <StaffTab.Navigator 
+      screenOptions={{ headerShown: false }} 
+      // initialRouteName="profile"
+    >
+      <StaffTab.Screen
+        name="scan"
+        component={Scan}
+        options={{
+          title: 'Scan',
+          tabBarIcon: () => <Icon size={30} source="qrcode-scan" />,
+        }}
+      />
+      {/* <StaffTab.Screen
+        name="profile"
+        component={Profile}
+        options={{
+          title: 'Profile',
+          tabBarIcon: () => <Icon size={30} source="account" />,
+        }}
+      /> */}
+    </StaffTab.Navigator>
+  );
+};
+
 // Bottom Tab Navigator for authenticated users
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
@@ -206,6 +234,10 @@ const user = React.useContext(MyUserContext);
       {user === null ? (
         // Khi chưa đăng nhập: show Home and Login tabs
         <UnauthTabNavigator />
+      ) : user.is_staff === true ? (
+        // Staff user: Scan and Profile tabs
+        <StaffTabNavigator />
+        
       ) : user.role === 'attendee' ? (
         // Khách tham gia: Home, My Tickets, Chat, Profile
         <Tab.Navigator screenOptions={{ headerShown: false }}>
@@ -322,6 +354,9 @@ const user = React.useContext(MyUserContext);
             }}
           />
         </Tab.Navigator>
+      ) : user.is_staff === true ? (
+          // Staff user: Scan and Profile tabs
+          <StaffTabNavigator />
       ) : (
         // Trường hợp vai trò không xác định: Chỉ hiển thị Home và Profile
         <Tab.Navigator screenOptions={{ headerShown: false }}>
