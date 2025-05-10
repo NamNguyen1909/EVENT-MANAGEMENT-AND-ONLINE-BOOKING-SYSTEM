@@ -7,7 +7,7 @@ import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Notifications from '../../components/Notification/Notifications'; // Import Notifications component
+import Notifications from '../../components/Notification/Notifications';
 
 const Profile = () => {
   const theme = useTheme();
@@ -18,11 +18,14 @@ const Profile = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [avatar, setAvatar] = useState(user?.avatar || null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ticketsCount, setTicketsCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [msg, setMsg] = useState(null);
   const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
 
   useEffect(() => {
@@ -37,9 +40,8 @@ const Profile = () => {
   const fetchUserStats = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      console.log('>>> token:', token);
       if (!token) {
-        Alert.alert('Error', 'No authentication token found!');
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
         return;
       }
 
@@ -58,14 +60,14 @@ const Profile = () => {
       const unreadMsgs = messages.filter(m => !m.is_read).length;
       setUnreadMessages(unreadMsgs);
     } catch (error) {
-      console.error('Error fetching user stats:', error);
+      console.error('Lỗi khi lấy thống kê người dùng:', error);
       if (error.response && error.response.status === 401) {
-        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
       } else {
-        Alert.alert('Error', 'Failed to fetch user stats. Please try again.');
+        Alert.alert('Lỗi', 'Không thể lấy thống kê người dùng. Vui lòng thử lại.');
       }
     }
   };
@@ -74,7 +76,7 @@ const Profile = () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Error', 'Cần cấp quyền truy cập thư viện ảnh!');
+        Alert.alert('Lỗi', 'Cần cấp quyền truy cập thư viện ảnh!');
         return;
       }
 
@@ -89,14 +91,14 @@ const Profile = () => {
         const uri = result.assets[0].uri;
         const fileType = uri.split('.').pop().toLowerCase();
         if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
-          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          Alert.alert('Lỗi', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
           return;
         }
 
         const response = await fetch(uri);
         const blob = await response.blob();
         if (blob.size > 5 * 1024 * 1024) {
-          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          Alert.alert('Lỗi', 'Ảnh không được lớn hơn 5MB!');
           return;
         }
 
@@ -104,8 +106,8 @@ const Profile = () => {
         await handleUpdateAvatar(uri);
       }
     } catch (error) {
-      console.error('Error selecting image:', error);
-      Alert.alert('Error', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
+      console.error('Lỗi khi chọn ảnh:', error);
+      Alert.alert('Lỗi', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
     }
   };
 
@@ -113,7 +115,7 @@ const Profile = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'You are not logged in!');
+        Alert.alert('Lỗi', 'Bạn chưa đăng nhập!');
         return;
       }
 
@@ -138,24 +140,36 @@ const Profile = () => {
         payload: res.data,
       });
 
-      Alert.alert('Success', 'Avatar updated successfully!');
+      Alert.alert('Thành công', 'Cập nhật avatar thành công!');
     } catch (error) {
-      console.error('Update avatar error:', error);
+      console.error('Lỗi cập nhật avatar:', error);
       if (error.response?.data) {
         const errors = error.response.data;
-        Alert.alert('Error', errors.avatar ? errors.avatar[0] : 'Failed to update avatar. Please try again.');
+        Alert.alert('Lỗi', errors.avatar ? errors.avatar[0] : 'Không thể cập nhật avatar. Vui lòng thử lại.');
       } else {
-        Alert.alert('Error', 'Failed to update avatar. Please try again.');
+        Alert.alert('Lỗi', 'Không thể cập nhật avatar. Vui lòng thử lại.');
       }
     }
   };
 
   const handleUpdate = async () => {
+    // Kiểm tra mật khẩu nếu được nhập
+    if (password || confirmPassword) {
+      if (password !== confirmPassword) {
+        Alert.alert('Lỗi', 'Mật khẩu và xác nhận mật khẩu không khớp.');
+        return;
+      }
+      if (password.length < 8) {
+        Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'You are not logged in!');
+        Alert.alert('Lỗi', 'Bạn chưa đăng nhập!');
         return;
       }
 
@@ -163,6 +177,11 @@ const Profile = () => {
         email: email,
         phone: phone,
       };
+
+      // Chỉ thêm password nếu được nhập
+      if (password) {
+        updatedData.password = password;
+      }
 
       const res = await Apis.patch(endpoints.currentUser, updatedData, {
         headers: {
@@ -175,14 +194,23 @@ const Profile = () => {
         payload: res.data,
       });
 
-      Alert.alert('Success', 'Profile updated successfully!');
+      // Xóa các trường mật khẩu sau khi cập nhật thành công
+      setPassword('');
+      setConfirmPassword('');
+
+      Alert.alert('Thành công', 'Cập nhật hồ sơ thành công!');
     } catch (error) {
-      console.error('Update error:', error);
+      console.error('Lỗi cập nhật:', error);
       if (error.response?.data) {
         const errors = error.response.data;
-        Alert.alert('Error', errors.email ? errors.email[0] : errors.phone ? errors.phone[0] : 'Failed to update profile. Please try again.');
+        Alert.alert('Lỗi', 
+          errors.email ? errors.email[0] : 
+          errors.phone ? errors.phone[0] : 
+          errors.password ? errors.password[0] : 
+          'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
+        );
       } else {
-        Alert.alert('Error', 'Failed to update profile. Please try again.');
+        Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.');
       }
     } finally {
       setLoading(false);
@@ -195,19 +223,19 @@ const Profile = () => {
       await AsyncStorage.removeItem('refresh_token');
       dispatch({ type: 'logout' });
     } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
+      console.error('Lỗi đăng xuất:', error);
+      Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
     }
   };
 
   const handleDeactivate = async () => {
     Alert.alert(
-      'Confirm Deactivation',
-      'Are you sure you want to deactivate your account? This action cannot be undone.',
+      'Xác nhận vô hiệu hóa',
+      'Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Hành động này không thể hoàn tác.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Hủy', style: 'cancel' },
         {
-          text: 'Deactivate',
+          text: 'Vô hiệu hóa',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -221,8 +249,8 @@ const Profile = () => {
               await AsyncStorage.removeItem('refresh_token');
               dispatch({ type: 'logout' });
             } catch (error) {
-              console.error('Deactivate error:', error);
-              Alert.alert('Error', 'Failed to deactivate account. Please try again.');
+              console.error('Lỗi vô hiệu hóa:', error);
+              Alert.alert('Lỗi', 'Không thể vô hiệu hóa tài khoản. Vui lòng thử lại.');
             }
           },
         },
@@ -232,7 +260,6 @@ const Profile = () => {
 
   const handleNotificationsPress = () => {
     setIsNotificationModalVisible(true);
-    // Refresh notification counts when opening modal
     fetchUserStats();
   };
 
@@ -247,7 +274,7 @@ const Profile = () => {
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.errorText}>Please log in to view your profile.</Text>
+        <Text style={styles.errorText}>Vui lòng đăng nhập để xem hồ sơ của bạn.</Text>
       </SafeAreaView>
     );
   }
@@ -286,60 +313,96 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
 
-        <Title style={styles.title}>Profile</Title>
+        <Title style={styles.title}>Hồ sơ</Title>
 
         <Card style={styles.statsCard}>
           <Card.Content>
             <View style={styles.statsRow}>
-              <Text style={styles.statsLabel}>Tickets Purchased:</Text>
+              <Text style={styles.statsLabel}>Vé đã mua:</Text>
               <Text style={styles.statsValue}>{ticketsCount}</Text>
             </View>
           </Card.Content>
         </Card>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.label}>Username:</Text>
+          <Text style={styles.label}>Tên người dùng:</Text>
           <Text style={styles.value}>{user.username}</Text>
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.label}>Role:</Text>
+          <Text style={styles.label}>Vai trò:</Text>
           <Text style={styles.value}>{user.role}</Text>
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.label}>Customer Group:</Text>
+          <Text style={styles.label}>Nhóm khách hàng:</Text>
           <Text style={styles.value}>{user.customer_group}</Text>
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.label}>Total Spent:</Text>
+          <Text style={styles.label}>Tổng chi tiêu:</Text>
           <Text style={styles.value}>{user.total_spent} VNĐ</Text>
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.label}>Joined At:</Text>
+          <Text style={styles.label}>Ngày tham gia:</Text>
           <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
         </View>
 
-        <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          style={styles.input}
-          mode="outlined"
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+        <Card style={styles.formCard}>
+          <Card.Content>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              mode="outlined"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
-        <TextInput
-          label="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          style={styles.input}
-          mode="outlined"
-          keyboardType="phone-pad"
-        />
+            <TextInput
+              label="Số điện thoại"
+              value={phone}
+              onChangeText={setPhone}
+              style={styles.input}
+              mode="outlined"
+              keyboardType="phone-pad"
+            />
+
+            <TextInput
+              label="Mật khẩu mới"
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+              mode="outlined"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              right={
+                <TextInput.Icon
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
+
+            <TextInput
+              label="Xác nhận mật khẩu"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              style={styles.input}
+              mode="outlined"
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              right={
+                <TextInput.Icon
+                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                />
+              }
+            />
+          </Card.Content>
+        </Card>
 
         <Button
           mode="contained"
@@ -348,7 +411,7 @@ const Profile = () => {
           disabled={loading}
           style={styles.button}
         >
-          Update Profile
+          Cập nhật
         </Button>
 
         <Button
@@ -356,7 +419,7 @@ const Profile = () => {
           onPress={handleLogout}
           style={[styles.button, styles.logoutButton]}
         >
-          Logout
+          Đăng xuất
         </Button>
 
         <Button
@@ -364,26 +427,26 @@ const Profile = () => {
           onPress={handleDeactivate}
           style={[styles.button, styles.deactivateButton]}
         >
-          Deactivate Account
+          Vô hiệu hóa tài khoản
         </Button>
       </ScrollView>
 
       <Modal
-    animationType="slide"
-    transparent={true}
-    visible={isNotificationModalVisible}
-    onRequestClose={closeNotificationModal}
-  >
-    <SafeAreaView style={styles.modalContainer}>
-      <View style={styles.notificationModalContent}>
-        <Notifications 
-          unreadNotifications={unreadNotifications} 
-          onClose={closeNotificationModal} 
-          onUpdateUnreadCount={fetchUserStats} 
-        />
-      </View>
-    </SafeAreaView>
-  </Modal>
+        animationType="slide"
+        transparent={true}
+        visible={isNotificationModalVisible}
+        onRequestClose={closeNotificationModal}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.notificationModalContent}>
+            <Notifications
+              unreadNotifications={unreadNotifications}
+              onClose={closeNotificationModal}
+              onUpdateUnreadCount={fetchUserStats}
+            />
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -473,6 +536,10 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
+  },
+  formCard: {
+    marginBottom: 20,
+    elevation: 4,
   },
   input: {
     marginBottom: 15,
