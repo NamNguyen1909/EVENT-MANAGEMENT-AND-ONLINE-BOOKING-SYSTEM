@@ -352,97 +352,79 @@
         }
     ],
     "payments": [
-        {
-            "user": "nguyenvan_a",
-            "amount": 225000.0,
-            "payment_method": "momo",
-            "status": true,
-            "transaction_id": "momo_12345678",
-            "paid_at": "2025-01-15T14:30:00",
-            "discount_code": "WELCOME10",
-            "tickets": [
-                "Hanoi Music Festival 2025",
-                "nguyenvan_a",
-                true,
-                true
-            ]
-        },
-        {
-            "user": "nguyenvan_a",
-            "amount": 0.0,
-            "payment_method": "vnpay",
-            "status": true,
-            "transaction_id": "vnpay_23456789",
-            "paid_at": "2025-02-10T09:45:00",
-            "discount_code": "WELCOME10",
-            "tickets": [
-                "Vietnam Tech Summit 2025",
-                "nguyenvan_a",
-                true,
-                false
-            ]
-        },
-        {
-            "user": "lethi_b",
-            "amount": 135000.0,
-            "payment_method": "momo",
-            "status": true,
-            "transaction_id": "momo_34567890",
-            "paid_at": "2025-01-20T11:20:00",
-            "discount_code": "WELCOME10",
-            "tickets": [
-                "Hanoi Music Festival 2025",
-                "lethi_b",
-                true,
-                true
-            ]
-        },
-        {
-            "user": "lethi_b",
-            "amount": 0.0,
-            "payment_method": "vnpay",
-            "status": true,
-            "transaction_id": "vnpay_45678901",
-            "paid_at": "2025-03-05T16:15:00",
-            "discount_code": "TETHOLIDAY25",
-            "tickets": [
-                "Ho Chi Minh City Marathon 2025",
-                "lethi_b",
-                true,
-                false
-            ]
-        },
-        {
-            "user": "phamthanh_c",
-            "amount": 150000.0,
-            "payment_method": "vnpay",
-            "status": true,
-            "transaction_id": "vnpay_56789012",
-            "paid_at": "2025-02-05T10:00:00",
-            "discount_code": null,
-            "tickets": [
-                "Vietnam Tech Summit 2025",
-                "phamthanh_c",
-                true,
-                false
-            ]
-        },
-        {
-            "user": "phamthanh_c",
-            "amount": 0.0,
-            "payment_method": "momo",
-            "status": true,
-            "transaction_id": "momo_67890123",
-            "paid_at": "2025-03-10T14:30:00",
-            "discount_code": null,
-            "tickets": [
-                "UI/UX Design Workshop 2025",
-                "phamthanh_c",
-                true,
-                false
-            ]
-        }
-    ],
+    {
+        "user": "nguyenvan_a",
+        "amount": 225000.0,
+        "payment_method": "momo",
+        "status": true,
+        "transaction_id": "momo_12345678",
+        "paid_at": "2025-01-15T14:30:00",
+        "discount_code": "WELCOME10",
+        "tickets": [
+            ["Hanoi Music Festival 2025", "nguyenvan_a"]
+        ]
+    },
+    {
+        "user": "nguyenvan_a",
+        "amount": 0.0,
+        "payment_method": "vnpay",
+        "status": true,
+        "transaction_id": "vnpay_23456789",
+        "paid_at": "2025-02-10T09:45:00",
+        "discount_code": "WELCOME10",
+        "tickets": [
+            ["Vietnam Tech Summit 2025", "nguyenvan_a"]
+        ]
+    },
+    {
+        "user": "lethi_b",
+        "amount": 135000.0,
+        "payment_method": "momo",
+        "status": true,
+        "transaction_id": "momo_34567890",
+        "paid_at": "2025-01-20T11:20:00",
+        "discount_code": "WELCOME10",
+        "tickets": [
+            ["Hanoi Music Festival 2025", "lethi_b"]
+        ]
+    },
+    {
+        "user": "lethi_b",
+        "amount": 0.0,
+        "payment_method": "vnpay",
+        "status": true,
+        "transaction_id": "vnpay_45678901",
+        "paid_at": "2025-03-05T16:15:00",
+        "discount_code": "TETHOLIDAY25",
+        "tickets": [
+            ["Ho Chi Minh City Marathon 2025", "lethi_b"]
+        ]
+    },
+    {
+        "user": "phamthanh_c",
+        "amount": 150000.0,
+        "payment_method": "vnpay",
+        "status": true,
+        "transaction_id": "vnpay_56789012",
+        "paid_at": "2025-02-05T10:00:00",
+        "discount_code": null,
+        "tickets": [
+            ["Vietnam Tech Summit 2025", "phamthanh_c"]
+        ]
+    },
+    {
+        "user": "phamthanh_c",
+        "amount": 0.0,
+        "payment_method": "momo",
+        "status": true,
+        "transaction_id": "momo_67890123",
+        "paid_at": "2025-03-10T14:30:00",
+        "discount_code": null,
+        "tickets": [
+            ["UI/UX Design Workshop 2025", "phamthanh_c"]
+        ]
+    }
+],
     "reviews": [
         {
             "event": "Hanoi Music Festival 2025",

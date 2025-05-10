@@ -45,7 +45,7 @@ def load_dummy_data():
     print("Bắt đầu nhập dữ liệu...")
     try:
         # Đọc file JSON
-        with open('dummy_data_fixed.json', 'r', encoding='utf-8') as f:
+        with open('dummy_data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
         print("Không tìm thấy file dummy_data.json")
