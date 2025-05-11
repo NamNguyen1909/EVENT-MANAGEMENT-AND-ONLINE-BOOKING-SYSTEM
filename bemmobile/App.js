@@ -1,4 +1,4 @@
-import React, { useReducer,useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,24 +10,24 @@ import BookTicket from './components/User/BookTicket';
 import Login from './components/User/Login';
 import Register from './components/User/Register';
 import Profile from './components/User/Profile';
-import MyTickets from './components/User/MyTickets'; // Giả định màn hình MyTickets
-import Chat from './components/Chat/Chat'; // Giả định màn hình Chat
-import MyEvents from './components/Organizer/MyEvents'; // Giả định màn hình MyEvents
-import CreateEvent from './components/Organizer/CreateEvent'; // Giả định màn hình CreateEvent
-import Dashboard from './components/Admin/Dashboard'; // Giả định màn hình Dashboard
-import ManageUsers from './components/Admin/ManageUsers'; // Giả định màn hình ManageUsers
-import ManageEvents from './components/Admin/ManageEvents'; // Giả định màn hình ManageEvents
-import Scan from './components/User/Scan'; // New Scan component for staff
+import MyTickets from './components/User/MyTickets';
+import Chat from './components/Chat/Chat';
+import MyEvents from './components/Organizer/MyEvents';
+import CreateEvent from './components/Organizer/CreateEvent';
+import Dashboard from './components/Admin/Dashboard';
+import ManageUsers from './components/Admin/ManageUsers';
+import ManageEvents from './components/Admin/ManageEvents';
+import Scan from './components/User/Scan';
 import { MyUserContext, MyDispatchContext } from './configs/MyContexts';
 import MyUserReducer from './reducers/MyUserReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TicketDetails from './components/User/TicketDetails';
 
-// Stack Navigator cho tab "Events" (danh sách sự kiện toàn hệ thống)
+// Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
 const EventsStackNavigator = () => {
   return (
-    <EventsStack.Navigator screenOptions={{ headerShown: true }}>
+    <EventsStack.Navigator screenOptions={{ headerShown: false }}>
       <EventsStack.Screen
         name="HomeScreen"
         component={Home}
@@ -47,11 +47,11 @@ const EventsStackNavigator = () => {
   );
 };
 
-// Stack Navigator cho tab "My Tickets" (các vé đã đặt)
+// Stack Navigator cho tab "My Tickets"
 const MyTicketsStack = createNativeStackNavigator();
 const MyTicketsStackNavigator = () => {
   return (
-    <MyTicketsStack.Navigator screenOptions={{ headerShown: true }}>
+    <MyTicketsStack.Navigator screenOptions={{ headerShown: false }}>
       <MyTicketsStack.Screen
         name="MyTicketsScreen"
         component={MyTickets}
@@ -80,7 +80,7 @@ const ChatStackNavigator = () => {
   );
 };
 
-// Stack Navigator cho tab "My Events" (quản lý sự kiện của nhà tổ chức)
+// Stack Navigator cho tab "My Events"
 const MyEventsStack = createNativeStackNavigator();
 const MyEventsStackNavigator = () => {
   return (
@@ -108,7 +108,7 @@ const CreateEventStackNavigator = () => {
   );
 };
 
-// Stack Navigator cho tab "Dashboard" (quản trị viên)
+// Stack Navigator cho tab "Dashboard"
 const DashboardStack = createNativeStackNavigator();
 const DashboardStackNavigator = () => {
   return (
@@ -122,7 +122,7 @@ const DashboardStackNavigator = () => {
   );
 };
 
-// Stack Navigator cho tab "Manage Users" (quản trị viên)
+// Stack Navigator cho tab "Manage Users"
 const ManageUsersStack = createNativeStackNavigator();
 const ManageUsersStackNavigator = () => {
   return (
@@ -136,7 +136,7 @@ const ManageUsersStackNavigator = () => {
   );
 };
 
-// Stack Navigator cho tab "Manage Events" (quản trị viên)
+// Stack Navigator cho tab "Manage Events"
 const ManageEventsStack = createNativeStackNavigator();
 const ManageEventsStackNavigator = () => {
   return (
@@ -150,14 +150,28 @@ const ManageEventsStackNavigator = () => {
   );
 };
 
-// Bottom Tab Navigator for unauthenticated users (Home and Login tabs)
+// Stack Navigator cho tab "Staff"
+const StaffStack = createNativeStackNavigator();
+const StaffStackNavigator = () => {
+  return (
+    <StaffStack.Navigator screenOptions={{ headerShown: false }}>
+      <StaffStack.Screen
+        name="ScanScreen"
+        component={Scan}
+        options={{ title: 'Scan' }}
+      />
+    </StaffStack.Navigator>
+  );
+};
+
+// Bottom Tab Navigator cho người dùng chưa xác thực
 const UnauthTab = createBottomTabNavigator();
 const UnauthTabNavigator = () => {
   return (
     <UnauthTab.Navigator screenOptions={{ headerShown: false }}>
       <UnauthTab.Screen
         name="home"
-        component={EventsStackNavigator} // ✅ dùng Stack có cả Home và EventDetails
+        component={EventsStackNavigator}
         options={{
           title: 'Home',
           tabBarIcon: () => <Icon size={30} source="calendar" />,
@@ -175,8 +189,7 @@ const UnauthTabNavigator = () => {
   );
 };
 
-
-// Stack Navigator for Login and Register screens
+// Stack Navigator cho Login và Register
 const LoginStack = createNativeStackNavigator();
 const LoginStackNavigator = () => {
   return (
@@ -195,216 +208,118 @@ const LoginStackNavigator = () => {
   );
 };
 
-const StaffTab = createBottomTabNavigator();
-const StaffTabNavigator = () => {
-  return (
-    <StaffTab.Navigator 
-      screenOptions={{ headerShown: false }} 
-      // initialRouteName="profile"
-    >
-      <StaffTab.Screen
-        name="scan"
-        component={Scan}
-        options={{
-          title: 'Scan',
-          tabBarIcon: () => <Icon size={30} source="qrcode-scan" />,
-        }}
-      />
-      <StaffTab.Screen
-        name="profile"
-        component={Profile}
-        options={{
-          title: 'Profile',
-          tabBarIcon: () => <Icon size={30} source="account" />,
-        }}
-      />
-    </StaffTab.Navigator>
-  );
-};
-
-// Bottom Tab Navigator for authenticated users
+// Khởi tạo Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
+
+// Hàm tạo cấu hình tab chung
+const createTabScreen = (name, component, title, icon) => (
+  <Tab.Screen
+    name={name}
+    component={component}
+    options={{
+      title,
+      tabBarIcon: () => <Icon size={30} source={icon} />,
+    }}
+  />
+);
+
+// Tabs cho người dùng chưa xác thực
+const UnauthenticatedTabs = () => <UnauthTabNavigator />;
+
+// Tabs cho nhân viên (Staff)
+const StaffTabs = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
+    {createTabScreen('scan', StaffStackNavigator, 'Scan', 'qrcode-scan')}
+    {createTabScreen('profile', Profile, 'Profile', 'account')}
+  </Tab.Navigator>
+);
+
+// Tabs cho khách tham gia (Attendee)
+const AttendeeTabs = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
+    {createTabScreen('events', EventsStackNavigator, 'Home', 'calendar')}
+    {createTabScreen('myTickets', MyTicketsStackNavigator, 'My Tickets', 'ticket')}
+    {createTabScreen('chat', ChatStackNavigator, 'Chat', 'chat')}
+    {createTabScreen('profile', Profile, 'Profile', 'account')}
+  </Tab.Navigator>
+);
+
+// Tabs cho nhà tổ chức (Organizer)
+const OrganizerTabs = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
+    {createTabScreen('events', EventsStackNavigator, 'Home', 'calendar')}
+    {createTabScreen('myEvents', MyEventsStackNavigator, 'My Events', 'calendar-check')}
+    {createTabScreen('createEvent', CreateEventStackNavigator, 'Create Event', 'calendar-plus')}
+    {createTabScreen('chat', ChatStackNavigator, 'Chat', 'chat')}
+    {createTabScreen('profile', Profile, 'Profile', 'account')}
+  </Tab.Navigator>
+);
+
+// Tabs cho quản trị viên (Admin)
+const AdminTabs = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
+    {createTabScreen('dashboard', DashboardStackNavigator, 'Dashboard', 'view-dashboard')}
+    {createTabScreen('manageUsers', ManageUsersStackNavigator, 'Manage Users', 'account-group')}
+    {createTabScreen('manageEvents', ManageEventsStackNavigator, 'Manage Events', 'calendar-multiple')}
+    {createTabScreen('profile', Profile, 'Profile', 'account')}
+  </Tab.Navigator>
+);
+
+// Tabs mặc định cho vai trò không xác định
+const DefaultTabs = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
+    {createTabScreen('events', EventsStackNavigator, 'Home', 'calendar')}
+    {createTabScreen('profile', Profile, 'Profile', 'account')}
+  </Tab.Navigator>
+);
+
+// Bottom Tab Navigator chính
 const TabNavigator = () => {
-const user = React.useContext(MyUserContext);
+  const user = React.useContext(MyUserContext);
+  console.log('User:', user); // Debug giá trị user
 
+  if (user === null) {
+    return <UnauthenticatedTabs />;
+  }
 
+  if (user.is_staff && user.role === 'attendee') {
+    return <StaffTabs />;
+  }
 
-  return (
-    <>
-      {user === null ? (
-        // Khi chưa đăng nhập: show Home and Login tabs
-        <UnauthTabNavigator />
-      ) : user.is_staff === true && user.role==='attendee' ? (
-        // Staff user: Scan and Profile tabs
-        <StaffTabNavigator />
-        
-      ) : user.role === 'attendee' ? (
-        // Khách tham gia: Home, My Tickets, Chat, Profile
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-          <Tab.Screen
-            name="events"
-            component={EventsStackNavigator}
-            options={{
-              title: 'Home',
-              tabBarIcon: () => <Icon size={30} source="calendar" />,
-            }}
-          />
-          <Tab.Screen
-            name="myTickets"
-            component={MyTicketsStackNavigator}
-            options={{
-              title: 'My Tickets',
-              tabBarIcon: () => <Icon size={30} source="ticket" />,
-            }}
-          />
-          <Tab.Screen
-            name="chat"
-            component={ChatStackNavigator}
-            options={{
-              title: 'Chat',
-              tabBarIcon: () => <Icon size={30} source="chat" />,
-            }}
-          />
-          <Tab.Screen
-            name="profile"
-            component={Profile}
-            options={{
-              title: 'Profile',
-              tabBarIcon: () => <Icon size={30} source="account" />,
-            }}
-          />
-        </Tab.Navigator>
-      ) : user.role === 'organizer' ? (
-        // Nhà tổ chức: Home, My Events, Create Event, Chat, Profile
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-          <Tab.Screen
-            name="events"
-            component={EventsStackNavigator}
-            options={{
-              title: 'Home',
-              tabBarIcon: () => <Icon size={30} source="calendar" />,
-            }}
-          />
-          <Tab.Screen
-            name="myEvents"
-            component={MyEventsStackNavigator}
-            options={{
-              title: 'My Events',
-              tabBarIcon: () => <Icon size={30} source="calendar-check" />,
-            }}
-          />
-          <Tab.Screen
-            name="createEvent"
-            component={CreateEventStackNavigator}
-            options={{
-              title: 'Create Event',
-              tabBarIcon: () => <Icon size={30} source="calendar-plus" />,
-            }}
-          />
-          <Tab.Screen
-            name="chat"
-            component={ChatStackNavigator}
-            options={{
-              title: 'Chat',
-              tabBarIcon: () => <Icon size={30} source="chat" />,
-            }}
-          />
-          <Tab.Screen
-            name="profile"
-            component={Profile}
-            options={{
-              title: 'Profile',
-              tabBarIcon: () => <Icon size={30} source="account" />,
-            }}
-          />
-        </Tab.Navigator>
-      ) : user.role === 'admin' ? (
-        // Quản trị viên: Dashboard, Manage Users, Manage Events, Profile
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-          <Tab.Screen
-            name="dashboard"
-            component={DashboardStackNavigator}
-            options={{
-              title: 'Dashboard',
-              tabBarIcon: () => <Icon size={30} source="view-dashboard" />,
-            }}
-          />
-          <Tab.Screen
-            name="manageUsers"
-            component={ManageUsersStackNavigator}
-            options={{
-              title: 'Manage Users',
-              tabBarIcon: () => <Icon size={30} source="account-group" />,
-            }}
-          />
-          <Tab.Screen
-            name="manageEvents"
-            component={ManageEventsStackNavigator}
-            options={{
-              title: 'Manage Events',
-              tabBarIcon: () => <Icon size={30} source="calendar-multiple" />,
-            }}
-          />
-          <Tab.Screen
-            name="profile"
-            component={Profile}
-            options={{
-              title: 'Profile',
-              tabBarIcon: () => <Icon size={30} source="account" />,
-            }}
-          />
-        </Tab.Navigator>
-      ) : user.is_staff === true ? (
-          // Staff user: Scan and Profile tabs
-          <StaffTabNavigator />
-      ) : (
-        // Trường hợp vai trò không xác định: Chỉ hiển thị Home và Profile
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-          <Tab.Screen
-            name="events"
-            component={EventsStackNavigator}
-            options={{
-              title: 'Home',
-              tabBarIcon: () => <Icon size={30} source="calendar" />,
-            }}
-          />
-          <Tab.Screen
-            name="profile"
-            component={Profile}
-            options={{
-              title: 'Profile',
-              tabBarIcon: () => <Icon size={30} source="account" />,
-            }}
-          />
-        </Tab.Navigator>
-      )}
-    </>
-  );
+  const role = user.role || 'default';
+  switch (role) {
+    case 'attendee':
+      return <AttendeeTabs />;
+    case 'organizer':
+      return <OrganizerTabs />;
+    case 'admin':
+      return <AdminTabs />;
+    default:
+      return <DefaultTabs />;
+  }
 };
 
 // App chính
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  // //Xóa token cũ khi ứng dụng khởi động
-  // useEffect(() => {
-  //   const clearTokenOnAppStart = async () => {
-  //     try {
-  //       await AsyncStorage.removeItem('auth_token');
-  //       console.log('Token removed on app start');
-
-  //       // Reset user state in context after token removal
-  //       dispatch({ type: ACTION_TYPES.LOGOUT });
-
-  //       const stillThere = await AsyncStorage.getItem('auth_token');
-  //       console.log('Check token after removal:', stillThere);
-  //     } catch (error) {
-  //       console.log('Error removing token on start:', error);
-  //     }
-  //   };
-
-  //   clearTokenOnAppStart();
-  // }, []); // Thêm mảng dependencies rỗng để useEffect chỉ chạy 1 lần khi component mount
+  // Xóa token cũ khi ứng dụng khởi động (bỏ comment nếu cần)
+  /*
+  useEffect(() => {
+    const clearTokenOnAppStart = async () => {
+      try {
+        await AsyncStorage.removeItem('token');
+        console.log('Token removed on app start');
+        dispatch({ type: 'LOGOUT' });
+        const stillThere = await AsyncStorage.getItem('token');
+        console.log('Check token after removal:', stillThere);
+      } catch (error) {
+        console.log('Error removing token on start:', error);
+      }
+    };
+    clearTokenOnAppStart();
+  }, []);
+  */
 
   return (
     <MyUserContext.Provider value={user}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
-import Camera from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
+import { Camera } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../../configs/Apis';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -10,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 const qrSize = width * 0.7;
 
-// A: Define these constants at the top of the file
+// Định nghĩa hằng số thủ công
 const CAMERA_TYPE_BACK = 1;
 const CAMERA_TYPE_FRONT = 2;
 const FLASH_MODE_OFF = 0;
@@ -18,7 +17,7 @@ const FLASH_MODE_TORCH = 3;
 const BARCODE_TYPE_QR = 'qr';
 
 const Scan = ({ navigation }) => {
-  // B: Replace state initialization to use constants
+  console.log('Rendering Scan component');
   const [scanned, setScanned] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [token, setToken] = useState(null);
@@ -27,53 +26,66 @@ const Scan = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastScanTime, setLastScanTime] = useState(0);
   const [flashMode, setFlashMode] = useState(FLASH_MODE_OFF);
+  const [initializing, setInitializing] = useState(true);
 
-  // B: Replace permission request to set cameraType and flashMode using constants
   const requestCameraPermission = useCallback(async () => {
     try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      console.log('Đang yêu cầu quyền camera...');
+      const { status } = await Promise.race([
+        Camera.requestCameraPermissionsAsync(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000)),
+      ]);
+      console.log('Trạng thái quyền camera:', status);
       setHasPermission(status === 'granted');
-      
+
       if (status === 'granted') {
         setCameraType(CAMERA_TYPE_BACK);
         setFlashMode(FLASH_MODE_OFF);
-      }
-      
-      if (status !== 'granted') {
+      } else {
         Alert.alert(
           'Yêu cầu quyền truy cập',
           'Ứng dụng cần quyền truy cập camera để quét mã QR',
           [
-            {
-              text: 'Hủy',
-              style: 'cancel'
-            },
+            { text: 'Hủy', style: 'cancel' },
             {
               text: 'Mở cài đặt',
-              onPress: () => IntentLauncher.startActivityAsync(
-                IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS
-              )
-            }
+              onPress: () => IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS),
+            },
           ]
         );
       }
     } catch (error) {
-      console.error('Lỗi khi yêu cầu quyền camera:', error);
+      console.error('Lỗi khi yêu cầu quyền camera:', error.message);
       setHasPermission(false);
+      if (error.message === 'Timeout') {
+        Alert.alert(
+          'Lỗi',
+          'Không thể yêu cầu quyền camera. Vui lòng kiểm tra cài đặt hoặc thử lại.',
+          [{ text: 'OK', onPress: () => setInitializing(false) }]
+        );
+      }
+    } finally {
+      setInitializing(false);
     }
   }, []);
 
   const getToken = useCallback(async () => {
     try {
+      console.log('Đang lấy token...');
       const storedToken = await AsyncStorage.getItem('token');
       if (!storedToken) {
-        navigation.navigate('Login');
+        console.log('No token found, navigating to loginStack');
+        // Điều hướng đến tab loginStack trong UnauthTabNavigator
+        navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
         return;
       }
       setToken(storedToken);
+      console.log('Lấy token thành công:', storedToken);
     } catch (error) {
       console.error('Lỗi khi lấy token:', error);
-      navigation.navigate('Login');
+      navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
+    } finally {
+      setInitializing(false);
     }
   }, [navigation]);
 
@@ -85,11 +97,11 @@ const Scan = ({ navigation }) => {
   );
 
   useEffect(() => {
+    setInitializing(true);
     getToken();
     requestCameraPermission();
   }, [getToken, requestCameraPermission]);
 
-  // B: Replace flash effect to use constants
   const handleBarCodeScanned = async ({ data }) => {
     const now = Date.now();
     if (scanned || !token || !cameraReady || isLoading || (now - lastScanTime < 2000)) {
@@ -123,11 +135,11 @@ const Scan = ({ navigation }) => {
       ]);
     } catch (error) {
       let errorMessage = 'Không thể xử lý check-in';
-      
+
       if (error.response) {
         if (error.response.status === 401) {
           await AsyncStorage.removeItem('token');
-          navigation.navigate('Login');
+          navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
           return;
         }
         errorMessage = error.response.data?.detail || 
@@ -151,9 +163,9 @@ const Scan = ({ navigation }) => {
 
   const handleCameraReady = () => {
     setCameraReady(true);
+    console.log('Camera đã sẵn sàng');
   };
 
-  // B: Replace toggle functions to use constants
   const toggleCameraType = () => {
     setCameraType(
       cameraType === CAMERA_TYPE_BACK
@@ -170,8 +182,8 @@ const Scan = ({ navigation }) => {
     );
   };
 
-  // B: Remove check for Camera.Constants, only check Camera
   if (!Camera) {
+    console.log('Camera is undefined');
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
@@ -179,11 +191,12 @@ const Scan = ({ navigation }) => {
     );
   }
 
-  if (hasPermission === null || cameraType === null) {
+  if (initializing || hasPermission === null || cameraType === null) {
+    console.log('Initializing or permission/cameraType is null', { initializing, hasPermission, cameraType });
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#ffffff" />
-        <Text style={styles.loadingText}>Đang yêu cầu quyền truy cập camera...</Text>
+        <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
       </View>
     );
   }
@@ -207,7 +220,6 @@ const Scan = ({ navigation }) => {
     );
   }
 
-  // B: Replace barCodeScannerSettings to use constant
   return (
     <View style={styles.container}>
       <Camera
@@ -273,21 +285,14 @@ const Scan = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
   },
-  loadingText: {
-    color: '#fff',
-    fontSize: 18,
-    marginTop: 20,
-  },
+  loadingText: { color: '#fff', fontSize: 18, marginTop: 20 },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -295,45 +300,14 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#000',
   },
-  permissionText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  permissionHelp: {
-    color: '#fff',
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.8,
-    marginTop: 20,
-  },
-  permissionButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  permissionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  camera: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  unfocusedArea: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  middleRow: {
-    flexDirection: 'row',
-    flex: 0.5,
-  },
+  permissionText: { color: '#fff', fontSize: 18, textAlign: 'center', marginBottom: 20 },
+  permissionHelp: { color: '#fff', fontSize: 14, textAlign: 'center', opacity: 0.8, marginTop: 20 },
+  permissionButton: { backgroundColor: '#3498db', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
+  permissionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  camera: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  unfocusedArea: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
+  middleRow: { flexDirection: 'row', flex: 0.5 },
   focusedArea: {
     flex: 1,
     borderWidth: 1,
@@ -342,66 +316,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  cornerTopLeft: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 40,
-    height: 40,
-    borderLeftWidth: 4,
-    borderTopWidth: 4,
-    borderColor: '#fff',
-  },
-  cornerTopRight: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRightWidth: 4,
-    borderTopWidth: 4,
-    borderColor: '#fff',
-  },
-  cornerBottomLeft: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: 40,
-    height: 40,
-    borderLeftWidth: 4,
-    borderBottomWidth: 4,
-    borderColor: '#fff',
-  },
-  cornerBottomRight: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRightWidth: 4,
-    borderBottomWidth: 4,
-    borderColor: '#fff',
-  },
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  instruction: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  scanAgainText: {
-    color: '#fff',
-    fontSize: 14,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
+  cornerTopLeft: { position: 'absolute', top: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderTopWidth: 4, borderColor: '#fff' },
+  cornerTopRight: { position: 'absolute', top: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderTopWidth: 4, borderColor: '#fff' },
+  cornerBottomLeft: { position: 'absolute', bottom: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderBottomWidth: 4, borderColor: '#fff' },
+  cornerBottomRight: { position: 'absolute', bottom: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderBottomWidth: 4, borderColor: '#fff' },
+  bottomContainer: { position: 'absolute', bottom: 100, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
+  instruction: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 10 },
+  scanAgainText: { color: '#fff', fontSize: 14, textAlign: 'center', fontStyle: 'italic' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -430,11 +351,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
   },
-  controlButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
+  controlButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
 });
 
 export default Scan;
