@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background-color: black;
+      overflow: hidden;
+    }
+    #reader {
+      width: 100%;
+      height: 100vh;
+    }
+    #error {
+      color: red;
+      font-size: 16px;
+      text-align: center;
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      z-index: 10;
+    }
+    .qrbox {
+      border: 2px solid #fff !important;
+      border-radius: 10px !important;
+    }
+    video {
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div id="error"></div>
+  <div id="reader"></div>
+  <script>
+    const errorDiv = document.getElementById('error');
+
+    function onScanSuccess(decodedText, decodedResult) {
+      console.log('QR code scanned:', decodedText);
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage(decodedText);
+      } else {
+        errorDiv.innerText = 'Không thể gửi dữ liệu về ứng dụng.';
+      }
+      html5QrcodeScanner.clear().catch(err => {
+        console.error('Error clearing scanner:', err);
+      });
+    }
+
+    function onScanFailure(error) {
+      console.warn('Scan failed:', error);
+      if (error.includes('Permission denied')) {
+        errorDiv.innerText = 'Vui lòng cấp quyền camera trong Cài đặt.';
+      } else if (error.includes('NotFoundError')) {
+        errorDiv.innerText = 'Không tìm thấy camera. Vui lòng kiểm tra thiết bị.';
+      }
+    }
+
+    // Kiểm tra quyền camera trước khi khởi tạo
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(() => {
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+          "reader",
+          { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true },
+          false
+        );
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        console.log('Html5QrcodeScanner initialized');
+      })
+      .catch(err => {
+        console.error('Camera access denied:', err);
+        errorDiv.innerText = 'Không thể truy cập camera. Vui lòng cấp quyền.';
+      });
+  </script>
+</body>
+</html>

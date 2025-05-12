@@ -1,357 +1,344 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Camera } from 'expo-camera';
+import React, { useState, useEffect, useContext } from 'react';
+import { SafeAreaView, View, StyleSheet, Alert, Text, Platform } from 'react-native';
+import { Button, Title, useTheme, ActivityIndicator } from 'react-native-paper';
+import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../../configs/Apis';
-import * as IntentLauncher from 'expo-intent-launcher';
-import { useFocusEffect } from '@react-navigation/native';
+import { MyUserContext } from '../../configs/MyContexts';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width } = Dimensions.get('window');
-const qrSize = width * 0.7;
-
-// Định nghĩa hằng số thủ công
-const CAMERA_TYPE_BACK = 1;
-const CAMERA_TYPE_FRONT = 2;
-const FLASH_MODE_OFF = 0;
-const FLASH_MODE_TORCH = 3;
-const BARCODE_TYPE_QR = 'qr';
-
-const Scan = ({ navigation }) => {
-  console.log('Rendering Scan component');
+const Scan = () => {
+  const theme = useTheme();
+  const user = useContext(MyUserContext);
   const [scanned, setScanned] = useState(false);
-  const [hasPermission, setHasPermission] = useState(null);
-  const [token, setToken] = useState(null);
-  const [cameraReady, setCameraReady] = useState(false);
-  const [cameraType, setCameraType] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastScanTime, setLastScanTime] = useState(0);
-  const [flashMode, setFlashMode] = useState(FLASH_MODE_OFF);
-  const [initializing, setInitializing] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
+  const [webViewLoaded, setWebViewLoaded] = useState(false);
+  const [webViewError, setWebViewError] = useState(null);
 
-  const requestCameraPermission = useCallback(async () => {
+  const qrScannerHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>QR Scanner</title>
+      <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+      <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background-color: black; overflow: hidden; }
+        #reader { width: 100%; height: 100vh; }
+        #error { color: red; font-size: 16px; text-align: center; position: absolute; top: 20px; width: 100%; z-index: 10; }
+        .qrbox { border: 2px solid #fff !important; border-radius: 10px !important; }
+        video { object-fit: cover; }
+      </style>
+    </head>
+    <body>
+      <div id="error"></div>
+      <div id="reader"></div>
+      <script>
+        const errorDiv = document.getElementById('error');
+        function onScanSuccess(decodedText, decodedResult) {
+          console.log('QR code scanned:', decodedText);
+          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+            window.ReactNativeWebView.postMessage(decodedText);
+          } else {
+            errorDiv.innerText = 'Không thể gửi dữ liệu về ứng dụng.';
+          }
+          html5QrcodeScanner.clear().catch(err => {
+            console.error('Error clearing scanner:', err);
+          });
+        }
+        function onScanFailure(error) {
+          console.warn('Scan failed:', error);
+          if (error.includes('Permission denied')) {
+            errorDiv.innerText = 'Vui lòng cấp quyền camera trong Cài đặt.';
+          } else if (error.includes('NotFoundError')) {
+            errorDiv.innerText = 'Không tìm thấy camera. Vui lòng kiểm tra thiết bị.';
+          }
+        }
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(() => {
+            const html5QrcodeScanner = new Html5QrcodeScanner(
+              "reader",
+              { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true },
+              false
+            );
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            console.log('Html5QrcodeScanner initialized');
+          })
+          .catch(err => {
+            console.error('Camera access denied:', err);
+            errorDiv.innerText = 'Không thể truy cập camera. Vui lòng cấp quyền.';
+          });
+      </script>
+    </body>
+    </html>
+  `;
+
+  const handleMessage = async (event) => {
+    if (scanned || !webViewLoaded) return;
+    setScanned(true);
+    setLoading(true);
+    setScanResult(null);
+
     try {
-      console.log('Đang yêu cầu quyền camera...');
-      const { status } = await Promise.race([
-        Camera.requestCameraPermissionsAsync(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000)),
-      ]);
-      console.log('Trạng thái quyền camera:', status);
-      setHasPermission(status === 'granted');
-
-      if (status === 'granted') {
-        setCameraType(CAMERA_TYPE_BACK);
-        setFlashMode(FLASH_MODE_OFF);
-      } else {
-        Alert.alert(
-          'Yêu cầu quyền truy cập',
-          'Ứng dụng cần quyền truy cập camera để quét mã QR',
-          [
-            { text: 'Hủy', style: 'cancel' },
-            {
-              text: 'Mở cài đặt',
-              onPress: () => IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Lỗi khi yêu cầu quyền camera:', error.message);
-      setHasPermission(false);
-      if (error.message === 'Timeout') {
-        Alert.alert(
-          'Lỗi',
-          'Không thể yêu cầu quyền camera. Vui lòng kiểm tra cài đặt hoặc thử lại.',
-          [{ text: 'OK', onPress: () => setInitializing(false) }]
-        );
-      }
-    } finally {
-      setInitializing(false);
-    }
-  }, []);
-
-  const getToken = useCallback(async () => {
-    try {
-      console.log('Đang lấy token...');
-      const storedToken = await AsyncStorage.getItem('token');
-      if (!storedToken) {
-        console.log('No token found, navigating to loginStack');
-        // Điều hướng đến tab loginStack trong UnauthTabNavigator
-        navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
         return;
       }
-      setToken(storedToken);
-      console.log('Lấy token thành công:', storedToken);
-    } catch (error) {
-      console.error('Lỗi khi lấy token:', error);
-      navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
-    } finally {
-      setInitializing(false);
-    }
-  }, [navigation]);
 
-  useFocusEffect(
-    useCallback(() => {
-      setScanned(false);
-      setIsLoading(false);
-    }, [])
-  );
+      const uuid = event.nativeEvent.data;
+      console.log('Scanned QR code:', uuid);
+      const response = await authApis(token).post(endpoints.checkInTicket, { uuid });
 
-  useEffect(() => {
-    setInitializing(true);
-    getToken();
-    requestCameraPermission();
-  }, [getToken, requestCameraPermission]);
-
-  const handleBarCodeScanned = async ({ data }) => {
-    const now = Date.now();
-    if (scanned || !token || !cameraReady || isLoading || (now - lastScanTime < 2000)) {
-      return;
-    }
-
-    setLastScanTime(now);
-    setScanned(true);
-    setIsLoading(true);
-
-    try {
-      await authApis.post(endpoints.checkInTicket, {
-        uuid: data,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      setScanResult({
+        success: true,
+        message: response.data.message || 'Check-in thành công!',
+        ticket: response.data.ticket,
       });
 
-      setFlashMode(FLASH_MODE_TORCH);
-      setTimeout(() => setFlashMode(FLASH_MODE_OFF), 300);
-
-      Alert.alert('Thành công', 'Check-in thành công!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setScanned(false);
-            setIsLoading(false);
-          },
-        },
-      ]);
+      Alert.alert('Thành công', response.data.message || 'Check-in vé thành công!');
     } catch (error) {
-      let errorMessage = 'Không thể xử lý check-in';
-
+      console.error('Error checking in ticket:', error);
+      let errorMessage = 'Không thể check-in vé. Vui lòng thử lại.';
       if (error.response) {
         if (error.response.status === 401) {
+          errorMessage = 'Xác thực thất bại. Vui lòng đăng nhập lại.';
           await AsyncStorage.removeItem('token');
-          navigation.navigate('UnauthTab', { screen: 'loginStack', params: { screen: 'login' } });
-          return;
+          await AsyncStorage.removeItem('refresh_token');
+        } else if (error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error;
         }
-        errorMessage = error.response.data?.detail || 
-                      error.response.data?.error || 
-                      'Check-in thất bại';
-      } else if (error.request) {
-        errorMessage = 'Lỗi kết nối - Vui lòng kiểm tra mạng';
       }
-
-      Alert.alert('Lỗi', errorMessage, [
-        {
-          text: 'OK',
-          onPress: () => {
-            setScanned(false);
-            setIsLoading(false);
-          },
-        },
-      ]);
+      setScanResult({ success: false, message: errorMessage });
+      Alert.alert('Lỗi', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCameraReady = () => {
-    setCameraReady(true);
-    console.log('Camera đã sẵn sàng');
+  const handleScanAgain = () => {
+    setScanned(false);
+    setScanResult(null);
+    setWebViewError(null);
+    setWebViewLoaded(false); // Reset để tải lại WebView
   };
 
-  const toggleCameraType = () => {
-    setCameraType(
-      cameraType === CAMERA_TYPE_BACK
-        ? CAMERA_TYPE_FRONT
-        : CAMERA_TYPE_BACK
-    );
+  const onWebViewLoad = () => {
+    console.log('WebView loaded successfully');
+    setWebViewLoaded(true);
+    setWebViewError(null);
   };
 
-  const toggleFlash = () => {
-    setFlashMode(
-      flashMode === FLASH_MODE_OFF
-        ? FLASH_MODE_TORCH
-        : FLASH_MODE_OFF
-    );
+  const onWebViewError = (syntheticEvent) => {
+    const { nativeEvent } = syntheticEvent;
+    console.warn('WebView error:', nativeEvent);
+    setWebViewError('Không thể tải scanner. Vui lòng thử lại.');
   };
 
-  if (!Camera) {
-    console.log('Camera is undefined');
+  if (!user || (user.role !== 'attendee' && !user.is_staff)) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
-      </View>
-    );
-  }
-
-  if (initializing || hasPermission === null || cameraType === null) {
-    console.log('Initializing or permission/cameraType is null', { initializing, hasPermission, cameraType });
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ffffff" />
-        <Text style={styles.loadingText}>Đang khởi tạo camera...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>
-          Ứng dụng cần quyền truy cập camera để quét mã QR
+      <SafeAreaView style={styles.safeArea}>
+        <Text style={styles.errorText}>
+          Chỉ nhân viên được phép sử dụng tính năng quét mã QR.
         </Text>
-        <TouchableOpacity 
-          style={styles.permissionButton}
-          onPress={requestCameraPermission}
-        >
-          <Text style={styles.permissionButtonText}>Thử lại</Text>
-        </TouchableOpacity>
-        <Text style={styles.permissionHelp}>
-          Hoặc bật quyền camera trong cài đặt thiết bị
-        </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Camera
-        style={styles.camera}
-        type={cameraType}
-        flashMode={flashMode}
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        onCameraReady={handleCameraReady}
-        barCodeScannerSettings={{
-          barCodeTypes: [BARCODE_TYPE_QR],
-        }}
-        ratio="16:9"
-      >
-        <View style={styles.overlay}>
-          <View style={styles.unfocusedArea} />
-          <View style={styles.middleRow}>
-            <View style={styles.unfocusedArea} />
-            <View style={styles.focusedArea}>
-              <View style={styles.cornerTopLeft} />
-              <View style={styles.cornerTopRight} />
-              <View style={styles.cornerBottomLeft} />
-              <View style={styles.cornerBottomRight} />
-            </View>
-            <View style={styles.unfocusedArea} />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Title style={styles.title}>Quét mã QR</Title>
+      </View>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {!scanned ? (
+          <View style={styles.scannerContainer}>
+            {webViewError ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{webViewError}</Text>
+                <Button
+                  mode="contained"
+                  onPress={handleScanAgain}
+                  style={styles.button}
+                >
+                  Thử lại
+                </Button>
+              </View>
+            ) : (
+              <>
+                <WebView
+                  source={{ html: qrScannerHtml }}
+                  style={styles.webview}
+                  onMessage={handleMessage}
+                  onLoad={onWebViewLoad}
+                  onError={onWebViewError}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  startInLoadingState={true}
+                  allowsInlineMediaPlayback={true}
+                  mediaPlaybackRequiresUserAction={false}
+                  renderLoading={() => (
+                    <ActivityIndicator
+                      animating={true}
+                      size="large"
+                      color={theme.colors.primary}
+                      style={styles.loading}
+                    />
+                  )}
+                />
+                {webViewLoaded && (
+                  <View style={styles.overlay}>
+                    <View style={styles.scanFrame}>
+                      <Icon name="qrcode-scan" size={40} color="#fff" style={styles.scanIcon} />
+                      <Text style={styles.scanText}>Quét mã QR của vé</Text>
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
           </View>
-          <View style={styles.unfocusedArea} />
-        </View>
-      </Camera>
-
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#ffffff" />
-          <Text style={styles.loadingText}>Đang xử lý...</Text>
-        </View>
-      )}
-
-      <View style={styles.bottomContainer}>
-        <Text style={styles.instruction}>Đặt mã QR vào khung để quét</Text>
-        {scanned && (
-          <Text style={styles.scanAgainText}>Chờ xử lý...</Text>
+        ) : (
+          <View style={styles.resultContainer}>
+            {loading ? (
+              <ActivityIndicator animating={true} size="large" color={theme.colors.primary} />
+            ) : scanResult ? (
+              <>
+                <Icon
+                  name={scanResult.success ? 'check-circle' : 'alert-circle'}
+                  size={60}
+                  color={scanResult.success ? theme.colors.success : theme.colors.error}
+                  style={styles.resultIcon}
+                />
+                <Text style={styles.resultMessage}>{scanResult.message}</Text>
+                {scanResult.success && scanResult.ticket && (
+                  <View style={styles.ticketInfo}>
+                    <Text style={styles.ticketText}>Sự kiện: {scanResult.ticket.event_title}</Text>
+                    <Text style={styles.ticketText}>Người dùng: {scanResult.ticket.username}</Text>
+                    <Text style={styles.ticketText}>
+                      Thời gian: {new Date(scanResult.ticket.event_start_time).toLocaleString()}
+                    </Text>
+                  </View>
+                )}
+                <Button
+                  mode="contained"
+                  onPress={handleScanAgain}
+                  style={styles.button}
+                  disabled={loading}
+                >
+                  Quét lại
+                </Button>
+              </>
+            ) : null}
+          </View>
         )}
       </View>
-
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={toggleFlash}
-        >
-          <Text style={styles.controlButtonText}>
-            {flashMode === FLASH_MODE_TORCH ? 'Tắt đèn' : 'Bật đèn'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={toggleCameraType}
-        >
-          <Text style={styles.controlButtonText}>Đổi camera</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
+    paddingTop: Platform.OS === 'ios' ? 40 : 20,
   },
-  loadingText: { color: '#fff', fontSize: 18, marginTop: 20 },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  container: {
+    flex: 1,
     padding: 20,
-    backgroundColor: '#000',
   },
-  permissionText: { color: '#fff', fontSize: 18, textAlign: 'center', marginBottom: 20 },
-  permissionHelp: { color: '#fff', fontSize: 14, textAlign: 'center', opacity: 0.8, marginTop: 20 },
-  permissionButton: { backgroundColor: '#3498db', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
-  permissionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  camera: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  unfocusedArea: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
-  middleRow: { flexDirection: 'row', flex: 0.5 },
-  focusedArea: {
+  scannerContainer: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'relative',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
-  cornerTopLeft: { position: 'absolute', top: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderTopWidth: 4, borderColor: '#fff' },
-  cornerTopRight: { position: 'absolute', top: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderTopWidth: 4, borderColor: '#fff' },
-  cornerBottomLeft: { position: 'absolute', bottom: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderBottomWidth: 4, borderColor: '#fff' },
-  cornerBottomRight: { position: 'absolute', bottom: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderBottomWidth: 4, borderColor: '#fff' },
-  bottomContainer: { position: 'absolute', bottom: 100, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
-  instruction: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 10 },
-  scanAgainText: { color: '#fff', fontSize: 14, textAlign: 'center', fontStyle: 'italic' },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  webview: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  controlsContainer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-  },
-  controlButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    borderWidth: 1,
+  scanFrame: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
     borderColor: '#fff',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
-  controlButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  scanIcon: {
+    marginBottom: 10,
+  },
+  scanText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  resultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultIcon: {
+    marginBottom: 20,
+  },
+  resultMessage: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  ticketInfo: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    width: '80%',
+  },
+  ticketText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  button: {
+    marginTop: 20,
+    paddingVertical: 6,
+    borderRadius: 8,
+    width: '80%',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'red',
+    marginBottom: 20,
+  },
+  loading: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -25 }, { translateY: -25 }],
+  },
 });
 
 export default Scan;

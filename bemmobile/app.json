@@ -36,6 +36,20 @@
     "permissions": [
       "camera",
       "mediaLibrary"
+    ],
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow access to camera"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to photos"
+        }
+      ]
     ]
   }
 }
