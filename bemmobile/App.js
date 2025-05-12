@@ -22,6 +22,7 @@ import { MyUserContext, MyDispatchContext } from './configs/MyContexts';
 import MyUserReducer from './reducers/MyUserReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TicketDetails from './components/User/TicketDetails';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
@@ -322,15 +323,17 @@ const App = () => {
   */
 
   return (
-    <MyUserContext.Provider value={user}>
-      <MyDispatchContext.Provider value={dispatch}>
-        <PaperProvider>
-          <NavigationContainer>
-            <TabNavigator />
-          </NavigationContainer>
-        </PaperProvider>
-      </MyDispatchContext.Provider>
-    </MyUserContext.Provider>
+    <SafeAreaProvider>
+      <MyUserContext.Provider value={user}>
+        <MyDispatchContext.Provider value={dispatch}>
+          <PaperProvider>
+            <NavigationContainer>
+              <TabNavigator />
+            </NavigationContainer>
+          </PaperProvider>
+        </MyDispatchContext.Provider>
+      </MyUserContext.Provider>
+    </SafeAreaProvider>
   );
 };
 

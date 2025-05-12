@@ -22,8 +22,10 @@ import { useNavigation } from "@react-navigation/native";
 import { MyUserContext } from "../../configs/MyContexts";
 import MyStyles, { colors } from "../../styles/MyStyles";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const EventDetails = ({ route }) => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { event } = route.params;
   const [eventDetail, setEventDetail] = useState(null);
@@ -312,219 +314,221 @@ const EventDetails = ({ route }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {eventDetail.poster && (
-        <Image source={{ uri: eventDetail.poster }} style={styles.poster} />
-      )}
-      <Text style={styles.title}>{eventDetail.title}</Text>
-      <View style={styles.section}>
-        <InfoRow icon="tag" text={eventDetail.category} />
-        <InfoRow icon="map-marker" text={eventDetail.location} />
-        <InfoRow
-          icon="calendar"
-          text={`Bắt đầu: ${new Date(eventDetail.start_time).toLocaleString()}`}
-        />
-        <InfoRow
-          icon="calendar"
-          text={`Kết thúc: ${new Date(eventDetail.end_time).toLocaleString()}`}
-        />
-        <InfoRow icon="ticket" text={`Tổng vé: ${eventDetail.total_tickets}`} />
-        <InfoRow
-          icon="ticket-confirmation"
-          text={`Đã bán: ${eventDetail.sold_tickets}`}
-        />
-        <InfoRow
-          icon="currency-usd"
-          text={`Giá vé: ${
-            eventDetail.ticket_price ? eventDetail.ticket_price + " VND" : "N/A"
-          }`}
-        />
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tags</Text>
-        <View style={styles.tagsContainer}>
-          {eventDetail.tags && eventDetail.tags.length > 0 ? (
-            eventDetail.tags.map((tag, index) => (
-              <View key={tag.id ?? index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag.name}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noTags}>Không có thẻ</Text>
-          )}
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <ScrollView style={styles.container}>
+        {eventDetail.poster && (
+          <Image source={{ uri: eventDetail.poster }} style={styles.poster} />
+        )}
+        <Text style={styles.title}>{eventDetail.title}</Text>
+        <View style={styles.section}>
+          <InfoRow icon="tag" text={eventDetail.category} />
+          <InfoRow icon="map-marker" text={eventDetail.location} />
+          <InfoRow
+            icon="calendar"
+            text={`Bắt đầu: ${new Date(eventDetail.start_time).toLocaleString()}`}
+          />
+          <InfoRow
+            icon="calendar"
+            text={`Kết thúc: ${new Date(eventDetail.end_time).toLocaleString()}`}
+          />
+          <InfoRow icon="ticket" text={`Tổng vé: ${eventDetail.total_tickets}`} />
+          <InfoRow
+            icon="ticket-confirmation"
+            text={`Đã bán: ${eventDetail.sold_tickets}`}
+          />
+          <InfoRow
+            icon="currency-usd"
+            text={`Giá vé: ${
+              eventDetail.ticket_price ? eventDetail.ticket_price + " VND" : "N/A"
+            }`}
+          />
         </View>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mô tả</Text>
-        <Text style={styles.description}>{eventDetail.description}</Text>
-      </View>
-      {eventDetail.latitude && eventDetail.longitude && (
-        <View style={styles.mapContainer}>
-          <View style={styles.mapHeader}>
-            <Text style={styles.sectionTitle}>Vị trí trên bản đồ</Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text
-                style={styles.openMapButton}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tags</Text>
+          <View style={styles.tagsContainer}>
+            {eventDetail.tags && eventDetail.tags.length > 0 ? (
+              eventDetail.tags.map((tag, index) => (
+                <View key={tag.id ?? index} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag.name}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noTags}>Không có thẻ</Text>
+            )}
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mô tả</Text>
+          <Text style={styles.description}>{eventDetail.description}</Text>
+        </View>
+        {eventDetail.latitude && eventDetail.longitude && (
+          <View style={styles.mapContainer}>
+            <View style={styles.mapHeader}>
+              <Text style={styles.sectionTitle}>Vị trí trên bản đồ</Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text
+                  style={styles.openMapButton}
+                  onPress={() =>
+                    openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
+                  }
+                >
+                  Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
+                </Text>
+                <TouchableOpacity onPress={centerMap} style={{ marginLeft: 12 }}>
+                  <Icon name="crosshairs-gps" size={22} color="#1a73e8" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              initialRegion={{
+                latitude: eventDetail.latitude,
+                longitude: eventDetail.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+            >
+              <Marker
+                coordinate={{
+                  latitude: eventDetail.latitude,
+                  longitude: eventDetail.longitude,
+                }}
+                title={eventDetail.title}
+                description={eventDetail.location}
                 onPress={() =>
                   openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
                 }
-              >
-                Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
-              </Text>
-              <TouchableOpacity onPress={centerMap} style={{ marginLeft: 12 }}>
-                <Icon name="crosshairs-gps" size={22} color="#1a73e8" />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            initialRegion={{
-              latitude: eventDetail.latitude,
-              longitude: eventDetail.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            <Marker
-              coordinate={{
-                latitude: eventDetail.latitude,
-                longitude: eventDetail.longitude,
+              />
+            </MapView>
+
+            <Button
+              mode="contained"
+              onPress={() => {
+                if (!user || !user.username) {
+                  navigation.navigate("loginStack");
+                } else {
+                  navigation.navigate("BookTicket", {
+                    eventId: eventDetail.id,
+                    ticketPrice: eventDetail.ticket_price,
+                  });
+                }
               }}
-              title={eventDetail.title}
-              description={eventDetail.location}
-              onPress={() =>
-                openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
-              }
-            />
-          </MapView>
-
-          <Button
-            mode="contained"
-            onPress={() => {
-              if (!user || !user.username) {
-                navigation.navigate("loginStack");
-              } else {
-                navigation.navigate("BookTicket", {
-                  eventId: eventDetail.id,
-                  ticketPrice: eventDetail.ticket_price,
-                });
-              }
-            }}
-            style={{
-              marginTop: 20,
-              marginHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 8,
-            }}
-            buttonColor={colors.bluePrimary}
-          >
-            Đặt vé ngay!
-          </Button>
-        </View>
-      )}
-      {/* Review Section */}
-      <View style={styles.reviewSection}>
-        <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
-        {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
-        {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
-        
-        {/* Add/Edit Review Form */}
-        {user && user.username ? (
-          <View>
-            <Text style={styles.formLabel}>
-              {editingReview ? "Chỉnh sửa đánh giá" : "Thêm đánh giá của bạn"}
-            </Text>
-            <StarRating rating={rating} onRatingChange={setRating} />
-            <TextInput
-              style={[styles.input, { height: 80 }]}
-              placeholder="Bình luận (tùy chọn)"
-              multiline
-              value={comment}
-              onChangeText={setComment}
-            />
-            <View style={styles.buttonGroup}>
-              {editingReview && (
-                <Button
-                  mode="outlined"
-                  onPress={() => {
-                    setEditingReview(null);
-                    setRating(0);
-                    setComment("");
-                  }}
-                  style={styles.cancelButton}
-                >
-                  Hủy
-                </Button>
-              )}
-              <Button
-                mode="contained"
-                onPress={editingReview ? updateReview : submitReview}
-                loading={submittingReview}
-                disabled={submittingReview || rating === 0}
-                buttonColor={colors.blueAccent}
-                style={styles.submitButton}
-              >
-                {editingReview ? "Cập nhật" : "Gửi đánh giá"}
-              </Button>
-            </View>
+              style={{
+                marginTop: 20,
+                marginHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 8,
+              }}
+              buttonColor={colors.bluePrimary}
+            >
+              Đặt vé ngay!
+            </Button>
           </View>
-        ) : (
-          <Text
-            style={styles.loginPrompt}
-            onPress={() => navigation.navigate("loginStack")}
-          >
-            Vui lòng đăng nhập để thêm đánh giá.
-          </Text>
         )}
-
-        {/* Review List */}
-        {reviews.length === 0 ? (
-          <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
-        ) : (
-          reviews.map((review) => (
-            <View key={review.id} style={[
-              styles.reviewItem,
-              user?.id === review.user && styles.myReview // Highlight my review
-            ]}>
-              <View style={styles.reviewHeader}>
-                {review.user_infor && review.user_infor.avatar ? (
-                  <Image
-                    source={{ uri: review.user_infor.avatar }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <Icon name="account-circle" size={40} color="#888" />
-                )}
-                <View style={styles.userInfo}>
-                  <Text style={styles.reviewUsername}>
-                    {review.user_infor?.username || "Người dùng"}
-                  </Text>
-                  <View style={styles.reviewStars}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FontAwesome
-                        key={star}
-                        name={star <= review.rating ? "star" : "star-o"}
-                        size={16}
-                        color="#f1c40f"
-                        style={styles.starIcon}
-                      />
-                    ))}
-                  </View>
-                </View>
-                <ReviewMenu review={review} />
-              </View>
-              {review.comment ? (
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-              ) : null}
-              <Text style={styles.reviewDate}>
-                {new Date(review.created_at).toLocaleDateString()}
+        {/* Review Section */}
+        <View style={styles.reviewSection}>
+          <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
+          {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
+          {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
+          
+          {/* Add/Edit Review Form */}
+          {user && user.username ? (
+            <View>
+              <Text style={styles.formLabel}>
+                {editingReview ? "Chỉnh sửa đánh giá" : "Thêm đánh giá của bạn"}
               </Text>
+              <StarRating rating={rating} onRatingChange={setRating} />
+              <TextInput
+                style={[styles.input, { height: 80 }]}
+                placeholder="Bình luận (tùy chọn)"
+                multiline
+                value={comment}
+                onChangeText={setComment}
+              />
+              <View style={styles.buttonGroup}>
+                {editingReview && (
+                  <Button
+                    mode="outlined"
+                    onPress={() => {
+                      setEditingReview(null);
+                      setRating(0);
+                      setComment("");
+                    }}
+                    style={styles.cancelButton}
+                  >
+                    Hủy
+                  </Button>
+                )}
+                <Button
+                  mode="contained"
+                  onPress={editingReview ? updateReview : submitReview}
+                  loading={submittingReview}
+                  disabled={submittingReview || rating === 0}
+                  buttonColor={colors.blueAccent}
+                  style={styles.submitButton}
+                >
+                  {editingReview ? "Cập nhật" : "Gửi đánh giá"}
+                </Button>
+              </View>
             </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+          ) : (
+            <Text
+              style={styles.loginPrompt}
+              onPress={() => navigation.navigate("loginStack")}
+            >
+              Vui lòng đăng nhập để thêm đánh giá.
+            </Text>
+          )}
+
+          {/* Review List */} 
+          {reviews.length === 0 ? (
+            <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
+          ) : (
+            reviews.map((review) => (
+              <View key={review.id} style={[
+                styles.reviewItem,
+                user?.id === review.user && styles.myReview // Highlight my review
+              ]}>
+                <View style={styles.reviewHeader}>
+                  {review.user_infor && review.user_infor.avatar ? (
+                    <Image
+                      source={{ uri: review.user_infor.avatar }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <Icon name="account-circle" size={40} color="#888" />
+                  )}
+                  <View style={styles.userInfo}>
+                    <Text style={styles.reviewUsername}>
+                      {review.user_infor?.username || "Người dùng"}
+                    </Text>
+                    <View style={styles.reviewStars}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FontAwesome
+                          key={star}
+                          name={star <= review.rating ? "star" : "star-o"}
+                          size={16}
+                          color="#f1c40f"
+                          style={styles.starIcon}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <ReviewMenu review={review} />
+                </View>
+                {review.comment ? (
+                  <Text style={styles.reviewComment}>{review.comment}</Text>
+                ) : null}
+                <Text style={styles.reviewDate}>
+                  {new Date(review.created_at).toLocaleDateString()}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
