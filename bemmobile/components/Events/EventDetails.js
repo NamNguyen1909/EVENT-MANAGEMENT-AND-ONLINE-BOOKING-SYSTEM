@@ -23,6 +23,8 @@ import { MyUserContext } from "../../configs/MyContexts";
 import MyStyles, { colors } from "../../styles/MyStyles";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Dimensions } from "react-native";
+import RenderHtml from "react-native-render-html";
 
 const EventDetails = ({ route }) => {
   const insets = useSafeAreaInsets();
@@ -357,9 +359,15 @@ const EventDetails = ({ route }) => {
             )}
           </View>
         </View>
+
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả</Text>
-          <Text style={styles.description}>{eventDetail.description}</Text>
+          <RenderHtml
+            contentWidth={Dimensions.get("window").width - 32}
+            source={{ html: eventDetail.description || "" }}
+            baseStyle={styles.description}
+          />
         </View>
         {eventDetail.latitude && eventDetail.longitude && (
           <View style={styles.mapContainer}>
