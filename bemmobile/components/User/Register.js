@@ -190,11 +190,12 @@ const Register = () => {
       return false;
     }
 
-    if (!avatar) {
-      console.log('Avatar is missing');
-      setMsg('Vui lòng chọn ảnh avatar!');
-      return false;
-    }
+    // Remove avatar required validation to allow registration without avatar
+    // if (!avatar) {
+    //   console.log('Avatar is missing');
+    //   setMsg('Vui lòng chọn ảnh avatar!');
+    //   return false;
+    // }
 
     if (!role) {
       console.log('Role is missing');
@@ -219,6 +220,7 @@ const Register = () => {
         formData.append('phone', user.phone);
         formData.append('role', role);
 
+      if (avatar) {
         const uriParts = avatar.split('.');
         const fileType = uriParts[uriParts.length - 1];
         formData.append('avatar', {
@@ -226,6 +228,7 @@ const Register = () => {
           name: `avatar.${fileType}`,
           type: `image/${fileType}`,
         });
+      }
 
         tags.forEach(tagId => {
           formData.append('tags', tagId);
@@ -352,9 +355,9 @@ const Register = () => {
                 </Button>
               }
             >
-              <Menu.Item onPress={() => { setRole('attendee'); setRoleMenuVisible(false); }} title="Attendee" titleStyle={{ color: role === 'attendee' ? colors.blueAccent : 'black' }}/>
-              <Menu.Item onPress={() => { setRole('organizer'); setRoleMenuVisible(false); }} title="Organizer" titleStyle={{ color: role === 'organizer' ? colors.blueAccent : 'black' }}/>
-              <Menu.Item onPress={() => { setRole('admin'); setRoleMenuVisible(false); }} title="Admin" titleStyle={{ color: role === 'admin' ? colors.blueAccent : 'black' }}/>
+            <Menu.Item onPress={() => { setRole('attendee'); setRoleMenuVisible(false); }} title="Attendee" titleStyle={{ color: role === 'attendee' ? colors.blueAccent : 'black' }}/>
+            <Menu.Item onPress={() => { setRole('organizer'); setRoleMenuVisible(false); }} title="Organizer" titleStyle={{ color: role === 'organizer' ? colors.blueAccent : 'black' }}/>
+            <Menu.Item onPress={() => { setRole('admin'); setRoleMenuVisible(false); }} title="Admin" titleStyle={{ color: role === 'admin' ? colors.blueAccent : 'black' }}/>
             </Menu>
 
             <Text style={{ marginBottom: 10, fontWeight: 'bold' }}>Chọn tags (bắt buộc):</Text>

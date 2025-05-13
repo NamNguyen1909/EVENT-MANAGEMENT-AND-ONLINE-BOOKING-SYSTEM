@@ -522,14 +522,14 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         })
 
 
-class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
+class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView,generics.DestroyAPIView):
     queryset = DiscountCode.objects.filter(is_active=True)
     serializer_class = DiscountCodeSerializer
     pagination_class = ItemPaginator
 
     def get_permissions(self):
         if self.action == 'create':
-            return [IsAdminOrOrganizer()]
+            return [IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
     @action(detail=False, methods=['get'], url_path='user-group-discount-codes')

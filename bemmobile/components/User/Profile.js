@@ -8,6 +8,7 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Notifications from '../../components/Notification/Notifications';
+import { colors } from '../../styles/MyStyles';
 
 const Profile = () => {
   const theme = useTheme();
@@ -409,7 +410,8 @@ const Profile = () => {
           onPress={handleUpdate}
           loading={loading}
           disabled={loading}
-          style={styles.button}
+          style={[styles.button, { backgroundColor: colors.blueDark }]}
+          buttonColor={colors.blueDark}
         >
           Cập nhật
         </Button>
