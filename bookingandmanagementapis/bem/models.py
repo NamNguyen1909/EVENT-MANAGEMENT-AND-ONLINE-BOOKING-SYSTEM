@@ -293,7 +293,10 @@ class Payment(models.Model):
 class Review(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_reviews')
-    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        default=0  # Đảm bảo default=0 để phù hợp với phản hồi
+    )
     comment = models.TextField(null=True, blank=True)
     
     # Thêm dòng này để cho phép phản hồi review khác

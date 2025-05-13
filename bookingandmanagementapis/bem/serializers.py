@@ -20,18 +20,35 @@ class TagSerializer(ModelSerializer):
 
 
 # Serializer cho Review
-class ReviewSerializer(ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     user_infor = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
-        fields = ['id', 'user', 'user_infor', 'event', 'rating', 'comment', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'user', 'user_infor', 'event', 'rating', 'comment', 'parent_review', 'created_at']
+        read_only_fields = ['id', 'created_at', 'user']
 
     def validate_rating(self, value):
-        if not (1 <= value <= 5):
-            raise serializers.ValidationError("Điểm đánh giá phải từ 1 đến 5.")
+        # Chỉ kiểm tra nếu rating được cung cấp và không phải là phản hồi
+        if value is not None and not self.initial_data.get('parent_review'):
+            if not (1 <= value <= 5):
+                raise serializers.ValidationError("Điểm đánh giá phải từ 1 đến 5.")
         return value
+
+    def validate(self, data):
+        # Nếu là phản hồi (parent_review được cung cấp), không yêu cầu rating
+        if data.get('parent_review'):
+            user = self.context['request'].user
+            event = data['parent_review'].event
+            if user.role != 'organizer' or event.organizer != user:
+                raise serializers.ValidationError("Chỉ organizer của sự kiện mới có thể phản hồi đánh giá.")
+            # Gán rating mặc định là 0 nếu không cung cấp
+            data['rating'] = data.get('rating', 0)
+        else:
+            # Nếu là review gốc, yêu cầu rating
+            if 'rating' not in data or data['rating'] is None:
+                raise serializers.ValidationError({"rating": "Điểm đánh giá là bắt buộc cho review gốc."})
+        return data
 
     def get_user_infor(self, obj):
         """Trả về thông tin chi tiết của người dùng."""

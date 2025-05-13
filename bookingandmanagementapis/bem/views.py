@@ -695,6 +695,11 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
             Q(receiver=self.request.user) | Q(sender=self.request.user)
         ).select_related('sender', 'receiver')
 
+# Giả sử bạn có class ReviewOwner để kiểm tra quyền
+class ReviewOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
 # Đánh giá sự kiện
 
 # Override get_permissions để phân quyền: create yêu cầu xác thực, update/partial_update/destroy yêu cầu ReviewOwner,
@@ -724,8 +729,6 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
             queryset = queryset.filter(event_id=event_id)
         user = self.request.user
         if user.is_authenticated:
-            # Sắp xếp sao cho review của user hiện tại đứng đầu
-            # Không dùng sorted để tránh trả về list, dùng order_by với Case expression
             from django.db.models import Case, When, Value, IntegerField
             queryset = queryset.annotate(
                 is_current_user=Case(
@@ -737,11 +740,21 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         return queryset
 
     def perform_create(self, serializer):
-        """Gán người dùng hiện tại khi tạo review, kiểm tra user chưa review event."""
+        """Gán người dùng hiện tại khi tạo review hoặc phản hồi."""
         user = self.request.user
-        event = serializer.validated_data.get('event')
-        if Review.objects.filter(user=user, event=event).exists():
-            raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
+        parent_review = serializer.validated_data.get('parent_review')
+
+        if parent_review:
+            # Nếu là phản hồi, không kiểm tra điều kiện "đã review"
+            event = parent_review.event
+            if user.role != 'organizer' or event.organizer != user:
+                raise PermissionDenied("Bạn không có quyền phản hồi đánh giá này.")
+        else:
+            # Nếu là review gốc, kiểm tra user chưa review event
+            event = serializer.validated_data.get('event')
+            if Review.objects.filter(user=user, event=event, parent_review__isnull=True).exists():
+                raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
+
         serializer.save(user=user)
 
     @action(detail=False, methods=['get'], url_path='event-reviews-organizer')
@@ -754,21 +767,18 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         if not event_id:
             raise ValidationError("Tham số event_id là bắt buộc.")
 
-        # Kiểm tra sự kiện tồn tại
         try:
             event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:
             raise ValidationError("Sự kiện không tồn tại.")
 
-        # Kiểm tra người dùng có phải là organizer của sự kiện
         user = request.user
         if not user.is_authenticated:
             raise PermissionDenied("Bạn cần đăng nhập để thực hiện hành động này.")
         if user.role != 'organizer' or event.organizer != user:
             raise PermissionDenied("Bạn không có quyền xem đánh giá của sự kiện này.")
 
-        # Lấy danh sách review của sự kiện
-        reviews = Review.objects.filter(event=event)
+        reviews = Review.objects.filter(event=event).prefetch_related('replies')
         page = self.paginate_queryset(reviews)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

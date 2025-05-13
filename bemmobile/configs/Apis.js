@@ -2,9 +2,9 @@
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
-//  const BASE_URL = "http://192.168.1.7:8000/";
+ const BASE_URL = "http://192.168.1.7:8000/";
 // const BASE_URL = "http://127.0.0.1:8000/";
-const BASE_URL = "http://192.168.44.105:8000/";
+// const BASE_URL = "http://192.168.44.105:8000/";
 
 
 export const endpoints = {
@@ -70,11 +70,12 @@ export const endpoints = {
   
 // Reviews
 reviews: "reviews/",
-createReview: "reviews/", // POST
-updateReview: (reviewId) => `reviews/${reviewId}/`, // PUT/PATCH
-deleteReview: (reviewId) => `reviews/${reviewId}/`, // DELETE
-getEventReviews: (eventId) => `reviews/?event_id=${eventId}`, // GET (danh sách review của 1 sự kiện)
-getReviewsOrganizer: (eventId) => `/reviews/event-reviews-organizer/?event_id=${eventId}`
+  createReview: "reviews/", // POST
+  updateReview: (reviewId) => `reviews/${reviewId}/`, // PUT/PATCH
+  deleteReview: (reviewId) => `reviews/${reviewId}/`, // DELETE
+  getEventReviews: (eventId) => `reviews/?event_id=${eventId}`, // GET (danh sách review của 1 sự kiện)
+  getReviewsOrganizer: (eventId) => `/reviews/event-reviews-organizer/?event_id=${eventId}`, // GET (danh sách review cho organizer)
+  replyReview: "reviews/", // POST (tạo phản hồi)
 
 
 };

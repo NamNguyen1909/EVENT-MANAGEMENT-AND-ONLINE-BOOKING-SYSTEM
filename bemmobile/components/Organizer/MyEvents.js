@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image } from 'react-native';
+import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Title, Card, useTheme, IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const MyEvents = () => {
   const theme = useTheme();
@@ -33,6 +34,10 @@ const MyEvents = () => {
   const [visibleReviews, setVisibleReviews] = useState(3);
   const [fetchingReviews, setFetchingReviews] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [activeTab, setActiveTab] = useState('update');
 
   useEffect(() => {
     if (user && user.role === 'organizer') {
@@ -82,7 +87,6 @@ const MyEvents = () => {
   const fetchCategories = async () => {
     try {
       const res = await Apis.get(endpoints['categories']);
-      console.log("Categories response:", res.data);
       const categoryData = Object.entries(res.data).map(([value, label]) => ({ value, label }));
       setCategories(categoryData);
     } catch (error) {
@@ -162,6 +166,7 @@ const MyEvents = () => {
 
       const api = authApis(token);
       const res = await api.get(endpoints.getReviewsOrganizer(eventId));
+      console.log('Reviews response:', res.data.results); // Thêm log để kiểm tra dữ liệu trả về
       setReviews(res.data.results || []);
     } catch (error) {
       console.error("Error fetching reviews:", error.response ? error.response.data : error.message);
@@ -180,6 +185,7 @@ const MyEvents = () => {
       fetchEventReviews(event.id);
       setShowEditModal(true);
       setVisibleReviews(3);
+      setActiveTab('update');
     }
   };
 
@@ -413,6 +419,186 @@ const MyEvents = () => {
     }
   };
 
+  const ReviewSection = () => {
+    const ReplyModal = ({ review, visible, onClose, onSubmit }) => {
+      const [reply, setReply] = useState('');
+
+      const handleSubmit = () => {
+        console.log('Reply value before submit:', reply); // Log để kiểm tra giá trị
+        if (!reply.trim()) {
+          Alert.alert('Error', 'Vui lòng nhập nội dung phản hồi!');
+          return;
+        }
+        onSubmit(reply); // Truyền trực tiếp giá trị reply
+      };
+
+      return (
+        <Modal
+          visible={visible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={onClose}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
+          >
+            <View style={styles.replyModalContent}>
+              <ScrollView contentContainerStyle={styles.replyModalScroll}>
+                <Text style={styles.pickerLabel}>Phản hồi đánh giá</Text>
+                <TextInput
+                  label="Nội dung phản hồi"
+                  value={reply}
+                  onChangeText={setReply}
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor={theme.colors.primary}
+                  multiline
+                  numberOfLines={4}
+                  theme={{ roundness: 10 }}
+                />
+                <View style={styles.modalButtonContainer}>
+                  <Button
+                    mode="contained"
+                    onPress={handleSubmit}
+                    loading={updating}
+                    disabled={updating}
+                    style={[styles.confirmButton, { marginRight: 10 }]}
+                  >
+                    Gửi
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={onClose}
+                    style={styles.closeButton}
+                  >
+                    Đóng
+                  </Button>
+                </View>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
+      );
+    };
+
+    const submitReply = async (replyContent) => {
+      if (!selectedReview || !replyContent.trim()) {
+        Alert.alert('Error', 'Vui lòng nhập nội dung phản hồi!');
+        return;
+      }
+
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          Alert.alert('Error', 'No authentication token found!');
+          return;
+        }
+
+        const api = authApis(token);
+        const payload = {
+          event: selectedReview.event.id || selectedReview.event, 
+          parent_review: selectedReview.id,
+          comment: replyContent.trim(),
+        };
+        const res = await api.post(endpoints.replyReview, payload);
+        const updatedReviews = reviews.map(r => {
+          if (r.id === selectedReview.id) {
+            return {
+              ...r,
+              replies: [...(r.replies || []), res.data],
+            };
+          }
+          return r;
+        });
+        setReviews(updatedReviews);
+        setReplyText(''); // Reset replyText
+        setShowReviewModal(false);
+        Alert.alert('Success', 'Phản hồi đã được gửi thành công!');
+      } catch (error) {
+        console.error('Error submitting reply:', error.response ? error.response.data : error.message);
+        Alert.alert('Error', 'Failed to submit reply. Please try again.');
+      }
+    };
+
+    return (
+      <View style={styles.reviewsContainer}>
+        <Title style={styles.sectionTitle}>Đánh giá từ người dùng</Title>
+        <FlatList
+          data={reviews.slice(0, visibleReviews)}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Card style={styles.reviewCard}>
+              <Card.Content>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.reviewInfo}>
+                    <Text style={styles.reviewUsername}>{item.user_infor.username}</Text>
+                    <Text style={styles.reviewRating}>Đánh giá: {item.rating} sao</Text>
+                  </View>
+                  <View style={styles.reviewActions}>
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      onPress={() => {
+                        setSelectedReview(item);
+                        setShowReviewModal(true);
+                      }}
+                    >
+                      <Text style={styles.menuText}>Phản hồi</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {item.comment && (
+                  <Text style={styles.reviewComment} numberOfLines={3} ellipsizeMode="tail">
+                    {item.comment}
+                  </Text>
+                )}
+                <Text style={styles.reviewDate}>
+                  {new Date(item.created_at).toLocaleString('vi-VN')}
+                </Text>
+                {item.replies && item.replies.length > 0 && (
+                  <View style={styles.repliesContainer}>
+                    {item.replies.map(reply => (
+                      <View key={reply.id} style={styles.replyItem}>
+                        <Text style={styles.replyUsername}>{reply.user_infor.username}</Text>
+                        <Text style={styles.reviewReply}>{reply.comment}</Text>
+                        <Text style={styles.replyDate}>
+                          {new Date(reply.created_at).toLocaleString('vi-VN')}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </Card.Content>
+            </Card>
+          )}
+          scrollEnabled={false}
+          ListFooterComponent={() =>
+            reviews.length > visibleReviews && (
+              <TouchableOpacity
+                style={styles.loadMoreButton}
+                onPress={() => setVisibleReviews(visibleReviews + 3)}
+                disabled={fetchingReviews}
+              >
+                <Text style={styles.loadMoreText}>
+                  {fetchingReviews ? 'Đang tải...' : 'Xem thêm'}
+                </Text>
+              </TouchableOpacity>
+            )
+          }
+        />
+        <ReplyModal
+          review={selectedReview}
+          visible={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedReview(null);
+          }}
+          onSubmit={submitReply} // Truyền trực tiếp submitReply
+        />
+      </View>
+    );
+  };
+
   const modalData = [
     {
       type: 'title',
@@ -512,7 +698,7 @@ const MyEvents = () => {
           {poster && (
             <IconButton
               icon="close"
-              size= {20}
+              size={20}
               onPress={removeImage}
               style={styles.removeImageButton}
             />
@@ -793,54 +979,6 @@ const MyEvents = () => {
           },
         ]
       : []),
-    ...(reviews.length > 0
-      ? [
-          {
-            type: 'reviews',
-            content: (
-              <View style={styles.reviewsContainer}>
-                <Title style={styles.sectionTitle}>Đánh giá từ người dùng</Title>
-                <FlatList
-                  data={reviews.slice(0, visibleReviews)}
-                  keyExtractor={(item) => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <Card style={styles.reviewCard}>
-                      <Card.Content>
-                        <Text style={styles.reviewUsername}>
-                          {item.user_infor.username}
-                        </Text>
-                        <Text style={styles.reviewRating}>
-                          Đánh giá: {item.rating} sao
-                        </Text>
-                        <Text style={styles.reviewComment}>
-                          {item.comment}
-                        </Text>
-                        <Text style={styles.reviewDate}>
-                          {new Date(item.created_at).toLocaleString('vi-VN')}
-                        </Text>
-                      </Card.Content>
-                    </Card>
-                  )}
-                  scrollEnabled={false}
-                  ListFooterComponent={() =>
-                    reviews.length > visibleReviews && (
-                      <TouchableOpacity
-                        style={styles.loadMoreButton}
-                        onPress={() => setVisibleReviews(visibleReviews + 3)}
-                        disabled={fetchingReviews}
-                      >
-                        <Text style={styles.loadMoreText}>
-                          {fetchingReviews ? 'Đang tải...' : 'Xem thêm'}
-                        </Text>
-                      </TouchableOpacity>
-                    )
-                  }
-                />
-              </View>
-            ),
-          },
-        ]
-      : []),
     {
       type: 'buttons',
       content: (
@@ -921,13 +1059,47 @@ const MyEvents = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <FlatList
-                data={modalData}
-                keyExtractor={(item, index) => `${item.type}-${index}`}
-                renderItem={({ item }) => item.content}
-                contentContainerStyle={styles.modalScrollContent}
-                nestedScrollEnabled
-              />
+              <View style={styles.header}>
+                <TouchableOpacity
+                  style={styles.closeButtonIcon}
+                  onPress={() => {
+                    setShowEditModal(false);
+                    setPoster(null);
+                    setShowImageOptions(false);
+                  }}
+                >
+                  <MaterialIcons name="close" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[styles.tabButton, activeTab === 'update' && styles.activeTab]}
+                  onPress={() => setActiveTab('update')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'update' && styles.activeTabText]}>
+                    Cập nhật sự kiện
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tabButton, activeTab === 'reviews' && styles.activeTab]}
+                  onPress={() => setActiveTab('reviews')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'reviews' && styles.activeTabText]}>
+                    Đánh giá & Phản hồi
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {activeTab === 'update' ? (
+                <FlatList
+                  data={modalData}
+                  keyExtractor={(item, index) => `${item.type}-${index}`}
+                  renderItem={({ item }) => item.content}
+                  contentContainerStyle={styles.modalScrollContent}
+                  nestedScrollEnabled
+                />
+              ) : (
+                <ReviewSection />
+              )}
             </View>
           </View>
         </Modal>
@@ -992,8 +1164,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 20,
   },
+  replyModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    width: '90%',
+    maxHeight: '50%',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  replyModalScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+  },
+  closeButtonIcon: {
+    padding: 5,
+  },
   modalScrollContent: {
     paddingBottom: 20,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#6200ea',
+  },
+  activeTabText: {
+    color: '#6200ea',
   },
   input: {
     marginBottom: 15,
@@ -1154,39 +1370,96 @@ const styles = StyleSheet.create({
   reviewsContainer: {
     marginTop: 20,
     marginBottom: 20,
+    paddingHorizontal: 5,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
+    paddingLeft: 5,
   },
   reviewCard: {
-    marginBottom: 10,
+    marginBottom: 15,
     borderRadius: 10,
     elevation: 2,
     backgroundColor: '#fff',
     padding: 10,
+    marginHorizontal: 5,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  reviewInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+  reviewActions: {
+    flexShrink: 0,
   },
   reviewUsername: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    marginBottom: 4,
   },
   reviewRating: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
+  },
+  reviewReply: {
+    fontSize: 14,
+    color: '#388e3c',
+    fontStyle: 'italic',
     marginTop: 5,
+    paddingLeft: 5,
   },
   reviewComment: {
     fontSize: 14,
     color: '#444',
     marginTop: 5,
+    paddingLeft: 5,
   },
   reviewDate: {
     fontSize: 12,
     color: '#888',
     marginTop: 5,
+    textAlign: 'right',
+    paddingRight: 5,
+  },
+  repliesContainer: {
+    marginTop: 10,
+    paddingLeft: 15,
+    borderLeftWidth: 2,
+    borderLeftColor: '#ddd',
+  },
+  replyItem: {
+    marginBottom: 10,
+  },
+  replyUsername: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  replyDate: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'right',
+    paddingRight: 5,
+  },
+  menuButton: {
+    padding: 5,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  menuText: {
+    fontSize: 14,
+    color: '#6200ea',
   },
   loadMoreButton: {
     padding: 10,
@@ -1194,6 +1467,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
+    marginHorizontal: 5,
   },
   loadMoreText: {
     color: '#fff',
