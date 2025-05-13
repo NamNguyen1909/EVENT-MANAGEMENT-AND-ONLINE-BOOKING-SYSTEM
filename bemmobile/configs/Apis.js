@@ -2,9 +2,9 @@
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
- const BASE_URL = "http://192.168.1.7:8000/";
+//  const BASE_URL = "http://192.168.1.7:8000/";
 // const BASE_URL = "http://127.0.0.1:8000/";
-// const BASE_URL = "http://192.168.44.105:8000/";
+const BASE_URL = "http://192.168.44.105:8000/";
 
 
 export const endpoints = {
@@ -27,11 +27,11 @@ export const endpoints = {
   eventTickets: (eventId) => `events/${eventId}/tickets/`,
   eventReviews: "reviews/",
   eventChatMessages: (eventId) => `events/${eventId}/chat-messages/`,
-  suggestEvents: "events/suggest/",
   hotEvents: "events/hot/",
   eventStatistics: (eventId) => `events/${eventId}/statistics/`,
   myEvents: "events/my-events/", 
   categories: 'events/categories/',
+  suggestEvents: 'events/suggest_events/',
 
   // Tags
   tags: "tags",

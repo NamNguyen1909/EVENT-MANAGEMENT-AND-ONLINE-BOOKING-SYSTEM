@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Avg, Q,F
+from django.db.models import Count, Avg, Q, F, Case, When, IntegerField
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -149,10 +149,10 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         return EventSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'suggest_events', 'hot_events', 'categories']:
-            # Không yêu cầu xác thực cho list, suggest_events, hot_events
+        if self.action in ['list', 'hot_events', 'categories']:
+            # Không yêu cầu xác thực cho list, hot_events
             return [permissions.AllowAny()]
-        elif self.action in ['retrieve', 'get_chat_messages']:
+        elif self.action in ['retrieve', 'get_chat_messages','suggest_events']:
             # Yêu cầu đăng nhập để xem chi tiết sự kiện hoặc tin nhắn chat
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:
@@ -218,28 +218,6 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         serializer = ChatMessageSerializer(page or messages, many=True)
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='suggest')
-    def suggest_events(self, request):
-        user = request.user
-        # Nếu chưa đăng nhập, trả về các sự kiện công khai sắp diễn ra
-        if not user.is_authenticated:
-            suggested_events = Event.objects.filter(
-                is_active=True,
-                start_time__gte=timezone.now()
-            ).order_by('start_time')[:5]
-        else:
-            user_tickets = Ticket.objects.filter(user=user).values('event__category').distinct()
-            categories = [ticket['event__category'] for ticket in user_tickets]
-            queryset = Event.objects.filter(
-                is_active=True,
-                start_time__gte=timezone.now()
-            ).select_related('organizer').prefetch_related('tags')
-            if categories:
-                queryset = queryset.filter(category__in=categories)
-            suggested_events = queryset.order_by('start_time')[:5]
-        serializer = self.get_serializer(suggested_events, many=True)
-        return Response(serializer.data)
-
     @action(detail=False, methods=['get'], url_path='hot')
     def hot_events(self, request):
         hot_events = Event.objects.filter(
@@ -276,6 +254,38 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
     def categories(self, request):
         categories = dict(Event.CATEGORY_CHOICES)
         return Response(categories)
+    
+    @action(detail=False, methods=['get'], url_path='suggest_events')
+    def suggest_events(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication required to get suggested events."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Lấy danh sách tag và category liên quan đến người dùng
+        user_tags = user.tags.all()
+        user_ticket_categories = Ticket.objects.filter(
+            user=user
+        ).values_list('event__category', flat=True).distinct()
+
+        # Truy vấn sự kiện theo tag hoặc category
+        suggested_events = Event.objects.active().filter(
+            Q(tags__in=user_tags) | Q(category__in=user_ticket_categories),
+            start_time__gte=timezone.now()
+        ).annotate(
+            matching_tags=Count('tags', filter=Q(tags__in=user_tags)),
+            is_matching_category=Case(
+                When(category__in=user_ticket_categories, then=1),
+                default=0,
+                output_field=IntegerField()
+            )
+        ).order_by(
+            '-matching_tags',
+            '-is_matching_category',
+            'start_time'
+        ).distinct()[:10]
+
+        serializer = EventSerializer(suggested_events, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 class TagViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
