@@ -17,9 +17,10 @@ import {
   IconButton,
 } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Apis, { endpoints } from "../../configs/Apis";
+import Apis, { endpoints, authApis } from "../../configs/Apis";
 import { colors } from "../../styles/MyStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const userGroups = [
   { label: "Khách hàng mới", value: "new" },
@@ -217,6 +218,14 @@ const DiscountCode = () => {
 
     setLoading(true);
     try {
+      const token = await AsyncStorage.getItem("token");
+      console.log("Token in DiscountCode:", token);
+      if (!token) {
+        Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         code: discountCode.code.trim(),
         discount_percentage: parseFloat(discountCode.discount_percentage),
@@ -227,22 +236,32 @@ const DiscountCode = () => {
           ? parseInt(discountCode.max_uses)
           : null,
       };
+      const api = authApis(token);
+      console.log("Payload for creating discount code:", payload);
 
-      const res = await Apis.post(endpoints["discount_codes"], payload);
-      Alert.alert("Thành công", "Mã giảm giá đã được tạo thành công.");
-      setDiscountCode({
-        code: "",
-        discount_percentage: "",
-        valid_from: "",
-        valid_to: "",
-        user_group: "",
-        max_uses: "",
-      });
+      try {
+        const res = await api.post(endpoints.discountCodes, payload);
+        console.log("Response from creating discount code:", res);
+        Alert.alert("Thành công", "Mã giảm giá đã được tạo thành công.");
+        // reset form inputs
+        setDiscountCode({
+          code: "",
+          discount_percentage: "",
+          valid_from: "",
+          valid_to: "",
+          user_group: "",
+          max_uses: "",
+        });
+      } catch (err) {
+        if (err.response) {
+          console.error("Error creating discount code:", err.response.data);
+        } else {
+          console.error("Error:", err.message);
+        }
+        Alert.alert("Lỗi", "Không thể tạo mã giảm giá.");
+      }
     } catch (error) {
-      console.error(
-        "Error creating discount code:",
-        error.response ? error.response.data : error.message
-      );
+      console.error("Error creating discount code:", error.message);
       Alert.alert("Lỗi", "Không thể tạo mã giảm giá. Vui lòng thử lại.");
     } finally {
       setLoading(false);
@@ -292,68 +311,68 @@ const DiscountCode = () => {
               {formatDateTime(discountCode.valid_from)}
             </Text>
           </TouchableOpacity>
-        <Modal
-          visible={showValidFromDatePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowValidFromDatePicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.pickerLabel}>Chọn ngày</Text>
-              <DateTimePicker
-                value={tempValidFromDate}
-                mode="date"
-                display="spinner"
-                onChange={(event, selectedDate) => {
-                  if (event.type === "dismissed") {
-                    setShowValidFromDatePicker(false);
-                    setPendingValidFromDate(null);
-                    return;
-                  }
-                  if (selectedDate) {
-                    setTempValidFromDate(selectedDate);
-                    setShowValidFromDatePicker(false);
-                    setShowValidFromTimePicker(true);
-                  }
-                }}
-              />
+          <Modal
+            visible={showValidFromDatePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowValidFromDatePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.pickerLabel}>Chọn ngày</Text>
+                <DateTimePicker
+                  value={tempValidFromDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, selectedDate) => {
+                    if (event.type === "dismissed") {
+                      setShowValidFromDatePicker(false);
+                      setPendingValidFromDate(null);
+                      return;
+                    }
+                    if (selectedDate) {
+                      setTempValidFromDate(selectedDate);
+                      setShowValidFromDatePicker(false);
+                      setShowValidFromTimePicker(true);
+                    }
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        </Modal>
-        <Modal
-          visible={showValidFromTimePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowValidFromTimePicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.pickerLabel}>Chọn giờ</Text>
-              <DateTimePicker
-                value={tempValidFromTime}
-                mode="time"
-                display="spinner"
-                onChange={(event, selectedTime) => {
-                  if (event.type === "dismissed") {
-                    setShowValidFromTimePicker(false);
-                    return;
-                  }
-                  if (selectedTime) {
-                    setTempValidFromTime(selectedTime);
-                    setShowValidFromTimePicker(false);
-                    const newDate = new Date(tempValidFromDate);
-                    newDate.setHours(
-                      selectedTime.getHours(),
-                      selectedTime.getMinutes()
-                    );
-                    onChange("valid_from", newDate.toISOString());
-                  }
-                }}
-              />
+          </Modal>
+          <Modal
+            visible={showValidFromTimePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowValidFromTimePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.pickerLabel}>Chọn giờ</Text>
+                <DateTimePicker
+                  value={tempValidFromTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    if (event.type === "dismissed") {
+                      setShowValidFromTimePicker(false);
+                      return;
+                    }
+                    if (selectedTime) {
+                      setTempValidFromTime(selectedTime);
+                      setShowValidFromTimePicker(false);
+                      const newDate = new Date(tempValidFromDate);
+                      newDate.setHours(
+                        selectedTime.getHours(),
+                        selectedTime.getMinutes()
+                      );
+                      onChange("valid_from", newDate.toISOString());
+                    }
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
         </View>
 
         {/* Updated valid_to input */}
@@ -367,68 +386,68 @@ const DiscountCode = () => {
               {formatDateTime(discountCode.valid_to)}
             </Text>
           </TouchableOpacity>
-        <Modal
-          visible={showValidToDatePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowValidToDatePicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.pickerLabel}>Chọn ngày</Text>
-              <DateTimePicker
-                value={tempValidToDate}
-                mode="date"
-                display="spinner"
-                onChange={(event, selectedDate) => {
-                  if (event.type === "dismissed") {
-                    setShowValidToDatePicker(false);
-                    setPendingValidToDate(null);
-                    return;
-                  }
-                  if (selectedDate) {
-                    setTempValidToDate(selectedDate);
-                    setShowValidToDatePicker(false);
-                    setShowValidToTimePicker(true);
-                  }
-                }}
-              />
+          <Modal
+            visible={showValidToDatePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowValidToDatePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.pickerLabel}>Chọn ngày</Text>
+                <DateTimePicker
+                  value={tempValidToDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, selectedDate) => {
+                    if (event.type === "dismissed") {
+                      setShowValidToDatePicker(false);
+                      setPendingValidToDate(null);
+                      return;
+                    }
+                    if (selectedDate) {
+                      setTempValidToDate(selectedDate);
+                      setShowValidToDatePicker(false);
+                      setShowValidToTimePicker(true);
+                    }
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        </Modal>
-        <Modal
-          visible={showValidToTimePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowValidToTimePicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.pickerLabel}>Chọn giờ</Text>
-              <DateTimePicker
-                value={tempValidToTime}
-                mode="time"
-                display="spinner"
-                onChange={(event, selectedTime) => {
-                  if (event.type === "dismissed") {
-                    setShowValidToTimePicker(false);
-                    return;
-                  }
-                  if (selectedTime) {
-                    setTempValidToTime(selectedTime);
-                    setShowValidToTimePicker(false);
-                    const newDate = new Date(tempValidToDate);
-                    newDate.setHours(
-                      selectedTime.getHours(),
-                      selectedTime.getMinutes()
-                    );
-                    onChange("valid_to", newDate.toISOString());
-                  }
-                }}
-              />
+          </Modal>
+          <Modal
+            visible={showValidToTimePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowValidToTimePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.pickerLabel}>Chọn giờ</Text>
+                <DateTimePicker
+                  value={tempValidToTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    if (event.type === "dismissed") {
+                      setShowValidToTimePicker(false);
+                      return;
+                    }
+                    if (selectedTime) {
+                      setTempValidToTime(selectedTime);
+                      setShowValidToTimePicker(false);
+                      const newDate = new Date(tempValidToDate);
+                      newDate.setHours(
+                        selectedTime.getHours(),
+                        selectedTime.getMinutes()
+                      );
+                      onChange("valid_to", newDate.toISOString());
+                    }
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
         </View>
 
         <Menu

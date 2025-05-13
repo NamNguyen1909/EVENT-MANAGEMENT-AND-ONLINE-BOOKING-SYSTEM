@@ -210,6 +210,25 @@ const LoginStackNavigator = () => {
     </LoginStack.Navigator>
   );
 };
+const DiscountCodeStack = createNativeStackNavigator();
+
+const DiscountCodeStackNavigator = () => {
+  return (
+    <DiscountCodeStack.Navigator screenOptions={{ headerShown: false }}>
+      <DiscountCodeStack.Screen
+        name="listDiscountCodes"
+        component={ListDiscountCodes}
+        options={{ title: 'List Discount Codes' }}
+      />
+      <DiscountCodeStack.Screen
+        name="discountCode"
+        component={DiscountCode}
+        options={{ title: 'Discount Code' }}
+      />
+    </DiscountCodeStack.Navigator>
+  );
+}
+
 
 // Khởi tạo Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -264,9 +283,7 @@ const AdminTabs = () => (
     {createTabScreen('dashboard', DashboardStackNavigator, 'Dashboard', 'view-dashboard')}
     {createTabScreen('manageUsers', ManageUsersStackNavigator, 'Manage Users', 'account-group')}
     {createTabScreen('manageEvents', ManageEventsStackNavigator, 'Manage Events', 'calendar-multiple')}
-    {createTabScreen('discountCode', DiscountCode, 'Discount Codes', 'tag')}
-    {createTabScreen('listDiscountCodes', ListDiscountCodes, 'List Discount Codes', 'tag')}
-
+    {createTabScreen('listDiscountCodes', DiscountCodeStackNavigator, 'List Discount Codes', 'tag')}
     {createTabScreen('profile', Profile, 'Profile', 'account')}
   </Tab.Navigator>
 );

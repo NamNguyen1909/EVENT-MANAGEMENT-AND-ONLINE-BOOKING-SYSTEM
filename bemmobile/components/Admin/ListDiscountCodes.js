@@ -170,7 +170,7 @@ const ListDiscountCodes = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top']} >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Danh sách mã giảm giá</Text>
         <TouchableOpacity
