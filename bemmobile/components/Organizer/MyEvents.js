@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image, ScrollView, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { TextInput, Button, Title, Card, useTheme, IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
@@ -12,6 +12,7 @@ const MyEvents = () => {
   const theme = useTheme();
   const user = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
+  const screenHeight = Dimensions.get('window').height;
 
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -38,6 +39,7 @@ const MyEvents = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [activeTab, setActiveTab] = useState('update');
+  const [pendingReplies, setPendingReplies] = useState({});
 
   useEffect(() => {
     if (user && user.role === 'organizer') {
@@ -161,16 +163,37 @@ const MyEvents = () => {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         Alert.alert('Error', 'No authentication token found!');
+        setReviews([]);
         return;
       }
 
       const api = authApis(token);
       const res = await api.get(endpoints.getReviewsOrganizer(eventId));
-      console.log('Reviews response:', res.data.results); // Thêm log để kiểm tra dữ liệu trả về
-      setReviews(res.data.results || []);
+      console.log('Reviews response:', res.data.results);
+
+      if (Array.isArray(res.data.results)) {
+        const processedReviews = res.data.results.map(review => {
+          const pendingReply = pendingReplies[review.id] || [];
+          const existingReplies = Array.isArray(review.replies) ? review.replies : [];
+          return {
+            ...review,
+            replies: [...pendingReply, ...existingReplies],
+          };
+        });
+        setReviews(processedReviews);
+        setPendingReplies(prev => {
+          const newPending = { ...prev };
+          processedReviews.forEach(r => delete newPending[r.id]);
+          return newPending;
+        });
+      } else {
+        console.error('Dữ liệu reviews không đúng định dạng:', res.data);
+        setReviews([]);
+      }
     } catch (error) {
       console.error("Error fetching reviews:", error.response ? error.response.data : error.message);
       Alert.alert('Error', 'Failed to fetch reviews. Please try again.');
+      setReviews([]);
     } finally {
       setFetchingReviews(false);
     }
@@ -424,12 +447,12 @@ const MyEvents = () => {
       const [reply, setReply] = useState('');
 
       const handleSubmit = () => {
-        console.log('Reply value before submit:', reply); // Log để kiểm tra giá trị
+        console.log('Reply value before submit:', reply);
         if (!reply.trim()) {
           Alert.alert('Error', 'Vui lòng nhập nội dung phản hồi!');
           return;
         }
-        onSubmit(reply); // Truyền trực tiếp giá trị reply
+        onSubmit(reply);
       };
 
       return (
@@ -497,22 +520,20 @@ const MyEvents = () => {
 
         const api = authApis(token);
         const payload = {
-          event: selectedReview.event.id || selectedReview.event, 
+          event: selectedReview.event,
           parent_review: selectedReview.id,
           comment: replyContent.trim(),
         };
         const res = await api.post(endpoints.replyReview, payload);
-        const updatedReviews = reviews.map(r => {
-          if (r.id === selectedReview.id) {
-            return {
-              ...r,
-              replies: [...(r.replies || []), res.data],
-            };
-          }
-          return r;
-        });
-        setReviews(updatedReviews);
-        setReplyText(''); // Reset replyText
+        console.log('Reply response:', res.data);
+
+        setPendingReplies(prev => ({
+          ...prev,
+          [selectedReview.id]: [...(prev[selectedReview.id] || []), res.data],
+        }));
+
+        await fetchEventReviews(selectedReview.event);
+        setReplyText('');
         setShowReviewModal(false);
         Alert.alert('Success', 'Phản hồi đã được gửi thành công!');
       } catch (error) {
@@ -522,493 +543,443 @@ const MyEvents = () => {
     };
 
     return (
-      <View style={styles.reviewsContainer}>
+      <View>
         <Title style={styles.sectionTitle}>Đánh giá từ người dùng</Title>
-        <FlatList
-          data={reviews.slice(0, visibleReviews)}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Card style={styles.reviewCard}>
-              <Card.Content>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.reviewInfo}>
-                    <Text style={styles.reviewUsername}>{item.user_infor.username}</Text>
-                    <Text style={styles.reviewRating}>Đánh giá: {item.rating} sao</Text>
+        {fetchingReviews ? (
+          <Text style={styles.loadingText}>Đang tải đánh giá...</Text>
+        ) : reviews.length === 0 ? (
+          <Text style={styles.noReviewsText}>Chưa có đánh giá nào cho sự kiện này.</Text>
+        ) : (
+          <FlatList
+            data={reviews.slice(0, visibleReviews)}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <Card style={styles.reviewCard}>
+                <Card.Content>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.reviewInfo}>
+                      <Text style={styles.reviewUsername}>{item.user_infor?.username || 'Ẩn danh'}</Text>
+                      <Text style={styles.reviewRating}>Đánh giá: {item.rating} sao</Text>
+                    </View>
+                    <View style={styles.reviewActions}>
+                      <TouchableOpacity
+                        style={styles.menuButton}
+                        onPress={() => {
+                          setSelectedReview(item);
+                          setShowReviewModal(true);
+                        }}
+                      >
+                        <Text style={styles.menuText}>Phản hồi</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.reviewActions}>
-                    <TouchableOpacity
-                      style={styles.menuButton}
-                      onPress={() => {
-                        setSelectedReview(item);
-                        setShowReviewModal(true);
-                      }}
-                    >
-                      <Text style={styles.menuText}>Phản hồi</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {item.comment && (
-                  <Text style={styles.reviewComment} numberOfLines={3} ellipsizeMode="tail">
-                    {item.comment}
+                  {item.comment && (
+                    <Text style={styles.reviewComment} numberOfLines={3} ellipsizeMode="tail">
+                      {item.comment}
+                    </Text>
+                  )}
+                  <Text style={styles.reviewDate}>
+                    {new Date(item.created_at).toLocaleString('vi-VN')}
                   </Text>
-                )}
-                <Text style={styles.reviewDate}>
-                  {new Date(item.created_at).toLocaleString('vi-VN')}
-                </Text>
-                {item.replies && item.replies.length > 0 && (
-                  <View style={styles.repliesContainer}>
-                    {item.replies.map(reply => (
-                      <View key={reply.id} style={styles.replyItem}>
-                        <Text style={styles.replyUsername}>{reply.user_infor.username}</Text>
-                        <Text style={styles.reviewReply}>{reply.comment}</Text>
-                        <Text style={styles.replyDate}>
-                          {new Date(reply.created_at).toLocaleString('vi-VN')}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </Card.Content>
-            </Card>
-          )}
-          scrollEnabled={false}
-          ListFooterComponent={() =>
-            reviews.length > visibleReviews && (
-              <TouchableOpacity
-                style={styles.loadMoreButton}
-                onPress={() => setVisibleReviews(visibleReviews + 3)}
-                disabled={fetchingReviews}
-              >
-                <Text style={styles.loadMoreText}>
-                  {fetchingReviews ? 'Đang tải...' : 'Xem thêm'}
-                </Text>
-              </TouchableOpacity>
-            )
-          }
-        />
+                  {item.replies && item.replies.length > 0 && (
+                    <View style={styles.repliesContainer}>
+                      {item.replies.map(reply => (
+                        <View key={reply.id} style={styles.replyItem}>
+                          <Text style={styles.replyUsername}>{reply.user_infor?.username || 'Ẩn danh'}</Text>
+                          <Text style={styles.reviewReply}>{reply.comment}</Text>
+                          <Text style={styles.replyDate}>
+                            {new Date(reply.created_at).toLocaleString('vi-VN')}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </Card.Content>
+              </Card>
+            )}
+            contentContainerStyle={styles.reviewListContent}
+          />
+        )}
+        {reviews.length > visibleReviews && (
+          <TouchableOpacity
+            style={styles.loadMoreButton}
+            onPress={() => setVisibleReviews(prev => prev + 3)}
+            disabled={fetchingReviews}
+          >
+            <Text style={styles.loadMoreText}>
+              {fetchingReviews ? 'Đang tải...' : 'Xem thêm'}
+            </Text>
+          </TouchableOpacity>
+        )}
         <ReplyModal
           review={selectedReview}
           visible={showReviewModal}
           onClose={() => {
             setShowReviewModal(false);
             setSelectedReview(null);
+            setReplyText('');
           }}
-          onSubmit={submitReply} // Truyền trực tiếp submitReply
+          onSubmit={submitReply}
         />
       </View>
     );
   };
 
-  const modalData = [
-    {
-      type: 'title',
-      content: <Title style={styles.subtitle}>Chỉnh Sửa Sự Kiện</Title>,
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Tiêu đề"
-          value={selectedEvent?.title || ''}
-          onChangeText={(text) => changeEvent('title', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Mô tả"
-          value={selectedEvent?.description || ''}
-          onChangeText={(text) => changeEvent('description', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          multiline
-          numberOfLines={3}
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Địa điểm"
-          value={selectedEvent?.location || ''}
-          onChangeText={(text) => changeEvent('location', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Latitude"
-          value={selectedEvent?.latitude?.toString() || ''}
-          onChangeText={(text) => changeEvent('latitude', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          keyboardType="numeric"
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Longitude"
-          value={selectedEvent?.longitude?.toString() || ''}
-          onChangeText={(text) => changeEvent('longitude', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          keyboardType="numeric"
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    {
-      type: 'upload',
-      content: (
-        <View style={styles.uploadContainer}>
-          <TouchableOpacity onPress={() => setShowImageOptions(!showImageOptions)}>
-            {poster ? (
-              <Image
-                source={{ uri: poster }}
-                style={styles.previewImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <View style={styles.placeholderImage}>
-                <Text style={styles.placeholderText}>Chọn ảnh poster</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          {poster && (
-            <IconButton
-              icon="close"
-              size={20}
-              onPress={removeImage}
-              style={styles.removeImageButton}
+  const UpdateSection = () => (
+    <View>
+      <Title style={styles.subtitle}>Chỉnh Sửa Sự Kiện</Title>
+      <TextInput
+        label="Tiêu đề"
+        value={selectedEvent?.title || ''}
+        onChangeText={(text) => changeEvent('title', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        theme={{ roundness: 10 }}
+      />
+      <TextInput
+        label="Mô tả"
+        value={selectedEvent?.description || ''}
+        onChangeText={(text) => changeEvent('description', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        multiline
+        numberOfLines={3}
+        theme={{ roundness: 10 }}
+      />
+      <TextInput
+        label="Địa điểm"
+        value={selectedEvent?.location || ''}
+        onChangeText={(text) => changeEvent('location', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        theme={{ roundness: 10 }}
+      />
+      <TextInput
+        label="Latitude"
+        value={selectedEvent?.latitude?.toString() || ''}
+        onChangeText={(text) => changeEvent('latitude', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        keyboardType="numeric"
+        theme={{ roundness: 10 }}
+      />
+      <TextInput
+        label="Longitude"
+        value={selectedEvent?.longitude?.toString() || ''}
+        onChangeText={(text) => changeEvent('longitude', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        keyboardType="numeric"
+        theme={{ roundness: 10 }}
+      />
+      <View style={styles.uploadContainer}>
+        <TouchableOpacity onPress={() => setShowImageOptions(!showImageOptions)}>
+          {poster ? (
+            <Image
+              source={{ uri: poster }}
+              style={styles.previewImage}
+              resizeMode="contain"
             />
-          )}
-          {showImageOptions && (
-            <View style={styles.imageOptionsContainer}>
-              <Button mode="outlined" onPress={pickImage} style={styles.imageOptionButton}>
-                Thư viện
-              </Button>
-              <Button mode="outlined" onPress={pickImageFromCamera} style={styles.imageOptionButton}>
-                Chụp ảnh
-              </Button>
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text style={styles.placeholderText}>Chọn ảnh poster</Text>
             </View>
           )}
-        </View>
-      ),
-    },
-    {
-      type: 'category',
-      content: (
-        <View style={styles.categoryContainer}>
-          <Text style={styles.sectionLabel}>Danh mục</Text>
-          <TouchableOpacity
-            style={styles.categoryButton}
-            onPress={() => setShowCategoryModal(true)}
-          >
-            <Text style={styles.categoryButtonText}>
-              {selectedEvent?.category
-                ? categories.find(cat => cat.value === selectedEvent.category)?.label
-                : 'Chọn danh mục'}
-            </Text>
-          </TouchableOpacity>
-          <Modal
-            visible={showCategoryModal}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowCategoryModal(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <FlatList
-                  data={categories}
-                  keyExtractor={(item) => item.value}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.categoryItem}
-                      onPress={() => selectCategory(item.value)}
-                    >
-                      <Text style={styles.categoryItemText}>{item.label}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
+        </TouchableOpacity>
+        {poster && (
+          <IconButton
+            icon="close"
+            size={20}
+            onPress={removeImage}
+            style={styles.removeImageButton}
+          />
+        )}
+        {showImageOptions && (
+          <View style={styles.imageOptionsContainer}>
+            <Button mode="outlined" onPress={pickImage} style={styles.imageOptionButton}>
+              Thư viện
+            </Button>
+            <Button mode="outlined" onPress={pickImageFromCamera} style={styles.imageOptionButton}>
+              Chụp ảnh
+            </Button>
+          </View>
+        )}
+      </View>
+      <View style={styles.categoryContainer}>
+        <Text style={styles.sectionLabel}>Danh mục</Text>
+        <TouchableOpacity
+          style={styles.categoryButton}
+          onPress={() => setShowCategoryModal(true)}
+        >
+          <Text style={styles.categoryButtonText}>
+            {selectedEvent?.category
+              ? categories.find(cat => cat.value === selectedEvent.category)?.label
+              : 'Chọn danh mục'}
+          </Text>
+        </TouchableOpacity>
+        <Modal
+          visible={showCategoryModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowCategoryModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <FlatList
+                data={categories}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.categoryItem}
+                    onPress={() => selectCategory(item.value)}
+                  >
+                    <Text style={styles.categoryItemText}>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              <Button
+                mode="contained"
+                onPress={() => setShowCategoryModal(false)}
+                style={styles.closeButton}
+              >
+                Đóng
+              </Button>
+            </View>
+          </View>
+        </Modal>
+      </View>
+      <View style={styles.datePickerContainer}>
+        <Text style={styles.sectionLabel}>Thời gian bắt đầu</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowStartDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDateTime(selectedEvent?.start_time)}
+          </Text>
+        </TouchableOpacity>
+        <Modal
+          visible={showStartDatePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowStartDatePicker(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.pickerLabel}>Chọn ngày</Text>
+              <DateTimePicker
+                value={tempStartDate || new Date(selectedEvent?.start_time || Date.now())}
+                mode="date"
+                display="spinner"
+                onChange={onStartDateChange}
+              />
+              <View style={styles.modalButtonContainer}>
                 <Button
                   mode="contained"
-                  onPress={() => setShowCategoryModal(false)}
+                  onPress={confirmStartDate}
+                  style={[styles.confirmButton, { marginRight: 10 }]}
+                >
+                  Xác nhận
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowStartDatePicker(false)}
                   style={styles.closeButton}
                 >
                   Đóng
                 </Button>
               </View>
             </View>
-          </Modal>
-        </View>
-      ),
-    },
-    {
-      type: 'datePicker',
-      content: (
-        <View style={styles.datePickerContainer}>
-          <Text style={styles.sectionLabel}>Thời gian bắt đầu</Text>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowStartDatePicker(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              {formatDateTime(selectedEvent?.start_time)}
-            </Text>
-          </TouchableOpacity>
-          <Modal
-            visible={showStartDatePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowStartDatePicker(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.pickerLabel}>Chọn ngày</Text>
-                <DateTimePicker
-                  value={tempStartDate || new Date(selectedEvent?.start_time || Date.now())}
-                  mode="date"
-                  display="spinner"
-                  onChange={onStartDateChange}
-                />
-                <View style={styles.modalButtonContainer}>
-                  <Button
-                    mode="contained"
-                    onPress={confirmStartDate}
-                    style={[styles.confirmButton, { marginRight: 10 }]}
-                  >
-                    Xác nhận
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowStartDatePicker(false)}
-                    style={styles.closeButton}
-                  >
-                    Đóng
-                  </Button>
-                </View>
+          </View>
+        </Modal>
+        <Modal
+          visible={showStartTimePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowStartTimePicker(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.pickerLabel}>Chọn giờ</Text>
+              <DateTimePicker
+                value={tempStartTime || new Date(selectedEvent?.start_time || Date.now())}
+                mode="time"
+                display="spinner"
+                onChange={onStartTimeChange}
+              />
+              <View style={styles.modalButtonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={confirmStartTime}
+                  style={[styles.confirmButton, { marginRight: 10 }]}
+                >
+                  Xác nhận
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowStartTimePicker(false)}
+                  style={styles.closeButton}
+                >
+                  Đóng
+                </Button>
               </View>
             </View>
-          </Modal>
-          <Modal
-            visible={showStartTimePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowStartTimePicker(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.pickerLabel}>Chọn giờ</Text>
-                <DateTimePicker
-                  value={tempStartTime || new Date(selectedEvent?.start_time || Date.now())}
-                  mode="time"
-                  display="spinner"
-                  onChange={onStartTimeChange}
-                />
-                <View style={styles.modalButtonContainer}>
-                  <Button
-                    mode="contained"
-                    onPress={confirmStartTime}
-                    style={[styles.confirmButton, { marginRight: 10 }]}
-                  >
-                    Xác nhận
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowStartTimePicker(false)}
-                    style={styles.closeButton}
-                  >
-                    Đóng
-                  </Button>
-                </View>
+          </View>
+        </Modal>
+      </View>
+      <View style={styles.datePickerContainer}>
+        <Text style={styles.sectionLabel}>Thời gian kết thúc</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowEndDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDateTime(selectedEvent?.end_time)}
+          </Text>
+        </TouchableOpacity>
+        <Modal
+          visible={showEndDatePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowEndDatePicker(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.pickerLabel}>Chọn ngày</Text>
+              <DateTimePicker
+                value={tempEndDate || new Date(selectedEvent?.end_time || Date.now())}
+                mode="date"
+                display="spinner"
+                onChange={onEndDateChange}
+              />
+              <View style={styles.modalButtonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={confirmEndDate}
+                  style={[styles.confirmButton, { marginRight: 10 }]}
+                >
+                  Xác nhận
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowEndDatePicker(false)}
+                  style={styles.closeButton}
+                >
+                  Đóng
+                </Button>
               </View>
             </View>
-          </Modal>
-        </View>
-      ),
-    },
-    {
-      type: 'datePicker',
-      content: (
-        <View style={styles.datePickerContainer}>
-          <Text style={styles.sectionLabel}>Thời gian kết thúc</Text>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowEndDatePicker(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              {formatDateTime(selectedEvent?.end_time)}
-            </Text>
-          </TouchableOpacity>
-          <Modal
-            visible={showEndDatePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowEndDatePicker(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.pickerLabel}>Chọn ngày</Text>
-                <DateTimePicker
-                  value={tempEndDate || new Date(selectedEvent?.end_time || Date.now())}
-                  mode="date"
-                  display="spinner"
-                  onChange={onEndDateChange}
-                />
-                <View style={styles.modalButtonContainer}>
-                  <Button
-                    mode="contained"
-                    onPress={confirmEndDate}
-                    style={[styles.confirmButton, { marginRight: 10 }]}
-                  >
-                    Xác nhận
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowEndDatePicker(false)}
-                    style={styles.closeButton}
-                  >
-                    Đóng
-                  </Button>
-                </View>
+          </View>
+        </Modal>
+        <Modal
+          visible={showEndTimePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowEndTimePicker(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.pickerLabel}>Chọn giờ</Text>
+              <DateTimePicker
+                value={tempEndTime || new Date(selectedEvent?.end_time || Date.now())}
+                mode="time"
+                display="spinner"
+                onChange={onEndTimeChange}
+              />
+              <View style={styles.modalButtonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={confirmEndTime}
+                  style={[styles.confirmButton, { marginRight: 10 }]}
+                >
+                  Xác nhận
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowEndTimePicker(false)}
+                  style={styles.closeButton}
+                >
+                  Đóng
+                </Button>
               </View>
             </View>
-          </Modal>
-          <Modal
-            visible={showEndTimePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowEndTimePicker(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.pickerLabel}>Chọn giờ</Text>
-                <DateTimePicker
-                  value={tempEndTime || new Date(selectedEvent?.end_time || Date.now())}
-                  mode="time"
-                  display="spinner"
-                  onChange={onEndTimeChange}
-                />
-                <View style={styles.modalButtonContainer}>
-                  <Button
-                    mode="contained"
-                    onPress={confirmEndTime}
-                    style={[styles.confirmButton, { marginRight: 10 }]}
-                  >
-                    Xác nhận
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowEndTimePicker(false)}
-                    style={styles.closeButton}
-                  >
-                    Đóng
-                  </Button>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        </View>
-      ),
-    },
-    {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Số vé tối đa"
-          value={selectedEvent?.total_tickets?.toString() || ''}
-          onChangeText={(text) => changeEvent('total_tickets', text)}
-          style={styles.input}
+          </View>
+        </Modal>
+      </View>
+      <TextInput
+        label="Số vé tối đa"
+        value={selectedEvent?.total_tickets?.toString() || ''}
+        onChangeText={(text) => changeEvent('total_tickets', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        keyboardType="number-pad"
+        theme={{ roundness: 10 }}
+      />
+      <TextInput
+        label="Giá vé (VNĐ)"
+        value={selectedEvent?.ticket_price?.toString() || ''}
+        onChangeText={(text) => changeEvent('ticket_price', text)}
+        style={styles.input}
+        mode="outlined"
+        outlineColor={theme.colors.primary}
+        keyboardType="numeric"
+        theme={{ roundness: 10 }}
+      />
+      {statistics && (
+        <Card style={styles.statsCard}>
+          <Card.Content>
+            <Text style={styles.statsTitle}>Thống Kê</Text>
+            <Text style={styles.statsText}>Vé đã bán: {statistics.tickets_sold}</Text>
+            <Text style={styles.statsText}>Doanh thu: {statistics.revenue} VNĐ</Text>
+            <Text style={styles.statsText}>Đánh giá trung bình: {statistics.average_rating.toFixed(1)}</Text>
+          </Card.Content>
+        </Card>
+      )}
+      <View style={styles.modalButtonContainer}>
+        <Button
+          mode="contained"
+          onPress={updateEvent}
+          loading={updating}
+          disabled={updating}
+          style={[styles.updateButton, { marginRight: 10 }]}
+          labelStyle={styles.buttonLabel}
+          contentStyle={styles.buttonContent}
+        >
+          Cập nhật
+        </Button>
+        <Button
           mode="outlined"
-          outlineColor={theme.colors.primary}
-          keyboardType="number-pad"
-          theme={{ roundness: 10 }}
-        />
-      ),
+          onPress={() => {
+            setShowEditModal(false);
+            setPoster(null);
+            setShowImageOptions(false);
+          }}
+          style={styles.closeButton}
+          labelStyle={styles.buttonLabel}
+          contentStyle={styles.buttonContent}
+        >
+          Đóng
+        </Button>
+      </View>
+    </View>
+  );
+
+  const modalData = [
+    {
+      key: 'update',
+      title: 'Cập nhật sự kiện',
+      content: <UpdateSection />,
     },
     {
-      type: 'input',
-      content: (
-        <TextInput
-          label="Giá vé (VNĐ)"
-          value={selectedEvent?.ticket_price?.toString() || ''}
-          onChangeText={(text) => changeEvent('ticket_price', text)}
-          style={styles.input}
-          mode="outlined"
-          outlineColor={theme.colors.primary}
-          keyboardType="numeric"
-          theme={{ roundness: 10 }}
-        />
-      ),
-    },
-    ...(statistics
-      ? [
-          {
-            type: 'statistics',
-            content: (
-              <Card style={styles.statsCard}>
-                <Card.Content>
-                  <Text style={styles.statsTitle}>Thống Kê</Text>
-                  <Text style={styles.statsText}>Vé đã bán: {statistics.tickets_sold}</Text>
-                  <Text style={styles.statsText}>Doanh thu: {statistics.revenue} VNĐ</Text>
-                  <Text style={styles.statsText}>Đánh giá trung bình: {statistics.average_rating.toFixed(1)}</Text>
-                </Card.Content>
-              </Card>
-            ),
-          },
-        ]
-      : []),
-    {
-      type: 'buttons',
-      content: (
-        <View style={styles.modalButtonContainer}>
-          <Button
-            mode="contained"
-            onPress={updateEvent}
-            loading={updating}
-            disabled={updating}
-            style={[styles.updateButton, { marginRight: 10 }]}
-            labelStyle={styles.buttonLabel}
-            contentStyle={styles.buttonContent}
-          >
-            Cập nhật
-          </Button>
-          <Button
-            mode="outlined"
-            onPress={() => {
-              setShowEditModal(false);
-              setPoster(null);
-              setShowImageOptions(false);
-            }}
-            style={styles.closeButton}
-            labelStyle={styles.buttonLabel}
-            contentStyle={styles.buttonContent}
-          >
-            Đóng
-          </Button>
-        </View>
-      ),
+      key: 'reviews',
+      title: 'Đánh giá & Phản hồi',
+      content: <ReviewSection />,
     },
   ];
 
@@ -1058,7 +1029,7 @@ const MyEvents = () => {
           onRequestClose={() => setShowEditModal(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.8 }]}>
               <View style={styles.header}>
                 <TouchableOpacity
                   style={styles.closeButtonIcon}
@@ -1066,40 +1037,33 @@ const MyEvents = () => {
                     setShowEditModal(false);
                     setPoster(null);
                     setShowImageOptions(false);
+                    setReviews([]);
                   }}
                 >
                   <MaterialIcons name="close" size={24} color="#666" />
                 </TouchableOpacity>
               </View>
               <View style={styles.tabContainer}>
-                <TouchableOpacity
-                  style={[styles.tabButton, activeTab === 'update' && styles.activeTab]}
-                  onPress={() => setActiveTab('update')}
-                >
-                  <Text style={[styles.tabText, activeTab === 'update' && styles.activeTabText]}>
-                    Cập nhật sự kiện
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.tabButton, activeTab === 'reviews' && styles.activeTab]}
-                  onPress={() => setActiveTab('reviews')}
-                >
-                  <Text style={[styles.tabText, activeTab === 'reviews' && styles.activeTabText]}>
-                    Đánh giá & Phản hồi
-                  </Text>
-                </TouchableOpacity>
+                {modalData.map((tab) => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[styles.tabButton, activeTab === tab.key && styles.activeTab]}
+                    onPress={() => setActiveTab(tab.key)}
+                  >
+                    <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+                      {tab.title}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              {activeTab === 'update' ? (
-                <FlatList
-                  data={modalData}
-                  keyExtractor={(item, index) => `${item.type}-${index}`}
-                  renderItem={({ item }) => item.content}
-                  contentContainerStyle={styles.modalScrollContent}
-                  nestedScrollEnabled
-                />
-              ) : (
-                <ReviewSection />
-              )}
+              <FlatList
+                data={modalData.filter(tab => tab.key === activeTab)}
+                keyExtractor={(item) => item.key}
+                renderItem={({ item }) => item.content}
+                contentContainerStyle={styles.modalScrollContent}
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
+              />
             </View>
           </View>
         </Modal>
@@ -1160,7 +1124,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     width: '90%',
-    maxHeight: '80%',
     paddingHorizontal: 16,
     paddingVertical: 20,
   },
@@ -1355,11 +1318,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     color: '#666',
+    paddingVertical: 10,
   },
   noEventsText: {
     textAlign: 'center',
     fontSize: 16,
     color: '#888',
+  },
+  noReviewsText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#888',
+    paddingVertical: 10,
   },
   errorText: {
     textAlign: 'center',
@@ -1368,7 +1338,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   reviewsContainer: {
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20,
     paddingHorizontal: 5,
   },
@@ -1430,6 +1400,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'right',
     paddingRight: 5,
+  },
+  reviewListContent: {
+    paddingBottom: 20,
   },
   repliesContainer: {
     marginTop: 10,

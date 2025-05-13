@@ -69,7 +69,7 @@ export const endpoints = {
   eventTrendingLogDetail: (logId) => `event-trending-logs/${logId}/`,
   
 // Reviews
-reviews: "reviews/",
+  reviews: "reviews/",
   createReview: "reviews/", // POST
   updateReview: (reviewId) => `reviews/${reviewId}/`, // PUT/PATCH
   deleteReview: (reviewId) => `reviews/${reviewId}/`, // DELETE
