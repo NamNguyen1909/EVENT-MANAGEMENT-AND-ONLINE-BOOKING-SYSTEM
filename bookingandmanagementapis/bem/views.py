@@ -528,9 +528,15 @@ class DiscountCodeViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Creat
     pagination_class = ItemPaginator
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create','destroy']:
             return [IsAdminUser()]
         return [permissions.IsAuthenticated()]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], url_path='user-group-discount-codes')
     def user_group_discount_codes(self, request):

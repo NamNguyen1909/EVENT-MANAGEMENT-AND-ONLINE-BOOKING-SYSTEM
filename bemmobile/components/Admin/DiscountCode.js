@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { TextInput, Button, Title, Menu, Text, useTheme } from 'react-native-paper';
 import Apis, { endpoints } from '../../configs/Apis';
 import { colors } from '../../styles/MyStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const userGroups = [
   { label: 'Khách hàng mới', value: 'new' },
@@ -93,7 +94,7 @@ const DiscountCode = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
         <Title style={styles.title}>Tạo Mã Giảm Giá</Title>
 

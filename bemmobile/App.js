@@ -24,6 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import TicketDetails from './components/User/TicketDetails';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DiscountCode from './components/Admin/DiscountCode';
+import ListDiscountCodes from './components/Admin/ListDiscountCodes';
 
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
@@ -263,7 +264,9 @@ const AdminTabs = () => (
     {createTabScreen('dashboard', DashboardStackNavigator, 'Dashboard', 'view-dashboard')}
     {createTabScreen('manageUsers', ManageUsersStackNavigator, 'Manage Users', 'account-group')}
     {createTabScreen('manageEvents', ManageEventsStackNavigator, 'Manage Events', 'calendar-multiple')}
-    {createTabScreen('discountCode', DiscountCode, 'Discount Codes', 'tag-percent')}
+    {createTabScreen('discountCode', DiscountCode, 'Discount Codes', 'tag')}
+    {createTabScreen('listDiscountCodes', ListDiscountCodes, 'List Discount Codes', 'tag')}
+
     {createTabScreen('profile', Profile, 'Profile', 'account')}
   </Tab.Navigator>
 );
