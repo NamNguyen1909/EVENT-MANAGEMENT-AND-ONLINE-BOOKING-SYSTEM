@@ -20,6 +20,7 @@ const SuggestEvents = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false); // Added refreshing state
   const navigation = useNavigation();
   const user = useContext(MyUserContext);
 
@@ -67,6 +68,7 @@ const SuggestEvents = () => {
       setError('Lỗi khi tải các sự kiện được đề xuất: ' + err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false); // Stop refreshing when load completes
     }
   };
 
@@ -113,6 +115,16 @@ const SuggestEvents = () => {
 
   const safeEvents = Array.isArray(events) ? events : [];
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    const loggedIn = await checkLogin();
+    if (loggedIn) {
+      await fetchSuggestEvents();
+    } else {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={MyStyles.container}>
       <View style={MyStyles.scrollContainer}>
@@ -131,6 +143,8 @@ const SuggestEvents = () => {
             data={safeEvents}
             renderItem={renderEventItem}
             keyExtractor={(item) => item.id.toString()}
+            refreshing={refreshing} // Added refreshing prop
+            onRefresh={onRefresh} // Added onRefresh prop
           />
         )}
       </View>

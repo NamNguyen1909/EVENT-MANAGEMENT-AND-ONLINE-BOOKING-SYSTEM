@@ -16,6 +16,7 @@ const HotEvents = () => {
   const [hotEvents, setHotEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false); // Added refreshing state
   const navigation = useNavigation();
 
   const loadHotEvents = async () => {
@@ -35,6 +36,7 @@ const HotEvents = () => {
       setError('Error loading hot events: ' + err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false); // Stop refreshing when load completes
     }
   };
 
@@ -88,12 +90,19 @@ const HotEvents = () => {
     );
   }
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadHotEvents();
+  };
+
   return (
     <FlatList
       data={hotEvents}
       renderItem={renderItem}
       keyExtractor={(item) => item.event.toString()}
       contentContainerStyle={styles.listContainer}
+      refreshing={refreshing} // Added refreshing prop
+      onRefresh={onRefresh} // Added onRefresh prop
     />
   );
 };

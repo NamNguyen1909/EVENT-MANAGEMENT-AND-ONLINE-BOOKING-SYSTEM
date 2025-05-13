@@ -33,6 +33,7 @@ const MainHome = () => {
   const [q, setQ] = useState('');
   const [cateId, setCateId] = useState(null);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false); // Added refreshing state
   const navigation = useNavigation();
 
 
@@ -67,6 +68,7 @@ const MainHome = () => {
         setError(`Failed to load events: ${error.message} (${error.config?.url || 'Unknown URL'})`);
       } finally {
         setLoading(false);
+        setRefreshing(false); // Stop refreshing when load completes
       }
     }
   };
@@ -83,6 +85,12 @@ const MainHome = () => {
     if (!loading && page > 0) {
       setPage(page + 1);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    setEvents([]); // Clear old events to reload fresh
   };
 
   const search = (value, callback) => {
@@ -186,13 +194,15 @@ const MainHome = () => {
             keyExtractor={(item) => item.id.toString()}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              loading && page > 1 && <ActivityIndicator size="large" color={colors.bluePrimary} />
-            }
-          />
-        )}
-      </View>
-    </SafeAreaView>
+        ListFooterComponent={
+          loading && page > 1 && <ActivityIndicator size="large" color={colors.bluePrimary} />
+        }
+        refreshing={refreshing} // Added refreshing prop
+        onRefresh={onRefresh} // Added onRefresh prop
+      />
+    )}
+  </View>
+</SafeAreaView>
   );
 };
 

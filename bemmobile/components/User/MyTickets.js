@@ -17,12 +17,14 @@ import { endpoints, authApis } from "../../configs/Apis";
 import { MyUserContext } from "../../configs/MyContexts";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MyStyles, { colors } from "../../styles/MyStyles";
+import { SafeAreaView} from 'react-native-safe-area-context';
 
 const MyTickets = () => {
   const navigation = useNavigation();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // Added refreshing state
   const [error, setError] = useState(null);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const user = useContext(MyUserContext);
@@ -34,10 +36,12 @@ const MyTickets = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorDetail, setErrorDetail] = useState(null);
 
-  const fetchTickets = async (url = endpoints.userTickets, append = false) => {
+  const fetchTickets = async (url = endpoints.userTickets, append = false, isRefresh = false) => {
     try {
       if (append) {
         setLoadingMore(true);
+      } else if (isRefresh) {
+        setRefreshing(true);
       } else {
         setLoading(true);
         setError(null);
@@ -48,6 +52,7 @@ const MyTickets = () => {
         setError("Vui lòng đăng nhập để xem vé của bạn.");
         setLoading(false);
         setLoadingMore(false);
+        setRefreshing(false);
         navigation.reset({
           index: 0,
           routes: [{ name: "loginStack" }],
@@ -70,6 +75,7 @@ const MyTickets = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      setRefreshing(false);
     }
   };
 
@@ -208,111 +214,113 @@ const MyTickets = () => {
 
   return (
     <>
-      <FlatList
-        data={tickets}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        refreshing={loading}
-        onRefresh={() => fetchTickets()}
-        onEndReached={fetchMoreTickets}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={() =>
-          loadingMore ? (
-            <View style={{ paddingVertical: 20 }}>
-              <ActivityIndicator size="small" color="#0000ff" />
-            </View>
-          ) : null
-        }
-      />
+      <SafeAreaView style={{ flex: 1 }}>
+        <FlatList
+          data={tickets}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          refreshing={refreshing} // Use refreshing state
+          onRefresh={() => fetchTickets(endpoints.userTickets, false, true)} // Pass isRefresh true
+          onEndReached={fetchMoreTickets}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={() =>
+            loadingMore ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color="#0000ff" />
+              </View>
+            ) : null
+          }
+        />
 
-      <Modal
-        visible={isTicketModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeTicketModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Pressable style={styles.modalCloseButton} onPress={closeTicketModal}>
-              <Text style={styles.modalCloseText}>Đóng</Text>
-            </Pressable>
-            {loadingDetail ? (
-              <ActivityIndicator size="large" color={colors.bluePrimary} />
-            ) : errorDetail ? (
-              <Text style={{ color: "red", textAlign: "center" }}>{errorDetail}</Text>
-            ) : ticketDetail ? (
-              <ScrollView>
-{ticketDetail.qr_code ? (
-  <Image
-    source={{ uri: ticketDetail.qr_code }}
-    style={styles.qrCode}
-  />
-) : (
-  <Text style={{ textAlign: "center", marginBottom: 20 }}>
-    Không có mã QR.
-  </Text>
-)}
-                <Text style={styles.title}>{ticketDetail.event_title || "Chi tiết vé"}</Text>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Username: <Text style={styles.value}>{ticketDetail.username || "N/A"}</Text>
-                  </Text>
-                </View>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Email: <Text style={styles.value}>{ticketDetail.email || "N/A"}</Text>
-                  </Text>
-                </View>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Ngày mua:{" "}
-                    <Text style={styles.value}>
-                      {ticketDetail.purchase_date
-                        ? new Date(ticketDetail.purchase_date).toLocaleString()
-                        : "N/A"}
+        <Modal
+          visible={isTicketModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={closeTicketModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Pressable style={styles.modalCloseButton} onPress={closeTicketModal}>
+                <Text style={styles.modalCloseText}>Đóng</Text>
+              </Pressable>
+              {loadingDetail ? (
+                <ActivityIndicator size="large" color={colors.bluePrimary} />
+              ) : errorDetail ? (
+                <Text style={{ color: "red", textAlign: "center" }}>{errorDetail}</Text>
+              ) : ticketDetail ? (
+                <ScrollView>
+                  {ticketDetail.qr_code ? (
+                    <Image
+                      source={{ uri: ticketDetail.qr_code }}
+                      style={styles.qrCode}
+                    />
+                  ) : (
+                    <Text style={{ textAlign: "center", marginBottom: 20 }}>
+                      Không có mã QR.
                     </Text>
-                  </Text>
-                </View>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Địa điểm: <Text style={styles.value}>{ticketDetail.event_location || "N/A"}</Text>
-                  </Text>
-                </View>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Thời gian bắt đầu:{" "}
-                    <Text style={styles.value}>
-                      {ticketDetail.event_start_time
-                        ? new Date(ticketDetail.event_start_time).toLocaleString()
-                        : "N/A"}
+                  )}
+                  <Text style={styles.title}>{ticketDetail.event_title || "Chi tiết vé"}</Text>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Username: <Text style={styles.value}>{ticketDetail.username || "N/A"}</Text>
                     </Text>
-                  </Text>
-                </View>
-                <View style={styles.section}>
-                  <Text style={styles.labelValue}>
-                    Trạng thái:{" "}
-                    <Text
-                      style={[
-                        styles.value,
-                        { color: ticketDetail.is_paid ? colors.blueDark : "red" },
-                      ]}
-                    >
-                      {ticketDetail.is_paid ? "Đã thanh toán" : "Chưa thanh toán"}
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Email: <Text style={styles.value}>{ticketDetail.email || "N/A"}</Text>
                     </Text>
-                    {"  "}
-                    {ticketDetail.is_paid ? (
-                      <FontAwesome name="check-circle" size={16} color={colors.blueDark} />
-                    ) : (
-                      <FontAwesome name="times-circle" size={16} color="red" />
-                    )}
-                  </Text>
-                </View>
-              </ScrollView>
-            ) : null}
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Ngày mua:{" "}
+                      <Text style={styles.value}>
+                        {ticketDetail.purchase_date
+                          ? new Date(ticketDetail.purchase_date).toLocaleString()
+                          : "N/A"}
+                      </Text>
+                    </Text>
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Địa điểm: <Text style={styles.value}>{ticketDetail.event_location || "N/A"}</Text>
+                    </Text>
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Thời gian bắt đầu:{" "}
+                      <Text style={styles.value}>
+                        {ticketDetail.event_start_time
+                          ? new Date(ticketDetail.event_start_time).toLocaleString()
+                          : "N/A"}
+                      </Text>
+                    </Text>
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Trạng thái:{" "}
+                      <Text
+                        style={[
+                          styles.value,
+                          { color: ticketDetail.is_paid ? colors.blueDark : "red" },
+                        ]}
+                      >
+                        {ticketDetail.is_paid ? "Đã thanh toán" : "Chưa thanh toán"}
+                      </Text>
+                      {"  "}
+                      {ticketDetail.is_paid ? (
+                        <FontAwesome name="check-circle" size={16} color={colors.blueDark} />
+                      ) : (
+                        <FontAwesome name="times-circle" size={16} color="red" />
+                      )}
+                    </Text>
+                  </View>
+                </ScrollView>
+              ) : null}
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </SafeAreaView>
     </>
   );
 };
