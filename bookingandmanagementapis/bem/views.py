@@ -711,10 +711,10 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
             Q(receiver=self.request.user) | Q(sender=self.request.user)
         ).select_related('sender', 'receiver')
 
-# Giả sử bạn có class ReviewOwner để kiểm tra quyền
-class ReviewOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+# # Giả sử bạn có class ReviewOwner để kiểm tra quyền
+# class ReviewOwner(permissions.BasePermission):
+#     def has_object_permission(self, request, view, obj):
+#         return obj.user == request.user
 
 # Đánh giá sự kiện
 

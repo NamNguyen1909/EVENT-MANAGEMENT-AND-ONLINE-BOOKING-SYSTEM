@@ -1,12 +1,25 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { SafeAreaView, View, StyleSheet, Image, ScrollView, Alert, TouchableOpacity, Modal } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
+  Dimensions,
+} from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import Notifications from '../../components/Notification/Notifications';
 import { colors } from '../../styles/MyStyles';
 
@@ -15,6 +28,7 @@ const Profile = () => {
   const navigation = useNavigation();
   const user = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
+  const screenHeight = Dimensions.get('window').height;
 
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -126,7 +140,7 @@ const Profile = () => {
       formData.append('avatar', {
         uri: uri,
         name: `avatar.${fileType}`,
-        type: `image/${fileType}`,
+        type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
       });
 
       const res = await Apis.patch(endpoints.currentUser, formData, {
@@ -154,7 +168,6 @@ const Profile = () => {
   };
 
   const handleUpdate = async () => {
-    // Kiểm tra mật khẩu nếu được nhập
     if (password || confirmPassword) {
       if (password !== confirmPassword) {
         Alert.alert('Lỗi', 'Mật khẩu và xác nhận mật khẩu không khớp.');
@@ -179,7 +192,6 @@ const Profile = () => {
         phone: phone,
       };
 
-      // Chỉ thêm password nếu được nhập
       if (password) {
         updatedData.password = password;
       }
@@ -195,7 +207,6 @@ const Profile = () => {
         payload: res.data,
       });
 
-      // Xóa các trường mật khẩu sau khi cập nhật thành công
       setPassword('');
       setConfirmPassword('');
 
@@ -204,10 +215,10 @@ const Profile = () => {
       console.error('Lỗi cập nhật:', error);
       if (error.response?.data) {
         const errors = error.response.data;
-        Alert.alert('Lỗi', 
-          errors.email ? errors.email[0] : 
-          errors.phone ? errors.phone[0] : 
-          errors.password ? errors.password[0] : 
+        Alert.alert('Lỗi',
+          errors.email ? errors.email[0] :
+          errors.phone ? errors.phone[0] :
+          errors.password ? errors.password[0] :
           'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
         );
       } else {
@@ -274,181 +285,205 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.errorText}>Vui lòng đăng nhập để xem hồ sơ của bạn.</Text>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Vui lòng đăng nhập để xem hồ sơ của bạn.</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleNotificationsPress} style={styles.iconContainer}>
-          <Icon name="bell-outline" size={28} color={theme.colors.primary} />
-          {unreadNotifications > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadNotifications}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleChatPress} style={styles.iconContainer}>
-          <Icon name="chat-outline" size={28} color={theme.colors.primary} />
-          {unreadMessages > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadMessages}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-      <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={handleSelectAvatar}>
-            {avatar ? (
-              <Image source={{ uri: avatar }} style={styles.avatar} />
-            ) : (
-              <Avatar.Text size={100} label={user.username[0].toUpperCase()} />
+    <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleNotificationsPress} style={styles.iconContainer}>
+            <MaterialIcons name="notifications-none" size={28} color={colors.bluePrimary} />
+            {unreadNotifications > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadNotifications}</Text>
+              </View>
             )}
-            <View style={styles.editAvatarOverlay}>
-              <Icon name="camera" size={24} color="#fff" />
-            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleChatPress} style={styles.iconContainer}>
+            <MaterialIcons name="chat-bubble-outline" size={28} color={colors.bluePrimary} />
+            {unreadMessages > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadMessages}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
-
-        <Title style={styles.title}>Hồ sơ</Title>
-
-        <Card style={styles.statsCard}>
-          <Card.Content>
-            <View style={styles.statsRow}>
-              <Text style={styles.statsLabel}>Vé đã mua:</Text>
-              <Text style={styles.statsValue}>{ticketsCount}</Text>
-            </View>
-          </Card.Content>
-        </Card>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Tên người dùng:</Text>
-          <Text style={styles.value}>{user.username}</Text>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Vai trò:</Text>
-          <Text style={styles.value}>{user.role}</Text>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Nhóm khách hàng:</Text>
-          <Text style={styles.value}>{user.customer_group}</Text>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Tổng chi tiêu:</Text>
-          <Text style={styles.value}>{user.total_spent} VNĐ</Text>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Ngày tham gia:</Text>
-          <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
-        </View>
-
-        <Card style={styles.formCard}>
-          <Card.Content>
-            <TextInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-              mode="outlined"
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-
-            <TextInput
-              label="Số điện thoại"
-              value={phone}
-              onChangeText={setPhone}
-              style={styles.input}
-              mode="outlined"
-              keyboardType="phone-pad"
-            />
-
-            <TextInput
-              label="Mật khẩu mới"
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-              mode="outlined"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              right={
-                <TextInput.Icon
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  onPress={() => setShowPassword(!showPassword)}
-                />
-              }
-            />
-
-            <TextInput
-              label="Xác nhận mật khẩu"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              style={styles.input}
-              mode="outlined"
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-              right={
-                <TextInput.Icon
-                  name={showConfirmPassword ? 'eye-off' : 'eye'}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                />
-              }
-            />
-          </Card.Content>
-        </Card>
-
-        <Button
-          mode="contained"
-          onPress={handleUpdate}
-          loading={loading}
-          disabled={loading}
-          style={[styles.button, { backgroundColor: colors.blueDark }]}
-          buttonColor={colors.blueDark}
+        <ScrollView
+          style={[styles.container, { backgroundColor: colors.grayLight }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: Platform.OS === 'android' ? 30 : 20 }]}
+          showsVerticalScrollIndicator={false}
         >
-          Cập nhật
-        </Button>
-
-        <Button
-          mode="outlined"
-          onPress={handleLogout}
-          style={[styles.button, styles.logoutButton]}
-        >
-          Đăng xuất
-        </Button>
-
-        <Button
-          mode="outlined"
-          onPress={handleDeactivate}
-          style={[styles.button, styles.deactivateButton]}
-        >
-          Vô hiệu hóa tài khoản
-        </Button>
-      </ScrollView>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isNotificationModalVisible}
-        onRequestClose={closeNotificationModal}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.notificationModalContent}>
-            <Notifications
-              unreadNotifications={unreadNotifications}
-              onClose={closeNotificationModal}
-              onUpdateUnreadCount={fetchUserStats}
-            />
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity onPress={handleSelectAvatar}>
+              {avatar ? (
+                <Image source={{ uri: avatar }} style={styles.avatar} />
+              ) : (
+                <Avatar.Text size={100} label={user.username[0].toUpperCase()} />
+              )}
+              <View style={styles.editAvatarOverlay}>
+                <MaterialIcons name="camera-alt" size={24} color={colors.white} />
+              </View>
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
-      </Modal>
+
+          <Title style={styles.title}>Hồ sơ</Title>
+
+          <Card style={styles.statsCard}>
+            <Card.Content>
+              <View style={styles.statsRow}>
+                <Text style={styles.statsLabel}>Vé đã mua:</Text>
+                <Text style={styles.statsValue}>{ticketsCount}</Text>
+              </View>
+            </Card.Content>
+          </Card>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Tên người dùng:</Text>
+            <Text style={styles.value}>{user.username}</Text>
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Vai trò:</Text>
+            <Text style={styles.value}>{user.role}</Text>
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Nhóm khách hàng:</Text>
+            <Text style={styles.value}>{user.customer_group}</Text>
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Tổng chi tiêu:</Text>
+            <Text style={styles.value}>{user.total_spent} VNĐ</Text>
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Ngày tham gia:</Text>
+            <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
+          </View>
+
+          <Card style={styles.formCard}>
+            <Card.Content>
+              <TextInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={colors.bluePrimary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+
+              <TextInput
+                label="Số điện thoại"
+                value={phone}
+                onChangeText={setPhone}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={colors.bluePrimary}
+                keyboardType="phone-pad"
+              />
+
+              <TextInput
+                label="Mật khẩu mới"
+                value={password}
+                onChangeText={setPassword}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={colors.bluePrimary}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+              />
+
+              <TextInput
+                label="Xác nhận mật khẩu"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={colors.bluePrimary}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                right={
+                  <TextInput.Icon
+                    icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  />
+                }
+              />
+            </Card.Content>
+          </Card>
+
+          <Button
+            mode="contained"
+            onPress={handleUpdate}
+            loading={loading}
+            disabled={loading}
+            style={[styles.button, { backgroundColor: colors.blueDark }]}
+            buttonColor={colors.blueDark}
+            textColor={colors.white}
+          >
+            Cập nhật
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={handleLogout}
+            style={[styles.button, styles.logoutButton]}
+            textColor={colors.redAccent}
+          >
+            Đăng xuất
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={handleDeactivate}
+            style={[styles.button, styles.deactivateButton]}
+            textColor={colors.orangeAccent}
+          >
+            Vô hiệu hóa tài khoản
+          </Button>
+        </ScrollView>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isNotificationModalVisible}
+          onRequestClose={closeNotificationModal}
+        >
+          <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+            <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={closeNotificationModal} style={styles.closeButton}>
+                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
+                </TouchableOpacity>
+              </View>
+              <Notifications
+                unreadNotifications={unreadNotifications}
+                onClose={closeNotificationModal}
+                onUpdateUnreadCount={fetchUserStats}
+              />
+            </View>
+          </SafeAreaView>
+        </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -456,22 +491,26 @@ const Profile = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: 40,
+    backgroundColor: colors.grayLight,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
   iconContainer: {
     position: 'relative',
+    marginLeft: 15,
   },
   badge: {
     position: 'absolute',
     top: -5,
     right: -5,
-    backgroundColor: 'red',
+    backgroundColor: colors.redAccent,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -479,13 +518,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: 'white',
+    color: colors.white,
     fontSize: 12,
     fontWeight: 'bold',
   },
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+  },
+  scrollContent: {
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -496,12 +539,14 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+    borderWidth: 2,
+    borderColor: colors.bluePrimary,
   },
   editAvatarOverlay: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.blackTransparent,
     borderRadius: 50,
     padding: 5,
   },
@@ -510,10 +555,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 24,
     fontWeight: 'bold',
+    color: colors.navy,
   },
   statsCard: {
     marginBottom: 20,
-    elevation: 4,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   statsRow: {
     flexDirection: 'row',
@@ -523,28 +575,41 @@ const styles = StyleSheet.create({
   statsLabel: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: colors.navy,
   },
   statsValue: {
     fontSize: 16,
+    color: colors.navy,
   },
   infoContainer: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   label: {
     fontWeight: 'bold',
     marginRight: 10,
     fontSize: 16,
+    color: colors.navy,
   },
   value: {
     fontSize: 16,
+    color: colors.navy,
+    flex: 1,
   },
   formCard: {
     marginBottom: 20,
-    elevation: 4,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   input: {
     marginBottom: 15,
+    backgroundColor: colors.white,
   },
   button: {
     marginTop: 10,
@@ -552,30 +617,47 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   logoutButton: {
-    borderColor: 'red',
+    borderColor: colors.redAccent,
     borderWidth: 1,
   },
   deactivateButton: {
-    borderColor: 'orange',
+    borderColor: colors.orangeAccent,
     borderWidth: 1,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   errorText: {
     textAlign: 'center',
     fontSize: 18,
-    color: 'red',
-    marginTop: 20,
+    color: colors.redError,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.blackTransparent,
   },
   notificationModalContent: {
-    flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     borderRadius: 10,
-    margin: 10,
-    marginTop: 40,
-    overflow: 'hidden',
+    marginHorizontal: 10,
+    paddingVertical: 10,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  closeButton: {
+    padding: 5,
   },
 });
 

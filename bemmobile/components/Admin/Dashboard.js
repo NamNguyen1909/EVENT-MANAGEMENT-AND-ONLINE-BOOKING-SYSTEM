@@ -9,6 +9,8 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Card, Title, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +19,7 @@ import Apis, { authApis, endpoints } from '../../configs/Apis';
 import { BarChart, LineChart, PieChart } from 'react-native-chart-kit';
 import moment from 'moment';
 import { Dimensions } from 'react-native';
+import { colors } from '../../styles/MyStyles';
 
 // Kích thước màn hình cho biểu đồ
 const screenWidth = Dimensions.get('window').width;
@@ -44,7 +47,7 @@ const Dashboard = ({ navigation }) => {
       const api = authApis(token);
       const response = await api.get(endpoint);
       const data = response.data.results || response.data;
-      console.log(`Data from ${endpoint}:`, JSON.stringify(data, null, 2)); // Debug log
+      console.log(`Data from ${endpoint}:`, JSON.stringify(data, null, 2));
       setState(transform(data));
     } catch (error) {
       console.error(`Error fetching ${endpoint}:`, error.response ? error.response.data : error.message);
@@ -81,9 +84,8 @@ const Dashboard = ({ navigation }) => {
         fetchData(endpoints.tickets, setTickets),
         fetchData(endpoints.payments, setPayments, (data) => data.filter(p => p.status)),
         fetchData(endpoints.hotEvents, hotEvents => {
-          // Tính tickets_sold cho hotEvents
           const updatedHotEvents = calculateTicketsSold(hotEvents, tickets);
-          console.log('Processed hotEvents:', JSON.stringify(updatedHotEvents, null, 2)); // Debug log
+          console.log('Processed hotEvents:', JSON.stringify(updatedHotEvents, null, 2));
           setHotEvents(updatedHotEvents);
         }),
         fetchData(endpoints.myNotifications, setNotifications),
@@ -99,7 +101,7 @@ const Dashboard = ({ navigation }) => {
   useEffect(() => {
     if (user && user.role === 'admin') {
       loadData();
-      const interval = setInterval(loadData, 30000); // Cập nhật mỗi 30s
+      const interval = setInterval(loadData, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -107,7 +109,7 @@ const Dashboard = ({ navigation }) => {
   // Kiểm tra quyền admin
   if (!user || user.role !== 'admin') {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
         <View style={styles.container}>
           <Text style={styles.errorText}>Chỉ có admin mới có thể truy cập dashboard.</Text>
         </View>
@@ -144,7 +146,7 @@ const Dashboard = ({ navigation }) => {
     datasets: [
       {
         data: Object.values(revenueByDate).map(v => Number.isFinite(v) ? v : 0),
-        color: () => '#FF6384',
+        color: () => colors.chartRed,
         strokeWidth: 2,
       },
     ],
@@ -159,8 +161,8 @@ const Dashboard = ({ navigation }) => {
   const categoryData = Object.keys(eventsByCategory).length > 0 ? Object.keys(eventsByCategory).map((key, index) => ({
     name: key,
     count: Number.isFinite(eventsByCategory[key]) ? eventsByCategory[key] : 0,
-    color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'][index % 5],
-    legendFontColor: '#333',
+    color: [colors.chartRed, colors.chartBlue, colors.chartYellow, colors.chartGreen, colors.chartPurple][index % 5],
+    legendFontColor: colors.navy,
     legendFontSize: 12,
   })) : null;
 
@@ -193,8 +195,14 @@ const Dashboard = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContainer, {
+          paddingTop: Platform.OS === 'android' ? 16 : 0,
+          paddingBottom: Platform.OS === 'android' ? 24 : 0,
+        }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.container}>
           <View style={styles.header}>
             <Title style={styles.title}>Admin Dashboard</Title>
@@ -247,12 +255,12 @@ const Dashboard = ({ navigation }) => {
                 height={220}
                 yAxisLabel=""
                 chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
+                  backgroundColor: colors.white,
+                  backgroundGradientFrom: colors.white,
+                  backgroundGradientTo: colors.white,
                   decimalPlaces: 0,
-                  color: () => '#36A2EB',
-                  labelColor: () => '#333',
+                  color: () => colors.chartBlue,
+                  labelColor: () => colors.navy,
                   style: { borderRadius: 16 },
                 }}
                 style={styles.chart}
@@ -269,12 +277,12 @@ const Dashboard = ({ navigation }) => {
                 height={220}
                 yAxisLabel="VND "
                 chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
+                  backgroundColor: colors.white,
+                  backgroundGradientFrom: colors.white,
+                  backgroundGradientTo: colors.white,
                   decimalPlaces: 0,
-                  color: () => '#FF6384',
-                  labelColor: () => '#333',
+                  color: () => colors.chartRed,
+                  labelColor: () => colors.navy,
                   style: { borderRadius: 16 },
                 }}
                 style={styles.chart}
@@ -290,11 +298,11 @@ const Dashboard = ({ navigation }) => {
                 width={screenWidth - 32}
                 height={220}
                 chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
-                  color: () => '#333',
-                  labelColor: () => '#333',
+                  backgroundColor: colors.white,
+                  backgroundGradientFrom: colors.white,
+                  backgroundGradientTo: colors.white,
+                  color: () => colors.navy,
+                  labelColor: () => colors.navy,
                 }}
                 accessor="count"
                 backgroundColor="transparent"
@@ -347,12 +355,11 @@ const Dashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.grayLight,
   },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingVertical: 24,
   },
   container: {
     flex: 1,
@@ -362,20 +369,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingTop: 8,
   },
   title: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#444',
+    color: colors.navy,
   },
   refreshButton: {
-    backgroundColor: '#6200ea',
+    backgroundColor: colors.bluePrimary,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
   },
   refreshButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -388,19 +396,23 @@ const styles = StyleSheet.create({
   statCard: {
     width: '48%',
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 8,
-    elevation: 2,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.blueGray,
     marginBottom: 8,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
   },
   chartContainer: {
     marginBottom: 20,
@@ -408,16 +420,17 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 10,
   },
   chart: {
     borderRadius: 16,
     marginBottom: 20,
+    paddingVertical: 8,
   },
   noDataText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.blueGray,
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -427,17 +440,21 @@ const styles = StyleSheet.create({
   tableTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 10,
   },
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 8,
-    elevation: 2,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.grayLightest,
     padding: 10,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
@@ -445,7 +462,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     flex: 1,
     textAlign: 'center',
   },
@@ -453,32 +470,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.grayMedium,
   },
   tableCell: {
     fontSize: 14,
-    color: '#333',
+    color: colors.navy,
     flex: 1,
     textAlign: 'center',
   },
   readStatus: {
-    color: '#4CAF50',
+    color: colors.greenSuccess,
     fontSize: 12,
   },
   unreadStatus: {
-    color: '#D32F2F',
+    color: colors.redError,
     fontSize: 12,
   },
   footer: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#666',
+    color: colors.blueGray,
     marginTop: 20,
+    marginBottom: Platform.OS === 'android' ? 16 : 8,
   },
   errorText: {
     textAlign: 'center',
     fontSize: 14,
-    color: '#d32f2f',
+    color: colors.redError,
     marginBottom: 10,
   },
 });

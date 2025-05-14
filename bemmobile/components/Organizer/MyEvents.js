@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, Alert, Text, TouchableOpacity, SafeAreaView, Modal, FlatList, Image, ScrollView, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  Modal,
+  FlatList,
+  Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
+  Dimensions,
+} from 'react-native';
 import { TextInput, Button, Title, Card, useTheme, IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
@@ -7,6 +22,7 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
+import MyStyles, { colors } from '../../styles/MyStyles';
 
 const MyEvents = () => {
   const theme = useTheme();
@@ -95,7 +111,7 @@ const MyEvents = () => {
       console.error("Error fetching categories:", error.response ? error.response.data : error.message);
       Alert.alert('Error', 'Failed to fetch categories. Using default categories.');
       setCategories([
-        { value: 'music', label: 'FakeMusic' },
+        { value: 'music', label: 'Music' },
         { value: 'sports', label: 'Sports' },
         { value: 'seminar', label: 'Seminar' },
         { value: 'conference', label: 'Conference' },
@@ -465,9 +481,13 @@ const MyEvents = () => {
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalContainer}
+            keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
           >
-            <View style={styles.replyModalContent}>
-              <ScrollView contentContainerStyle={styles.replyModalScroll}>
+            <View style={[styles.replyModalContent, { maxHeight: screenHeight * 0.5 }]}>
+              <ScrollView
+                contentContainerStyle={[styles.replyModalScroll, { paddingBottom: Platform.OS === 'android' ? 16 : 0 }]}
+                showsVerticalScrollIndicator={true}
+              >
                 <Text style={styles.pickerLabel}>Phản hồi đánh giá</Text>
                 <TextInput
                   label="Nội dung phản hồi"
@@ -475,7 +495,7 @@ const MyEvents = () => {
                   onChangeText={setReply}
                   style={styles.input}
                   mode="outlined"
-                  outlineColor={theme.colors.primary}
+                  outlineColor={colors.bluePrimary}
                   multiline
                   numberOfLines={4}
                   theme={{ roundness: 10 }}
@@ -487,6 +507,7 @@ const MyEvents = () => {
                     loading={updating}
                     disabled={updating}
                     style={[styles.confirmButton, { marginRight: 10 }]}
+                    buttonColor={colors.bluePrimary}
                   >
                     Gửi
                   </Button>
@@ -494,6 +515,7 @@ const MyEvents = () => {
                     mode="outlined"
                     onPress={onClose}
                     style={styles.closeButton}
+                    textColor={colors.bluePrimary}
                   >
                     Đóng
                   </Button>
@@ -563,7 +585,7 @@ const MyEvents = () => {
                     </View>
                     <View style={styles.reviewActions}>
                       <TouchableOpacity
-                        style={styles.menuButton}
+                        style={axiosstyles.menuButton}
                         onPress={() => {
                           setSelectedReview(item);
                           setShowReviewModal(true);
@@ -597,7 +619,9 @@ const MyEvents = () => {
                 </Card.Content>
               </Card>
             )}
-            contentContainerStyle={styles.reviewListContent}
+            contentContainerStyle={[styles.reviewListContent, { paddingBottom: Platform.OS === 'android' ? 16 : 0 }]}
+            nestedScrollEnabled={true}
+            scrollEnabled={false}
           />
         )}
         {reviews.length > visibleReviews && (
@@ -634,7 +658,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('title', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         theme={{ roundness: 10 }}
       />
       <TextInput
@@ -643,7 +667,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('description', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         multiline
         numberOfLines={3}
         theme={{ roundness: 10 }}
@@ -654,7 +678,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('location', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         theme={{ roundness: 10 }}
       />
       <TextInput
@@ -663,7 +687,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('latitude', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         keyboardType="numeric"
         theme={{ roundness: 10 }}
       />
@@ -673,7 +697,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('longitude', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         keyboardType="numeric"
         theme={{ roundness: 10 }}
       />
@@ -701,10 +725,10 @@ const MyEvents = () => {
         )}
         {showImageOptions && (
           <View style={styles.imageOptionsContainer}>
-            <Button mode="outlined" onPress={pickImage} style={styles.imageOptionButton}>
+            <Button mode="outlined" onPress={pickImage} style={styles.imageOptionButton} textColor={colors.bluePrimary}>
               Thư viện
             </Button>
-            <Button mode="outlined" onPress={pickImageFromCamera} style={styles.imageOptionButton}>
+            <Button mode="outlined" onPress={pickImageFromCamera} style={styles.imageOptionButton} textColor={colors.bluePrimary}>
               Chụp ảnh
             </Button>
           </View>
@@ -729,7 +753,7 @@ const MyEvents = () => {
           onRequestClose={() => setShowCategoryModal(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.6 }]}>
               <FlatList
                 data={categories}
                 keyExtractor={(item) => item.value}
@@ -741,11 +765,13 @@ const MyEvents = () => {
                     <Text style={styles.categoryItemText}>{item.label}</Text>
                   </TouchableOpacity>
                 )}
+                contentContainerStyle={{ paddingBottom: Platform.OS === 'android' ? 16 : 0 }}
               />
               <Button
                 mode="contained"
                 onPress={() => setShowCategoryModal(false)}
                 style={styles.closeButton}
+                buttonColor={colors.bluePrimary}
               >
                 Đóng
               </Button>
@@ -770,12 +796,12 @@ const MyEvents = () => {
           onRequestClose={() => setShowStartDatePicker(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.5 }]}>
               <Text style={styles.pickerLabel}>Chọn ngày</Text>
               <DateTimePicker
                 value={tempStartDate || new Date(selectedEvent?.start_time || Date.now())}
                 mode="date"
-                display="spinner"
+                display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                 onChange={onStartDateChange}
               />
               <View style={styles.modalButtonContainer}>
@@ -783,6 +809,7 @@ const MyEvents = () => {
                   mode="contained"
                   onPress={confirmStartDate}
                   style={[styles.confirmButton, { marginRight: 10 }]}
+                  buttonColor={colors.bluePrimary}
                 >
                   Xác nhận
                 </Button>
@@ -790,6 +817,7 @@ const MyEvents = () => {
                   mode="outlined"
                   onPress={() => setShowStartDatePicker(false)}
                   style={styles.closeButton}
+                  textColor={colors.bluePrimary}
                 >
                   Đóng
                 </Button>
@@ -804,12 +832,12 @@ const MyEvents = () => {
           onRequestClose={() => setShowStartTimePicker(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.5 }]}>
               <Text style={styles.pickerLabel}>Chọn giờ</Text>
               <DateTimePicker
                 value={tempStartTime || new Date(selectedEvent?.start_time || Date.now())}
                 mode="time"
-                display="spinner"
+                display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                 onChange={onStartTimeChange}
               />
               <View style={styles.modalButtonContainer}>
@@ -817,6 +845,7 @@ const MyEvents = () => {
                   mode="contained"
                   onPress={confirmStartTime}
                   style={[styles.confirmButton, { marginRight: 10 }]}
+                  buttonColor={colors.bluePrimary}
                 >
                   Xác nhận
                 </Button>
@@ -824,6 +853,7 @@ const MyEvents = () => {
                   mode="outlined"
                   onPress={() => setShowStartTimePicker(false)}
                   style={styles.closeButton}
+                  textColor={colors.bluePrimary}
                 >
                   Đóng
                 </Button>
@@ -849,12 +879,12 @@ const MyEvents = () => {
           onRequestClose={() => setShowEndDatePicker(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.5 }]}>
               <Text style={styles.pickerLabel}>Chọn ngày</Text>
               <DateTimePicker
                 value={tempEndDate || new Date(selectedEvent?.end_time || Date.now())}
                 mode="date"
-                display="spinner"
+                display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                 onChange={onEndDateChange}
               />
               <View style={styles.modalButtonContainer}>
@@ -862,6 +892,7 @@ const MyEvents = () => {
                   mode="contained"
                   onPress={confirmEndDate}
                   style={[styles.confirmButton, { marginRight: 10 }]}
+                  buttonColor={colors.bluePrimary}
                 >
                   Xác nhận
                 </Button>
@@ -869,6 +900,7 @@ const MyEvents = () => {
                   mode="outlined"
                   onPress={() => setShowEndDatePicker(false)}
                   style={styles.closeButton}
+                  textColor={colors.bluePrimary}
                 >
                   Đóng
                 </Button>
@@ -883,12 +915,12 @@ const MyEvents = () => {
           onRequestClose={() => setShowEndTimePicker(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.5 }]}>
               <Text style={styles.pickerLabel}>Chọn giờ</Text>
               <DateTimePicker
                 value={tempEndTime || new Date(selectedEvent?.end_time || Date.now())}
                 mode="time"
-                display="spinner"
+                display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                 onChange={onEndTimeChange}
               />
               <View style={styles.modalButtonContainer}>
@@ -896,6 +928,7 @@ const MyEvents = () => {
                   mode="contained"
                   onPress={confirmEndTime}
                   style={[styles.confirmButton, { marginRight: 10 }]}
+                  buttonColor={colors.bluePrimary}
                 >
                   Xác nhận
                 </Button>
@@ -903,6 +936,7 @@ const MyEvents = () => {
                   mode="outlined"
                   onPress={() => setShowEndTimePicker(false)}
                   style={styles.closeButton}
+                  textColor={colors.bluePrimary}
                 >
                   Đóng
                 </Button>
@@ -917,7 +951,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('total_tickets', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         keyboardType="number-pad"
         theme={{ roundness: 10 }}
       />
@@ -927,7 +961,7 @@ const MyEvents = () => {
         onChangeText={(text) => changeEvent('ticket_price', text)}
         style={styles.input}
         mode="outlined"
-        outlineColor={theme.colors.primary}
+        outlineColor={colors.bluePrimary}
         keyboardType="numeric"
         theme={{ roundness: 10 }}
       />
@@ -948,6 +982,7 @@ const MyEvents = () => {
           loading={updating}
           disabled={updating}
           style={[styles.updateButton, { marginRight: 10 }]}
+          buttonColor={colors.bluePrimary}
           labelStyle={styles.buttonLabel}
           contentStyle={styles.buttonContent}
         >
@@ -961,6 +996,7 @@ const MyEvents = () => {
             setShowImageOptions(false);
           }}
           style={styles.closeButton}
+          textColor={colors.bluePrimary}
           labelStyle={styles.buttonLabel}
           contentStyle={styles.buttonContent}
         >
@@ -985,8 +1021,8 @@ const MyEvents = () => {
 
   if (!user || user.role !== 'organizer') {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <View style={MyStyles.container}>
           <Text style={styles.errorText}>Chỉ có organizer mới có thể quản lý sự kiện.</Text>
         </View>
       </SafeAreaView>
@@ -994,20 +1030,23 @@ const MyEvents = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
       <FlatList
         data={events}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background, paddingBottom: 30 }]}
+        contentContainerStyle={[MyStyles.container, {
+          paddingBottom: Platform.OS === 'android' ? 30 : 20,
+          paddingTop: Platform.OS === 'android' ? 16 : 0,
+        }]}
         ListHeaderComponent={<Title style={styles.title}>Quản Lý Sự Kiện</Title>}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleSelectEvent(item)}>
-            <Card style={styles.eventCard}>
+            <Card style={MyStyles.eventItem}>
               <Card.Content>
-                <Text style={styles.eventTitle}>{item.title}</Text>
-                <Text style={styles.eventText}>Địa điểm: {item.location}</Text>
-                <Text style={styles.eventText}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
-                <Text style={styles.eventText}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
+                <Text style={MyStyles.eventTitle}>{item.title}</Text>
+                <Text style={MyStyles.eventDetail}>Địa điểm: {item.location}</Text>
+                <Text style={MyStyles.eventDetail}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
+                <Text style={MyStyles.eventPrice}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
               </Card.Content>
             </Card>
           </TouchableOpacity>
@@ -1019,6 +1058,7 @@ const MyEvents = () => {
             <Text style={styles.noEventsText}>Không có sự kiện nào để hiển thị.</Text>
           )
         }
+        showsVerticalScrollIndicator={true}
       />
 
       {selectedEvent && (
@@ -1028,8 +1068,12 @@ const MyEvents = () => {
           animationType="slide"
           onRequestClose={() => setShowEditModal(false)}
         >
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.8 }]}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
+            keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
+          >
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.9 }]}>
               <View style={styles.header}>
                 <TouchableOpacity
                   style={styles.closeButtonIcon}
@@ -1040,7 +1084,7 @@ const MyEvents = () => {
                     setReviews([]);
                   }}
                 >
-                  <MaterialIcons name="close" size={24} color="#666" />
+                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
                 </TouchableOpacity>
               </View>
               <View style={styles.tabContainer}>
@@ -1056,16 +1100,16 @@ const MyEvents = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-              <FlatList
-                data={modalData.filter(tab => tab.key === activeTab)}
-                keyExtractor={(item) => item.key}
-                renderItem={({ item }) => item.content}
-                contentContainerStyle={styles.modalScrollContent}
-                scrollEnabled={true}
+              <ScrollView
+                contentContainerStyle={[styles.modalScrollContent, { paddingBottom: Platform.OS === 'android' ? 30 : 20 }]}
+                showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
-              />
+                bounces={Platform.OS === 'ios' ? false : undefined}
+              >
+                {modalData.find(tab => tab.key === activeTab)?.content}
+              </ScrollView>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </SafeAreaView>
@@ -1075,65 +1119,52 @@ const MyEvents = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+    backgroundColor: colors.grayLight,
   },
   title: {
     textAlign: 'center',
     marginBottom: 20,
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.navy,
+    paddingTop: 8,
   },
   subtitle: {
     textAlign: 'center',
     marginBottom: 16,
     fontSize: 22,
     fontWeight: '600',
-    color: '#444',
-  },
-  eventCard: {
-    marginBottom: 12,
-    borderRadius: 10,
-    elevation: 3,
-    backgroundColor: '#fff',
-    padding: 10,
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  eventText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
+    color: colors.navy,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.blackTransparent,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 10,
     width: '90%',
     paddingHorizontal: 16,
     paddingVertical: 20,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   replyModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 10,
     width: '90%',
-    maxHeight: '50%',
     paddingHorizontal: 16,
     paddingVertical: 20,
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   replyModalScroll: {
     flexGrow: 1,
@@ -1148,14 +1179,14 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   modalScrollContent: {
-    paddingBottom: 20,
+    flexGrow: 1,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: colors.blueLight,
   },
   tabButton: {
     flex: 1,
@@ -1164,19 +1195,19 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.blueGray,
     fontWeight: '600',
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#6200ea',
+    borderBottomColor: colors.bluePrimary,
   },
   activeTabText: {
-    color: '#6200ea',
+    color: colors.bluePrimary,
   },
   input: {
     marginBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
   },
   uploadContainer: {
     marginBottom: 15,
@@ -1186,12 +1217,12 @@ const styles = StyleSheet.create({
     width: 200,
     height: 150,
     borderRadius: 8,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.blueLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
-    color: '#666',
+    color: colors.blueGray,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1200,13 +1231,13 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#6200ea',
+    borderColor: colors.bluePrimary,
   },
   removeImageButton: {
     position: 'absolute',
     top: -10,
     right: -10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
   },
   imageOptionsContainer: {
     flexDirection: 'row',
@@ -1216,6 +1247,7 @@ const styles = StyleSheet.create({
   imageOptionButton: {
     marginHorizontal: 5,
     borderRadius: 8,
+    borderColor: colors.bluePrimary,
   },
   categoryContainer: {
     marginBottom: 20,
@@ -1223,20 +1255,20 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 8,
   },
   categoryButton: {
     padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#6200ea',
+    borderColor: colors.bluePrimary,
     borderRadius: 10,
     alignItems: 'center',
   },
   categoryButtonText: {
     fontSize: 14,
-    color: '#6200ea',
+    color: colors.bluePrimary,
     fontWeight: '600',
   },
   datePickerContainer: {
@@ -1244,45 +1276,45 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     padding: 12,
-    backgroundColor: '#6200ea',
+    backgroundColor: colors.bluePrimary,
     borderRadius: 8,
     alignItems: 'center',
   },
   dateButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
   pickerLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 10,
     textAlign: 'center',
   },
   categoryItem: {
     padding: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.blueLight,
     borderRadius: 8,
     marginBottom: 8,
     width: '100%',
   },
   categoryItemText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.navy,
     textAlign: 'center',
   },
   closeButton: {
     borderRadius: 8,
-    borderColor: '#6200ea',
+    borderColor: colors.bluePrimary,
   },
   confirmButton: {
     borderRadius: 8,
-    backgroundColor: '#6200ea',
+    backgroundColor: colors.bluePrimary,
   },
   updateButton: {
     borderRadius: 8,
-    backgroundColor: '#6200ea',
+    backgroundColor: colors.bluePrimary,
   },
   buttonLabel: {
     fontSize: 14,
@@ -1299,42 +1331,46 @@ const styles = StyleSheet.create({
   statsCard: {
     marginTop: 20,
     borderRadius: 10,
-    elevation: 3,
-    backgroundColor: '#fff',
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    backgroundColor: colors.white,
     padding: 15,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   statsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 8,
   },
   statsText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.blueGray,
     marginBottom: 4,
   },
   loadingText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#666',
+    color: colors.blueGray,
     paddingVertical: 10,
   },
   noEventsText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#888',
+    color: colors.blueGray,
   },
   noReviewsText: {
     textAlign: 'center',
     fontSize: 14,
-    color: '#888',
+    color: colors.blueGray,
     paddingVertical: 10,
   },
   errorText: {
     textAlign: 'center',
     fontSize: 18,
-    color: '#d32f2f',
+    color: colors.redError,
     marginTop: 20,
   },
   reviewsContainer: {
@@ -1345,17 +1381,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 10,
     paddingLeft: 5,
   },
   reviewCard: {
     marginBottom: 15,
     borderRadius: 10,
-    elevation: 2,
-    backgroundColor: '#fff',
+    elevation: Platform.OS === 'android' ? 4 : 2,
+    backgroundColor: colors.white,
     padding: 10,
     marginHorizontal: 5,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+    shadowRadius: 4,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -1373,42 +1413,42 @@ const styles = StyleSheet.create({
   reviewUsername: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 4,
   },
   reviewRating: {
     fontSize: 14,
-    color: '#666',
+    color: colors.blueGray,
     marginBottom: 4,
   },
   reviewReply: {
     fontSize: 14,
-    color: '#388e3c',
+    color: colors.blueLight,
     fontStyle: 'italic',
     marginTop: 5,
     paddingLeft: 5,
   },
   reviewComment: {
     fontSize: 14,
-    color: '#444',
+    color: colors.navy,
     marginTop: 5,
     paddingLeft: 5,
   },
   reviewDate: {
     fontSize: 12,
-    color: '#888',
+    color: colors.blueGray,
     marginTop: 5,
     textAlign: 'right',
     paddingRight: 5,
   },
   reviewListContent: {
-    paddingBottom: 20,
+    flexGrow: 1,
   },
   repliesContainer: {
     marginTop: 10,
     paddingLeft: 15,
     borderLeftWidth: 2,
-    borderLeftColor: '#ddd',
+    borderLeftColor: colors.blueLight,
   },
   replyItem: {
     marginBottom: 10,
@@ -1416,34 +1456,34 @@ const styles = StyleSheet.create({
   replyUsername: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.navy,
     marginBottom: 2,
   },
   replyDate: {
     fontSize: 12,
-    color: '#888',
+    color: colors.blueGray,
     textAlign: 'right',
     paddingRight: 5,
   },
   menuButton: {
     padding: 5,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.blueLight,
     borderRadius: 5,
   },
   menuText: {
     fontSize: 14,
-    color: '#6200ea',
+    color: colors.bluePrimary,
   },
   loadMoreButton: {
     padding: 10,
-    backgroundColor: '#6200ea',
+    backgroundColor: colors.bluePrimary,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
     marginHorizontal: 5,
   },
   loadMoreText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
