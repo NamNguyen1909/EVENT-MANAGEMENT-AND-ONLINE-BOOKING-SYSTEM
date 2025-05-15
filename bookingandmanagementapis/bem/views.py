@@ -152,7 +152,7 @@ class EventViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIV
         if self.action in ['list', 'hot_events', 'categories']:
             # Không yêu cầu xác thực cho list, hot_events
             return [permissions.AllowAny()]
-        elif self.action in ['retrieve', 'get_chat_messages','suggest_events']:
+        elif self.action in ['retrieve', 'get_chat_messages','suggest_events', 'get_statistics']:
             # Yêu cầu đăng nhập để xem chi tiết sự kiện hoặc tin nhắn chat
             return [permissions.IsAuthenticated()]
         elif self.action in ['create']:

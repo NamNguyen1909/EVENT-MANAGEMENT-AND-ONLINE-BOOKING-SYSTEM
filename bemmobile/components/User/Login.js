@@ -71,7 +71,7 @@ const Login = () => {
 
       // Điều hướng dựa trên vai trò người dùng và is_staff
       setTimeout(() => {
-        if (u.data.is_staff === true) {
+        if (u.data.is_staff === true && u.data.role === 'attendee') {
           // Điều hướng đến tab staff (Scan và Profile)
           navigation.reset({
             index: 0,
