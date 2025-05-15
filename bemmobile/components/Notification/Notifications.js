@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, FlatList, ActivityIndicator, Platform } from 'react-native';
 import { Button, Card } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MyStyles, { colors } from '../../styles/MyStyles';
 
 const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) => {
     const user = useContext(MyUserContext);
@@ -19,7 +20,7 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
     // Debug: Log user và unreadNotifications
     useEffect(() => {
         console.log('>>> Notifications.js - User:', user);
-        console.log('>>> Notifications.js - Unread Notifications:', unreadNotifications);
+        console.log('>>> Notifications.js - Unread Notifications (prop):', unreadNotifications);
     }, [user, unreadNotifications]);
 
     // Reset notifications khi component được mở
@@ -260,10 +261,10 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { flex: 1, maxHeight: '100%' }]}>
             <View style={styles.header}>
                 <View style={styles.headerTitle}>
-                    <Icon name="bell" size={24} color="#4f46e5" style={styles.headerIcon} />
+                    <Icon name="bell" size={24} color={colors.bluePrimary} style={styles.headerIcon} />
                     <Text style={styles.headerText}>Thông Báo</Text>
                 </View>
                 <View style={styles.headerActions}>
@@ -279,14 +280,14 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                         </Button>
                     )}
                     <TouchableOpacity onPress={onClose}>
-                        <Icon name="close" size={24} color="#6b7280" />
+                        <Icon name="close" size={24} color={colors.blueGray} />
                     </TouchableOpacity>
                 </View>
             </View>
 
             {unreadNotifications > 0 && (
                 <View style={styles.unreadBanner}>
-                    <Icon name="bell-ring" size={18} color="#4f46e5" style={styles.unreadIcon} />
+                    <Icon name="bell-ring" size={18} color={colors.bluePrimary} style={styles.unreadIcon} />
                     <Text style={styles.unreadText}>
                         Bạn có {unreadNotifications} thông báo chưa đọc
                     </Text>
@@ -301,7 +302,7 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
 
             {loading && notifications.length === 0 ? (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#4f46e5" />
+                    <ActivityIndicator size="large" color={colors.bluePrimary} />
                     <Text style={styles.loadingText}>Đang tải thông báo...</Text>
                 </View>
             ) : notifications.length === 0 ? (
@@ -317,6 +318,7 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                     showsVerticalScrollIndicator={true}
                     onEndReached={handleLoadMore}
                     onEndReachedThreshold={0.5}
+                    style={{ flex: 1 }}
                 />
             )}
 
@@ -332,7 +334,7 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
             )}
 
             {loading && notifications.length > 0 && (
-                <ActivityIndicator size="small" color="#4f46e5" style={styles.loadingMore} />
+                <ActivityIndicator size="small" color={colors.bluePrimary} style={styles.loadingMore} />
             )}
         </View>
     );
@@ -341,14 +343,15 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
     },
     centeredContainer: {
+        flex: 1,
         padding: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'white',
+        backgroundColor: colors.white,
         borderRadius: 12,
     },
     header: {
@@ -357,7 +360,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.grayMedium,
     },
     headerTitle: {
         flexDirection: 'row',
@@ -373,10 +376,10 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.navy,
     },
     markAllButton: {
-        marginRight: 8,
+        marginRight: 12,
     },
     markAllButtonContent: {
         flexDirection: 'row-reverse',
@@ -384,94 +387,120 @@ const styles = StyleSheet.create({
     unreadBanner: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#eef2ff',
-        padding: 12,
+        backgroundColor: colors.blueLight,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
         marginHorizontal: 16,
-        marginTop: 8,
+        marginTop: 12,
         borderRadius: 8,
     },
     unreadIcon: {
         marginRight: 8,
     },
     unreadText: {
-        color: '#4f46e5',
+        color: colors.bluePrimary,
         fontSize: 14,
     },
     errorBanner: {
-        backgroundColor: '#fee2e2',
-        padding: 12,
+        backgroundColor: colors.redError,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
         marginHorizontal: 16,
-        marginTop: 8,
+        marginTop: 12,
         borderRadius: 8,
     },
     errorText: {
-        color: '#b91c1c',
+        color: colors.white,
         fontSize: 14,
         textAlign: 'center',
     },
     loadingContainer: {
+        flex: 1,
         padding: 40,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     loadingText: {
-        color: '#6b7280',
+        color: colors.blueGray,
         marginTop: 12,
+        textAlign: 'center',
     },
     emptyContainer: {
+        flex: 1,
         padding: 40,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyText: {
-        color: '#6b7280',
+        color: colors.blueGray,
         fontSize: 16,
+        textAlign: 'center',
     },
     listContent: {
-        padding: 16,
+        paddingVertical: 16,
+        paddingHorizontal: 16,
     },
     notificationCard: {
         marginBottom: 12,
-        elevation: 2,
         borderRadius: 8,
+        elevation: Platform.OS === 'android' ? 4 : 0,
+        backgroundColor: colors.white,
+        ...Platform.select({
+            ios: {
+                shadowColor: colors.black,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+        }),
     },
     readNotification: {
-        backgroundColor: '#f9fafb',
-        elevation: 1,
+        backgroundColor: colors.grayLightest,
+        elevation: Platform.OS === 'android' ? 2 : 0,
+        ...Platform.select({
+            ios: {
+                shadowOpacity: 0.05,
+            },
+        }),
     },
     notificationTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 4,
+        color: colors.navy,
+        marginBottom: 6,
     },
     notificationMessage: {
         fontSize: 14,
-        color: '#4b5563',
+        color: colors.blueGray,
         marginBottom: 8,
     },
     notificationTime: {
         fontSize: 12,
-        color: '#9ca3af',
-        marginBottom: 4,
+        color: colors.blueGray,
+        marginBottom: 6,
     },
     notificationEvent: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.blueGray,
         marginBottom: 8,
     },
     markReadButton: {
-        marginTop: 8,
-        backgroundColor: '#4f46e5',
+        marginTop: 10,
+        backgroundColor: colors.bluePrimary,
+        borderRadius: 8,
     },
     loadMoreButton: {
         margin: 16,
-        borderColor: '#4f46e5',
+        borderColor: colors.bluePrimary,
+        borderRadius: 8,
     },
     loadingMore: {
-        marginBottom: 16,
+        marginVertical: 16,
     },
     closeButton: {
         marginTop: 16,
-        backgroundColor: '#4f46e5',
+        backgroundColor: colors.bluePrimary,
+        borderRadius: 8,
     },
 });
 

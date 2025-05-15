@@ -69,7 +69,7 @@ const MyEvents = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'No authentication token found!');
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
         setEvents([]);
         return;
       }
@@ -80,21 +80,21 @@ const MyEvents = () => {
       if (Array.isArray(res.data)) {
         setEvents(res.data);
       } else if (res.data && res.data.error) {
-        Alert.alert('Error', res.data.error);
+        Alert.alert('Lỗi', res.data.error);
         setEvents([]);
       } else {
-        Alert.alert('Error', 'Dữ liệu trả về không đúng định dạng. Vui lòng kiểm tra cấu hình backend.');
+        Alert.alert('Lỗi', 'Dữ liệu trả về không đúng định dạng. Vui lòng kiểm tra cấu hình backend.');
         setEvents([]);
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
       } else {
-        console.error("Error fetching my events:", error.response ? error.response.data : error.message);
-        Alert.alert('Error', 'Failed to fetch your events. Please try again.');
+        console.error("Lỗi khi lấy danh sách sự kiện:", error.response ? error.response.data : error.message);
+        Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại.');
       }
       setEvents([]);
     } finally {
@@ -108,18 +108,18 @@ const MyEvents = () => {
       const categoryData = Object.entries(res.data).map(([value, label]) => ({ value, label }));
       setCategories(categoryData);
     } catch (error) {
-      console.error("Error fetching categories:", error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'Failed to fetch categories. Using default categories.');
+      console.error("Lỗi khi lấy danh mục:", error.response ? error.response.data : error.message);
+      Alert.alert('Lỗi', 'Không thể lấy danh mục. Sử dụng danh mục mặc định.');
       setCategories([
-        { value: 'music', label: 'Music' },
-        { value: 'sports', label: 'Sports' },
-        { value: 'seminar', label: 'Seminar' },
-        { value: 'conference', label: 'Conference' },
-        { value: 'festival', label: 'Festival' },
+        { value: 'music', label: 'Âm nhạc' },
+        { value: 'sports', label: 'Thể thao' },
+        { value: 'seminar', label: 'Hội thảo' },
+        { value: 'conference', label: 'Hội nghị' },
+        { value: 'festival', label: 'Lễ hội' },
         { value: 'workshop', label: 'Workshop' },
-        { value: 'party', label: 'Party' },
-        { value: 'competition', label: 'Competition' },
-        { value: 'other', label: 'Other' },
+        { value: 'party', label: 'Tiệc tùng' },
+        { value: 'competition', label: 'Thi đấu' },
+        { value: 'other', label: 'Khác' },
       ]);
     }
   };
@@ -128,7 +128,7 @@ const MyEvents = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'No authentication token found!');
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
         return null;
       }
 
@@ -137,13 +137,13 @@ const MyEvents = () => {
       return res.data;
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
       } else {
-        console.error("Error fetching event details:", error.response ? error.response.data : error.message);
-        Alert.alert('Error', 'Failed to fetch event details. Please try again.');
+        console.error("Lỗi khi lấy chi tiết sự kiện:", error.response ? error.response.data : error.message);
+        Alert.alert('Lỗi', 'Không thể lấy chi tiết sự kiện. Vui lòng thử lại.');
       }
       return null;
     }
@@ -153,7 +153,7 @@ const MyEvents = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'No authentication token found!');
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
         return;
       }
 
@@ -162,13 +162,13 @@ const MyEvents = () => {
       setStatistics(res.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
       } else {
-        console.error("Error fetching statistics:", error.response ? error.response.data : error.message);
-        Alert.alert('Error', 'Failed to fetch statistics. Please try again.');
+        console.error("Lỗi khi lấy thống kê:", error.response ? error.response.data : error.message);
+        Alert.alert('Lỗi', 'Không thể lấy thống kê. Vui lòng thử lại.');
       }
     }
   };
@@ -178,14 +178,14 @@ const MyEvents = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'No authentication token found!');
+        Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
         setReviews([]);
         return;
       }
 
       const api = authApis(token);
       const res = await api.get(endpoints.getReviewsOrganizer(eventId));
-      console.log('Reviews response:', res.data.results);
+      console.log('Phản hồi đánh giá:', res.data.results);
 
       if (Array.isArray(res.data.results)) {
         const processedReviews = res.data.results.map(review => {
@@ -203,12 +203,12 @@ const MyEvents = () => {
           return newPending;
         });
       } else {
-        console.error('Dữ liệu reviews không đúng định dạng:', res.data);
+        console.error('Dữ liệu đánh giá không đúng định dạng:', res.data);
         setReviews([]);
       }
     } catch (error) {
-      console.error("Error fetching reviews:", error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'Failed to fetch reviews. Please try again.');
+      console.error("Lỗi khi lấy đánh giá:", error.response ? error.response.data : error.message);
+      Alert.alert('Lỗi', 'Không thể lấy đánh giá. Vui lòng thử lại.');
       setReviews([]);
     } finally {
       setFetchingReviews(false);
@@ -236,7 +236,7 @@ const MyEvents = () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Error', 'Cần cấp quyền truy cập thư viện ảnh!');
+        Alert.alert('Lỗi', 'Cần cấp quyền truy cập thư viện ảnh!');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -249,21 +249,21 @@ const MyEvents = () => {
         const uri = result.assets[0].uri;
         const fileType = uri.split('.').pop().toLowerCase();
         if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
-          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          Alert.alert('Lỗi', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
           return;
         }
         const response = await fetch(uri);
         const blob = await response.blob();
         if (blob.size > 5 * 1024 * 1024) {
-          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          Alert.alert('Lỗi', 'Ảnh không được lớn hơn 5MB!');
           return;
         }
         setPoster(uri);
         setShowImageOptions(false);
       }
     } catch (error) {
-      console.error('Error picking image from library:', error);
-      Alert.alert('Error', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
+      console.error('Lỗi khi chọn ảnh từ thư viện:', error);
+      Alert.alert('Lỗi', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
     }
   };
 
@@ -271,7 +271,7 @@ const MyEvents = () => {
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Error', 'Cần cấp quyền truy cập camera!');
+        Alert.alert('Lỗi', 'Cần cấp quyền truy cập camera!');
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -284,21 +284,21 @@ const MyEvents = () => {
         const uri = result.assets[0].uri;
         const fileType = uri.split('.').pop().toLowerCase();
         if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
-          Alert.alert('Error', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+          Alert.alert('Lỗi', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
           return;
         }
         const response = await fetch(uri);
         const blob = await response.blob();
         if (blob.size > 5 * 1024 * 1024) {
-          Alert.alert('Error', 'Ảnh không được lớn hơn 5MB!');
+          Alert.alert('Lỗi', 'Ảnh không được lớn hơn 5MB!');
           return;
         }
         setPoster(uri);
         setShowImageOptions(false);
       }
     } catch (error) {
-      console.error('Error picking image from camera:', error);
-      Alert.alert('Error', 'Có lỗi khi chụp ảnh. Vui lòng thử lại!');
+      console.error('Lỗi khi chụp ảnh:', error);
+      Alert.alert('Lỗi', 'Có lỗi khi chụp ảnh. Vui lòng thử lại!');
     }
   };
 
@@ -387,7 +387,7 @@ const MyEvents = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        Alert.alert('Error', 'You are not logged in!');
+        Alert.alert('Lỗi', 'Bạn chưa đăng nhập!');
         return;
       }
 
@@ -432,7 +432,7 @@ const MyEvents = () => {
         }
       );
 
-      Alert.alert('Success', 'Sự kiện đã được cập nhật thành công!');
+      Alert.alert('Thành công', 'Sự kiện đã được cập nhật thành công!');
       fetchMyEvents();
       setSelectedEvent(null);
       setStatistics(null);
@@ -441,17 +441,17 @@ const MyEvents = () => {
       setShowEditModal(false);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        Alert.alert('Error', 'Authentication failed. Please log in again.');
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('refresh_token');
         dispatch({ type: 'logout' });
       } else if (error.response?.data) {
         const errors = error.response.data;
-        console.error("Update event error:", errors);
-        Alert.alert('Error', errors.detail || 'Failed to update event. Please try again.');
+        console.error("Lỗi khi cập nhật sự kiện:", errors);
+        Alert.alert('Lỗi', errors.detail || 'Không thể cập nhật sự kiện. Vui lòng thử lại.');
       } else {
-        console.error("Update event error:", error.message);
-        Alert.alert('Error', 'Server error (500). Please contact support or try again later.');
+        console.error("Lỗi khi cập nhật sự kiện:", error.message);
+        Alert.alert('Lỗi', 'Lỗi máy chủ (500). Vui lòng liên hệ hỗ trợ hoặc thử lại sau.');
       }
     } finally {
       setUpdating(false);
@@ -463,9 +463,8 @@ const MyEvents = () => {
       const [reply, setReply] = useState('');
 
       const handleSubmit = () => {
-        console.log('Reply value before submit:', reply);
         if (!reply.trim()) {
-          Alert.alert('Error', 'Vui lòng nhập nội dung phản hồi!');
+          Alert.alert('Lỗi', 'Vui lòng nhập nội dung phản hồi!');
           return;
         }
         onSubmit(reply);
@@ -481,7 +480,7 @@ const MyEvents = () => {
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalContainer}
-            keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
+            keyboardVerticalOffset={Platform.OS === 'android' ? 50 : 0}
           >
             <View style={[styles.replyModalContent, { maxHeight: screenHeight * 0.5 }]}>
               <ScrollView
@@ -529,14 +528,14 @@ const MyEvents = () => {
 
     const submitReply = async (replyContent) => {
       if (!selectedReview || !replyContent.trim()) {
-        Alert.alert('Error', 'Vui lòng nhập nội dung phản hồi!');
+        Alert.alert('Lỗi', 'Vui lòng nhập nội dung phản hồi!');
         return;
       }
 
       try {
         const token = await AsyncStorage.getItem('token');
         if (!token) {
-          Alert.alert('Error', 'No authentication token found!');
+          Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
           return;
         }
 
@@ -547,7 +546,7 @@ const MyEvents = () => {
           comment: replyContent.trim(),
         };
         const res = await api.post(endpoints.replyReview, payload);
-        console.log('Reply response:', res.data);
+        console.log('Phản hồi:', res.data);
 
         setPendingReplies(prev => ({
           ...prev,
@@ -557,15 +556,15 @@ const MyEvents = () => {
         await fetchEventReviews(selectedReview.event);
         setReplyText('');
         setShowReviewModal(false);
-        Alert.alert('Success', 'Phản hồi đã được gửi thành công!');
+        Alert.alert('Thành công', 'Phản hồi đã được gửi thành công!');
       } catch (error) {
-        console.error('Error submitting reply:', error.response ? error.response.data : error.message);
-        Alert.alert('Error', 'Failed to submit reply. Please try again.');
+        console.error('Lỗi khi gửi phản hồi:', error.response ? error.response.data : error.message);
+        Alert.alert('Lỗi', 'Không thể gửi phản hồi. Vui lòng thử lại.');
       }
     };
 
     return (
-      <View>
+      <View style={{ maxHeight: screenHeight * 0.6 }}>
         <Title style={styles.sectionTitle}>Đánh giá từ người dùng</Title>
         {fetchingReviews ? (
           <Text style={styles.loadingText}>Đang tải đánh giá...</Text>
@@ -585,7 +584,7 @@ const MyEvents = () => {
                     </View>
                     <View style={styles.reviewActions}>
                       <TouchableOpacity
-                        style={axiosstyles.menuButton}
+                        style={styles.menuButton}
                         onPress={() => {
                           setSelectedReview(item);
                           setShowReviewModal(true);
@@ -621,7 +620,7 @@ const MyEvents = () => {
             )}
             contentContainerStyle={[styles.reviewListContent, { paddingBottom: Platform.OS === 'android' ? 16 : 0 }]}
             nestedScrollEnabled={true}
-            scrollEnabled={false}
+            showsVerticalScrollIndicator={true}
           />
         )}
         {reviews.length > visibleReviews && (
@@ -1019,101 +1018,100 @@ const MyEvents = () => {
     },
   ];
 
-  if (!user || user.role !== 'organizer') {
-    return (
-      <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-        <View style={MyStyles.container}>
-          <Text style={styles.errorText}>Chỉ có organizer mới có thể quản lý sự kiện.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+if (!user || user.role !== 'organizer') {
   return (
-    <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-      <FlatList
-        data={events}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={[MyStyles.container, {
-          paddingBottom: Platform.OS === 'android' ? 30 : 20,
-          paddingTop: Platform.OS === 'android' ? 16 : 0,
-        }]}
-        ListHeaderComponent={<Title style={styles.title}>Quản Lý Sự Kiện</Title>}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleSelectEvent(item)}>
-            <Card style={MyStyles.eventItem}>
-              <Card.Content>
-                <Text style={MyStyles.eventTitle}>{item.title}</Text>
-                <Text style={MyStyles.eventDetail}>Địa điểm: {item.location}</Text>
-                <Text style={MyStyles.eventDetail}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
-                <Text style={MyStyles.eventPrice}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          loading ? (
-            <Text style={styles.loadingText}>Đang tải...</Text>
-          ) : (
-            <Text style={styles.noEventsText}>Không có sự kiện nào để hiển thị.</Text>
-          )
-        }
-        showsVerticalScrollIndicator={true}
-      />
-
-      {selectedEvent && (
-        <Modal
-          visible={showEditModal}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowEditModal(false)}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.modalContainer}
-            keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
-          >
-            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.9 }]}>
-              <View style={styles.header}>
-                <TouchableOpacity
-                  style={styles.closeButtonIcon}
-                  onPress={() => {
-                    setShowEditModal(false);
-                    setPoster(null);
-                    setShowImageOptions(false);
-                    setReviews([]);
-                  }}
-                >
-                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.tabContainer}>
-                {modalData.map((tab) => (
-                  <TouchableOpacity
-                    key={tab.key}
-                    style={[styles.tabButton, activeTab === tab.key && styles.activeTab]}
-                    onPress={() => setActiveTab(tab.key)}
-                  >
-                    <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
-                      {tab.title}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <ScrollView
-                contentContainerStyle={[styles.modalScrollContent, { paddingBottom: Platform.OS === 'android' ? 30 : 20 }]}
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled={true}
-                bounces={Platform.OS === 'ios' ? false : undefined}
-              >
-                {modalData.find(tab => tab.key === activeTab)?.content}
-              </ScrollView>
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
-      )}
+    <SafeAreaView style={[styles.safeArea, { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <View style={MyStyles.container}>
+        <Text style={styles.errorText}>Chỉ có organizer mới có thể quản lý sự kiện.</Text>
+      </View>
     </SafeAreaView>
   );
+}
+
+return (
+  <SafeAreaView style={[styles.safeArea, { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+    <FlatList
+      data={events}
+      keyExtractor={(item) => item.id.toString()}
+      style={{ flex: 1 }} // Đảm bảo FlatList chiếm toàn bộ chiều cao
+      contentContainerStyle={{
+        paddingBottom: Platform.OS === 'android' ? 30 : 20,
+        paddingTop: Platform.OS === 'android' ? 16 : 0,
+      }} // Chỉ dùng cho padding, không flexGrow
+      ListHeaderComponent={<Title style={styles.title}>Quản Lý Sự Kiện</Title>}
+      renderItem={({ item }) => (
+        <TouchableOpacity onPress={() => handleSelectEvent(item)}>
+          <Card style={MyStyles.eventItem}>
+            <Card.Content>
+              <Text style={MyStyles.eventTitle}>{item.title}</Text>
+              <Text style={MyStyles.eventDetail}>Địa điểm: {item.location}</Text>
+              <Text style={MyStyles.eventDetail}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
+              <Text style={MyStyles.eventPrice}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
+            </Card.Content>
+          </Card>
+        </TouchableOpacity>
+      )}
+      ListEmptyComponent={
+        loading ? (
+          <Text style={styles.loadingText}>Đang tải...</Text>
+        ) : (
+          <Text style={styles.noEventsText}>Không có sự kiện nào để hiển thị.</Text>
+        )
+      }
+      showsVerticalScrollIndicator={true}
+    />
+    {selectedEvent && (
+      <Modal
+        visible={showEditModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+          keyboardVerticalOffset={Platform.OS === 'android' ? 50 : 0}
+        >
+          <View style={[styles.modalContent, { maxHeight: screenHeight * 0.95 }]}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.closeButtonIcon}
+                onPress={() => {
+                  setShowEditModal(false);
+                  setPoster(null);
+                  setShowImageOptions(false);
+                  setReviews([]);
+                }}
+              >
+                <MaterialIcons name="close" size={24} color={colors.blueGray} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.tabContainer}>
+              {modalData.map((tab) => (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[styles.tabButton, activeTab === tab.key && styles.activeTab]}
+                  onPress={() => setActiveTab(tab.key)}
+                >
+                  <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+                    {tab.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <ScrollView
+              contentContainerStyle={[styles.modalScrollContent, { paddingBottom: Platform.OS === 'android' ? 50 : 20 }]}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {modalData.find(tab => tab.key === activeTab)?.content}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    )}
+  </SafeAreaView>
+);
 };
 
 const styles = StyleSheet.create({
@@ -1123,18 +1121,19 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.navy,
-    paddingTop: 8,
+    paddingTop: 10,
   },
   subtitle: {
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     fontSize: 22,
     fontWeight: '600',
     color: colors.navy,
+    paddingHorizontal: 10,
   },
   modalContainer: {
     flex: 1,
@@ -1144,53 +1143,56 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.white,
-    borderRadius: 10,
-    width: '90%',
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    width: '92%',
+    paddingHorizontal: 18,
     paddingVertical: 20,
-    elevation: Platform.OS === 'android' ? 4 : 2,
+    elevation: Platform.OS === 'android' ? 6 : 4,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0.25,
+    shadowRadius: 6,
   },
   replyModalContent: {
     backgroundColor: colors.white,
-    borderRadius: 10,
-    width: '90%',
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    width: '92%',
+    paddingHorizontal: 18,
     paddingVertical: 20,
-    elevation: Platform.OS === 'android' ? 4 : 2,
+    elevation: Platform.OS === 'android' ? 6 : 4,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0.25,
+    shadowRadius: 6,
   },
   replyModalScroll: {
     flexGrow: 1,
     justifyContent: 'center',
+    paddingVertical: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   closeButtonIcon: {
-    padding: 5,
+    padding: 6,
   },
   modalScrollContent: {
     flexGrow: 1,
+    paddingBottom: Platform.OS === 'android' ? 60 : 30,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
-    borderBottomWidth: 1,
+    marginBottom: 15,
+    borderBottomWidth: 2,
     borderBottomColor: colors.blueLight,
+    paddingBottom: 5,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   tabText: {
@@ -1199,125 +1201,136 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   activeTab: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: colors.bluePrimary,
   },
   activeTabText: {
     color: colors.bluePrimary,
   },
   input: {
-    marginBottom: 15,
+    marginBottom: 12,
     backgroundColor: colors.white,
+    borderRadius: 12,
   },
   uploadContainer: {
     marginBottom: 15,
     alignItems: 'center',
+    paddingVertical: 10,
   },
   placeholderImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 8,
+    width: 220,
+    height: 160,
+    borderRadius: 10,
     backgroundColor: colors.blueLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
     color: colors.blueGray,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   previewImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 8,
+    width: 220,
+    height: 160,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.bluePrimary,
   },
   removeImageButton: {
     position: 'absolute',
-    top: -10,
-    right: -10,
+    top: -12,
+    right: -12,
     backgroundColor: colors.white,
+    borderRadius: 15,
   },
   imageOptionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    marginTop: 12,
+    width: '60%',
   },
   imageOptionButton: {
-    marginHorizontal: 5,
-    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 6,
+    borderRadius: 10,
     borderColor: colors.bluePrimary,
   },
   categoryContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   sectionLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.navy,
     marginBottom: 8,
   },
   categoryButton: {
-    padding: 12,
+    padding: 14,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.bluePrimary,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
   },
   categoryButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.bluePrimary,
     fontWeight: '600',
   },
   datePickerContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   dateButton: {
-    padding: 12,
+    padding: 14,
     backgroundColor: colors.bluePrimary,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
+    marginBottom: 10,
   },
   dateButtonText: {
     color: colors.white,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   pickerLabel: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.navy,
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: 'center',
   },
   categoryItem: {
-    padding: 10,
+    padding: 12,
     backgroundColor: colors.blueLight,
-    borderRadius: 8,
-    marginBottom: 8,
+    borderRadius: 10,
+    marginBottom: 10,
     width: '100%',
   },
   categoryItemText: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.navy,
     textAlign: 'center',
   },
   closeButton: {
-    borderRadius: 8,
+    borderRadius: 10,
     borderColor: colors.bluePrimary,
+    marginTop: 10,
   },
   confirmButton: {
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: colors.bluePrimary,
+    marginTop: 10,
   },
   updateButton: {
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: colors.bluePrimary,
+    marginTop: 15,
   },
   buttonLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   buttonContent: {
@@ -1325,87 +1338,90 @@ const styles = StyleSheet.create({
   },
   modalButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginTop: 20,
+    paddingHorizontal: 10,
   },
   statsCard: {
-    marginTop: 20,
-    borderRadius: 10,
-    elevation: Platform.OS === 'android' ? 4 : 2,
+    marginTop: 15,
+    borderRadius: 12,
+    elevation: Platform.OS === 'android' ? 6 : 4,
     backgroundColor: colors.white,
     padding: 15,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0.25,
+    shadowRadius: 6,
+    marginHorizontal: 10,
   },
   statsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.navy,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   statsText: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.blueGray,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   loadingText: {
     textAlign: 'center',
     fontSize: 16,
     color: colors.blueGray,
-    paddingVertical: 10,
+    paddingVertical: 15,
   },
   noEventsText: {
     textAlign: 'center',
     fontSize: 16,
     color: colors.blueGray,
+    paddingVertical: 15,
   },
   noReviewsText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 15,
     color: colors.blueGray,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   errorText: {
     textAlign: 'center',
     fontSize: 18,
     color: colors.redError,
-    marginTop: 20,
+    marginTop: 25,
   },
   reviewsContainer: {
-    marginTop: 10,
-    marginBottom: 20,
-    paddingHorizontal: 5,
+    marginTop: 12,
+    marginBottom: 15,
+    paddingHorizontal: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.navy,
-    marginBottom: 10,
-    paddingLeft: 5,
+    marginBottom: 12,
+    paddingLeft: 8,
   },
   reviewCard: {
-    marginBottom: 15,
-    borderRadius: 10,
-    elevation: Platform.OS === 'android' ? 4 : 2,
+    marginBottom: 12,
+    borderRadius: 12,
+    elevation: Platform.OS === 'android' ? 6 : 4,
     backgroundColor: colors.white,
-    padding: 10,
-    marginHorizontal: 5,
+    padding: 12,
+    marginHorizontal: 8,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0.25,
+    shadowRadius: 6,
   },
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   reviewInfo: {
     flex: 1,
-    marginRight: 10,
+    marginRight: 12,
   },
   reviewActions: {
     flexShrink: 0,
@@ -1414,77 +1430,78 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.navy,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   reviewRating: {
     fontSize: 14,
     color: colors.blueGray,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   reviewReply: {
     fontSize: 14,
     color: colors.blueLight,
     fontStyle: 'italic',
-    marginTop: 5,
-    paddingLeft: 5,
+    marginTop: 6,
+    paddingLeft: 8,
   },
   reviewComment: {
     fontSize: 14,
     color: colors.navy,
-    marginTop: 5,
-    paddingLeft: 5,
+    marginTop: 6,
+    paddingLeft: 8,
   },
   reviewDate: {
     fontSize: 12,
     color: colors.blueGray,
-    marginTop: 5,
+    marginTop: 6,
     textAlign: 'right',
-    paddingRight: 5,
+    paddingRight: 8,
   },
   reviewListContent: {
     flexGrow: 1,
+    paddingBottom: Platform.OS === 'android' ? 20 : 15,
   },
   repliesContainer: {
-    marginTop: 10,
-    paddingLeft: 15,
+    marginTop: 12,
+    paddingLeft: 18,
     borderLeftWidth: 2,
     borderLeftColor: colors.blueLight,
   },
   replyItem: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   replyUsername: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.navy,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   replyDate: {
     fontSize: 12,
     color: colors.blueGray,
     textAlign: 'right',
-    paddingRight: 5,
+    paddingRight: 8,
   },
   menuButton: {
-    padding: 5,
+    padding: 6,
     backgroundColor: colors.blueLight,
-    borderRadius: 5,
+    borderRadius: 6,
   },
   menuText: {
     fontSize: 14,
     color: colors.bluePrimary,
   },
   loadMoreButton: {
-    padding: 10,
+    padding: 12,
     backgroundColor: colors.bluePrimary,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
-    marginHorizontal: 5,
+    marginTop: 12,
+    marginHorizontal: 8,
   },
   loadMoreText: {
     color: colors.white,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

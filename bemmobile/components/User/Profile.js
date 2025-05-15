@@ -270,9 +270,9 @@ const Profile = () => {
     );
   };
 
-  const handleNotificationsPress = () => {
+  const handleNotificationsPress = async () => {
+    await fetchUserStats(); // Đảm bảo lấy dữ liệu mới trước khi mở modal
     setIsNotificationModalVisible(true);
-    fetchUserStats();
   };
 
   const handleChatPress = () => {
@@ -469,7 +469,7 @@ const Profile = () => {
           onRequestClose={closeNotificationModal}
         >
           <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-            <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
+            <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8, flex: 1 }]}>
               <View style={styles.modalHeader}>
                 <TouchableOpacity onPress={closeNotificationModal} style={styles.closeButton}>
                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
@@ -478,7 +478,7 @@ const Profile = () => {
               <Notifications
                 unreadNotifications={unreadNotifications}
                 onClose={closeNotificationModal}
-                onUpdateUnreadCount={fetchUserStats}
+                onUpdateUnreadCount={() => fetchUserStats()} // Đảm bảo callback được định nghĩa rõ ràng
               />
             </View>
           </SafeAreaView>
@@ -638,6 +638,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: colors.blackTransparent,
+    justifyContent: 'center',
   },
   notificationModalContent: {
     backgroundColor: colors.white,
