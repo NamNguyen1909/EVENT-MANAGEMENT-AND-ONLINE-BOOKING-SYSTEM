@@ -58,7 +58,7 @@ def create_usernotification_for_manual_notification(sender, instance, created, *
                 UserNotification(user_id=user_id, notification=instance)
                 for user_id in ticket_owners
             ]
-            UserNotification.objects.bulk_create(user_notifications)
+            UserNotification.objects.bulk_create(user_notifications, ignore_conflicts=True)
 
 
 # Tạo tag và superuser mặc định sau khi migrate

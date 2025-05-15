@@ -250,28 +250,33 @@ def load_dummy_data():
             if abs(final_amount - payment_amount) > Decimal('0.01'):
                 print(f"Warning: Amount mismatch for user {user.username}: JSON={payment_amount}, Calculated={final_amount}, using JSON value")
             paid_at = parse_datetime(payment_data['paid_at']) if payment_data.get('paid_at') else None
-            payment = Payment(
-                user=user,
-                amount=payment_amount,
-                payment_method=payment_data['payment_method'],
-                status=payment_data.get('status', False),
-                transaction_id=transaction_id,
-                paid_at=paid_at,
-                discount_code=discount_code
-            )
-            try:
-                payment.full_clean()
-                payment.save()
-                payment.tickets.set(tickets)
-                if payment.status:
-                    for ticket in tickets:
-                        if not ticket.is_paid:
-                            ticket.mark_as_paid(paid_at)
-                            user.total_spent += ticket.event.ticket_price
-                    user.save(update_fields=['total_spent'])
-                print(f"Đã tạo payment cho user {user.username} với transaction_id {payment.transaction_id}")
-            except ValidationError as e:
-                print(f"Validation error for payment {transaction_id}: {e}, bỏ qua...")
+        payment = Payment(
+            user=user,
+            amount=payment_amount,
+            payment_method=payment_data['payment_method'],
+            status=payment_data.get('status', False),
+            transaction_id=transaction_id,
+            paid_at=paid_at,
+            discount_code=discount_code
+        )
+        try:
+            payment.full_clean()
+            payment.save()
+
+            # Assign payment to tickets (one-to-many relationship)
+            for ticket in tickets:
+                ticket.payment = payment
+                ticket.save()
+
+            if payment.status:
+                for ticket in tickets:
+                    if not ticket.is_paid:
+                        ticket.mark_as_paid(paid_at)
+                        user.total_spent += ticket.event.ticket_price
+                user.save(update_fields=['total_spent'])
+            print(f"Đã tạo payment cho user {user.username} với transaction_id {payment.transaction_id}")
+        except ValidationError as e:
+            print(f"Validation error for payment {transaction_id}: {e}, bỏ qua...")
 
         # 7. Nhập dữ liệu cho Review
         print("\nĐang nhập dữ liệu cho Review...")

@@ -147,9 +147,10 @@ class EventSerializer(serializers.ModelSerializer):
         min_value=Decimal('0'),
         required=False
     )
-    total_tickets = serializers.IntegerField(min_value=0, required=False)
-    latitude = serializers.FloatField(min_value=-90, max_value=90, required=False)
-    longitude = serializers.FloatField(min_value=-180, max_value=180, required=False)
+    from decimal import Decimal
+    total_tickets = serializers.IntegerField(min_value=Decimal('0'), required=False)
+    latitude = serializers.FloatField(min_value=Decimal('-90'), max_value=Decimal('90'), required=False)
+    longitude = serializers.FloatField(min_value=Decimal('-180'), max_value=Decimal('180'), required=False)
 
 
 # Serializer cho Ticket

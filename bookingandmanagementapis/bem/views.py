@@ -433,7 +433,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             )
             notification.save()
             # Tạo UserNotification để liên kết Notification với User
-            UserNotification.objects.create(user=request.user, notification=notification)
+            UserNotification.objects.get_or_create(user=request.user, notification=notification)
 
         return Response({
             "message": "Thanh toán xác nhận thành công.",
@@ -490,7 +490,9 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             discount_code=discount_obj
         )
         payment.save()
-        payment.tickets.set(unpaid_tickets) # Add unpaid tickets to payment
+        for ticket in (unpaid_tickets):
+            ticket.payment = payment
+            ticket.save()
 
         notification = Notification(
             event=event,
@@ -502,7 +504,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         notification.save()
 
         # Tạo UserNotification để liên kết Notification với User
-        # UserNotification.objects.create(user=user, notification=notification)
+        # UserNotification.objects.get_or_create(user=user, notification=notification)
 
         send_mail(
             subject=f"Xác Nhận Tạo Payment cho {event.title}",
