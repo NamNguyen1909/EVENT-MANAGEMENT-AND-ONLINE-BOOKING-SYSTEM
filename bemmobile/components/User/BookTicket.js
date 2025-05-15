@@ -175,6 +175,7 @@ const handlePayment = async () => {
         event_id: eventId,
       };
       const bookRes = await api.post(endpoints.bookTicket, bookPayload);
+      console.log('bookPayload: ',bookPayload);
       console.log('bookRes: ',bookRes.data);
       if (!bookRes || bookRes.status >= 400) {
         setMsg('Đặt vé thất bại. Vui lòng thử lại.');

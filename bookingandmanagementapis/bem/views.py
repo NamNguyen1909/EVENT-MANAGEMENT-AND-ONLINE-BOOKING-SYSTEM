@@ -317,7 +317,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         return super().get_permissions()
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user).select_related('event')
+        return self.queryset.filter(user=self.request.user).select_related('event').order_by('-ticket__created_at')
 
     #Xem chi tiết vé (xem chi tiết,hiện QR để scan check-in)
     # Chỉ cho phép người dùng xem vé của mình
@@ -490,7 +490,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             discount_code=discount_obj
         )
         payment.save()
-        payment.tickets.set(unpaid_tickets)
+        payment.tickets.set(unpaid_tickets) # Add unpaid tickets to payment
 
         notification = Notification(
             event=event,
@@ -502,7 +502,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         notification.save()
 
         # Tạo UserNotification để liên kết Notification với User
-        UserNotification.objects.create(user=user, notification=notification)
+        # UserNotification.objects.create(user=user, notification=notification)
 
         send_mail(
             subject=f"Xác Nhận Tạo Payment cho {event.title}",
@@ -577,7 +577,7 @@ class NotificationViewSet(viewsets.ViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "Yêu cầu xác thực."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user_notifications = UserNotification.objects.filter(user=request.user).select_related('notification__event')
+        user_notifications = UserNotification.objects.filter(user=request.user).select_related('notification__event').order_by('-notification__created_at')
         notifications = [un.notification for un in user_notifications]
 
         paginator = ItemPaginator()

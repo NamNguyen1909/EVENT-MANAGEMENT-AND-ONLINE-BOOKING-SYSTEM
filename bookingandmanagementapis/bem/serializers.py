@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.db.models import F
 from django.db import models
 from decimal import Decimal
-
+from cloudinary.utils import cloudinary_url
 
 
 # Serializer cho Tag
@@ -164,18 +164,23 @@ class TicketSerializer(ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['qr_code'] = instance.qr_code.url if instance.qr_code else ''
+        if instance.qr_code:
+            public_id = str(instance.qr_code)  # hoặc instance.qr_code.public_id nếu cần chính xác hơn
+            url, options = cloudinary_url(public_id)
+            data['qr_code'] = url
+        else:
+            data['qr_code'] = ''
         return data
 
     class Meta:
         model = Ticket
         fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
         ]
         read_only_fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
         ]
 
     def create(self, validated_data):

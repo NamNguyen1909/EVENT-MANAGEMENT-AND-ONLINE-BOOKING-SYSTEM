@@ -202,6 +202,7 @@ class Ticket(models.Model):
             models.Index(fields=['user', 'event']),
             models.Index(fields=['qr_code']),
         ]
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Vé của {self.user} - Sự kiện {self.event.title}"
@@ -234,7 +235,7 @@ class Payment(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    tickets = models.ManyToManyField(Ticket, related_name='payments', blank=True)  # Danh sách vé liên quan
+    tickets = models.ManyToManyField(Ticket, related_name='payments', blank=True,)  # Danh sách vé liên quan
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.BooleanField(default=False)
@@ -253,21 +254,24 @@ class Payment(models.Model):
         with transaction.atomic():
             if not self.pk:
                 # Nếu là tạo mới (chưa có id), thì tự động lấy các vé chưa thanh toán của sự kiện liên quan
-                unpaid_tickets = Ticket.objects.filter(user=self.user, is_paid=False, event__in=Event.objects.filter(tickets__user=self.user)).select_related('event').distinct()
-                total = sum(ticket.event.ticket_price for ticket in unpaid_tickets)
+                # unpaid_tickets = Ticket.objects.filter(user=self.user, is_paid=False, event__in=Event.objects.filter(tickets__user=self.user)).select_related('event').distinct()
+                # total = sum(ticket.event.ticket_price for ticket in unpaid_tickets)
 
                 # Áp dụng giảm giá nếu có
-                if self.discount_code and self.discount_code.is_valid():
-                    discount = total * (self.discount_code.discount_percentage / 100)
-                    total -= discount
-                self.amount = max(total, 0)
+                # if self.discount_code and self.discount_code.is_valid():
+                #     discount = total * (self.discount_code.discount_percentage / 100)
+                #     total -= discount
+                # self.amount = max(total, 0)
 
-                self.status = True  # Giả định là thanh toán thành công (bạn có thể tùy chỉnh)
+                # Respect the status set externally, default to False if not set
+                if self.status is None:
+                    self.status = False
+
                 if self.status and not self.paid_at:
                     self.paid_at = timezone.now()
 
                 super().save(*args, **kwargs)  # Phải save trước khi gọi set() cho ManyToMany
-                self.tickets.set(unpaid_tickets)  # Gắn vé vào payment
+                # self.tickets.set(unpaid_tickets)  # Gắn vé vào payment
 
             else:
                 # Cập nhật thanh toán (nếu có cập nhật sau này)
@@ -367,6 +371,9 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+    
+    class Meta:
+        ordering = ['-created_at']
 
 # Chưa có cơ chế gửi thông báo real-time (cần tích hợp WebSocket hoặc Django Channels).
 # Để đánh dấu thông báo  đã được người dùng đọc hay chưa
