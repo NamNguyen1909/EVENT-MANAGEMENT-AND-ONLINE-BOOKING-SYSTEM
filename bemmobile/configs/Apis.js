@@ -2,9 +2,9 @@
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
- const BASE_URL = "http://192.168.1.8:8000/";
+//  const BASE_URL = "http://192.168.1.8:8000/";
 
-// const BASE_URL = "http://192.168.44.105:8000/";
+const BASE_URL = "http://192.168.44.105:8000/";
 // const BASE_URL = "http://192.168.55.239:8000/";
 
 

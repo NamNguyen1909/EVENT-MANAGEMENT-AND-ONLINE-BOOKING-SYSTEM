@@ -196,6 +196,8 @@ class PaymentSerializer(ModelSerializer):
     user_detail = serializers.SerializerMethodField()
     tickets = TicketSerializer(many=True, read_only=True)  # Lấy danh sách vé đã mua
 
+    amount = serializers.SerializerMethodField()
+
     class Meta:
         model = Payment
         fields = ['id', 'user', 'user_detail', 'amount', 'payment_method', 'paid_at', 'transaction_id', 'tickets']
@@ -207,6 +209,10 @@ class PaymentSerializer(ModelSerializer):
             'email': obj.user.email,
             'phone': obj.user.phone,
         }
+
+    def get_amount(self, obj):
+        # Convert Decimal to string for JSON serialization
+        return str(obj.amount)
 
 
 # Serializer cho User

@@ -36,6 +36,7 @@ from .paginators import ItemPaginator
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = ItemPaginator
     filter_backends = [SearchFilter, OrderingFilter]
@@ -317,6 +318,8 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         return super().get_permissions()
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return self.queryset.none()
         return self.queryset.filter(user=self.request.user).select_related('event').order_by('-ticket__created_at')
 
     #Xem chi tiết vé (xem chi tiết,hiện QR để scan check-in)
