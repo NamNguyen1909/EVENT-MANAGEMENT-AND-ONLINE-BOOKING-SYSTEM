@@ -27,16 +27,15 @@ const Dashboard = () => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
-    totalEvents: 0,
     totalTicketsSold: 0,
     totalRevenue: 0,
-    activeEvents: 0,
     hotEvents: [],
-    categoryDistribution: [],
+    trendingLogs: [],
   });
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [eventFilter, setEventFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [isAdminOrOrganizer, setIsAdminOrOrganizer] = useState(false);
+  const [eventFilterTickets, setEventFilterTickets] = useState('all');
+  const [eventFilterRevenue, setEventFilterRevenue] = useState('all');
+  const [eventFilterTrending, setEventFilterTrending] = useState('all');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -53,22 +52,14 @@ const Dashboard = () => {
 
         const userResponse = await api.get(endpoints.currentUser);
         const userRole = userResponse.data.role?.toLowerCase();
-        if (userRole !== 'admin') {
-          Alert.alert('Lỗi', 'Chỉ admin mới có quyền truy cập báo cáo.');
+        if (userRole !== 'admin' && userRole !== 'organizer') {
+          Alert.alert('Lỗi', 'Chỉ quản trị viên và nhà tổ chức mới có quyền truy cập báo cáo.');
           setLoading(false);
           return;
         }
-        setIsAdmin(true);
+        setIsAdminOrOrganizer(true);
 
-        const eventsResponse = await api.get(endpoints.events);
-        const events = Array.isArray(eventsResponse.data.results)
-          ? eventsResponse.data.results
-          : Array.isArray(eventsResponse.data)
-            ? eventsResponse.data
-            : [];
-        const totalEvents = events.length;
-        const activeEvents = events.filter(event => event.is_active).length;
-
+        // Lấy dữ liệu hot events (vé bán ra và doanh thu)
         const hotEventsResponse = await api.get(endpoints.hotEvents);
         const hotEvents = Array.isArray(hotEventsResponse.data) ? hotEventsResponse.data : [];
 
@@ -80,11 +71,11 @@ const Dashboard = () => {
             const statsResponse = await api.get(endpoints.eventStatistics(event.id));
             enhancedHotEvents.push({
               ...event,
-              sold_tickets: Number(statsResponse.data.tickets_sold) || 0,
-              revenue: Number(statsResponse.data.revenue) || 0,
+              sold_tickets: Math.floor(Number(statsResponse.data.tickets_sold) || 0),
+              revenue: Math.floor(Number(statsResponse.data.revenue) || 0),
             });
-            totalTicketsSold += Number(statsResponse.data.tickets_sold) || 0;
-            totalRevenue += Number(statsResponse.data.revenue) || 0;
+            totalTicketsSold += Math.floor(Number(statsResponse.data.tickets_sold) || 0);
+            totalRevenue += Math.floor(Number(statsResponse.data.revenue) || 0);
           } catch (err) {
             console.warn(`Lỗi khi lấy thống kê cho sự kiện ${event.id}:`, err.response?.data || err.message);
             enhancedHotEvents.push({
@@ -95,23 +86,19 @@ const Dashboard = () => {
           }
         }
 
-        const categoryCounts = {};
-        events.forEach(event => {
-          const category = event.category || 'Không xác định';
-          categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-        });
-        const categoryDistribution = Object.keys(categoryCounts).map(category => ({
-          name: category,
-          count: categoryCounts[category],
+        // Lấy dữ liệu mức độ quan tâm từ EventTrendingLog
+        const trendingResponse = await api.get(endpoints.eventTrendingLogs);
+        const trendingLogs = Array.isArray(trendingResponse.data.results) ? trendingResponse.data.results : [];
+        const enhancedTrendingLogs = trendingLogs.map(log => ({
+          ...log,
+          interest_score: Number(log.interest_score) || 0,
         }));
 
         setDashboardData({
-          totalEvents,
           totalTicketsSold,
           totalRevenue,
-          activeEvents,
           hotEvents: enhancedHotEvents,
-          categoryDistribution,
+          trendingLogs: enhancedTrendingLogs,
         });
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu báo cáo:', error.response?.data || error.message);
@@ -131,21 +118,30 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const filteredHotEvents = () => {
-    if (eventFilter === 'all') return dashboardData.hotEvents;
-    const limit = eventFilter === 'top5' ? 5 : 10;
+  const filteredHotEventsTickets = () => {
+    if (eventFilterTickets === 'all') return dashboardData.hotEvents;
+    const limit = eventFilterTickets === 'top5' ? 5 : 10;
     return dashboardData.hotEvents
       .slice()
       .sort((a, b) => b.sold_tickets - a.sold_tickets)
       .slice(0, limit);
   };
 
-  const filteredCategoryDistribution = () => {
-    if (categoryFilter === 'all') return dashboardData.categoryDistribution;
-    const limit = categoryFilter === 'top5' ? 5 : 10;
-    return dashboardData.categoryDistribution
+  const filteredHotEventsRevenue = () => {
+    if (eventFilterRevenue === 'all') return dashboardData.hotEvents;
+    const limit = eventFilterRevenue === 'top5' ? 5 : 10;
+    return dashboardData.hotEvents
       .slice()
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, limit);
+  };
+
+  const filteredTrendingLogs = () => {
+    if (eventFilterTrending === 'all') return dashboardData.trendingLogs;
+    const limit = eventFilterTrending === 'top5' ? 5 : 10;
+    return dashboardData.trendingLogs
+      .slice()
+      .sort((a, b) => b.interest_score - a.interest_score)
       .slice(0, limit);
   };
 
@@ -160,23 +156,25 @@ const Dashboard = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdminOrOrganizer) {
     return (
       <SafeAreaView style={MyStyles.container} edges={['top']}>
         <View style={[MyStyles.loadingContainer, styles.centered]}>
           <Text style={{ color: colors.redError, textAlign: 'center' }}>
-            Bạn không có quyền truy cập trang này.
+            Chỉ quản trị viên và nhà tổ chức mới có quyền truy cập trang này.
           </Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const filteredEvents = filteredHotEvents();
-  const filteredCategories = filteredCategoryDistribution();
-  const maxChartWidth = screenWidth - 40; // Giới hạn chiều rộng biểu đồ
-  const chartWidth = Math.min(maxChartWidth, filteredEvents.length * 50); // Giảm khoảng cách cột
-  const categoryChartWidth = Math.min(maxChartWidth, filteredCategories.length * 50);
+  const filteredEventsTickets = filteredHotEventsTickets();
+  const filteredEventsRevenue = filteredHotEventsRevenue();
+  const filteredTrending = filteredTrendingLogs();
+  const maxChartWidth = screenWidth - 40;
+  const chartWidthTickets = Math.min(maxChartWidth, filteredEventsTickets.length * 50);
+  const chartWidthRevenue = Math.min(maxChartWidth, filteredEventsRevenue.length * 50);
+  const chartWidthTrending = Math.min(maxChartWidth, filteredTrending.length * 50);
 
   return (
     <SafeAreaView style={[MyStyles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
@@ -194,30 +192,29 @@ const Dashboard = () => {
 
         <View style={styles.statsContainer}>
           {[
-            { label: 'Tổng số sự kiện', value: dashboardData.totalEvents, color: colors.blueAccent },
-            { label: 'Sự kiện đang hoạt động', value: dashboardData.activeEvents, color: colors.blueAccent },
             { label: 'Tổng vé đã bán', value: dashboardData.totalTicketsSold, color: colors.blueAccent },
             { label: 'Tổng doanh thu', value: formatCurrency(dashboardData.totalRevenue), color: colors.greenSuccess },
           ].map((item, index) => (
             <View key={index} style={styles.statCard}>
               <Text style={[MyStyles.eventDetail, styles.statLabel]}>{item.label}</Text>
-              <Text style={[MyStyles.eventPrice, { color: item.color, fontSize: 18 }]}>{item.value}</Text>
+              <Text style={[MyStyles.eventPrice, { color: item.color, fontSize: 20 }]}>{item.value}</Text>
             </View>
           ))}
         </View>
 
+        {/* Biểu đồ Số lượng vé bán ra */}
         {dashboardData.hotEvents.length > 0 ? (
           <View style={styles.chartContainer}>
             <Text style={[MyStyles.eventTitle, styles.chartTitle]}>
-              Vé Bán Ra Của Sự Kiện Nổi Bật
+              Số Lượng Vé Bán Ra
             </Text>
             <View style={styles.filterContainer}>
               <Text style={styles.filterLabel}>Lọc sự kiện: </Text>
               <View style={styles.pickerWrapper}>
                 <Picker
-                  selectedValue={eventFilter}
+                  selectedValue={eventFilterTickets}
                   style={styles.picker}
-                  onValueChange={(itemValue) => setEventFilter(itemValue)}
+                  onValueChange={(itemValue) => setEventFilterTickets(itemValue)}
                   dropdownIconColor={colors.navy}
                 >
                   <Picker.Item label="Tất cả" value="all" />
@@ -229,19 +226,20 @@ const Dashboard = () => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScroll}>
               <BarChart
                 data={{
-                  labels: filteredEvents.map(event =>
+                  labels: filteredEventsTickets.map(event =>
                     (event.title?.slice(0, 8) || 'N/A') + (event.title?.length > 8 ? '...' : '')
                   ),
                   datasets: [
                     {
-                      data: filteredEvents.map(event => event.sold_tickets),
+                      data: filteredEventsTickets.map(event => event.sold_tickets),
                     },
                   ],
                 }}
-                width={chartWidth}
-                height={280}
+                width={chartWidthTickets}
+                height={300}
                 yAxisLabel=""
                 yAxisSuffix=""
+                yAxisInterval={1}
                 chartConfig={{
                   backgroundColor: colors.white,
                   backgroundGradientFrom: colors.white,
@@ -249,7 +247,7 @@ const Dashboard = () => {
                   decimalPlaces: 0,
                   color: (opacity = 1) => colors.blueAccent,
                   labelColor: (opacity = 1) => colors.navy,
-                  barPercentage: 0.7, // Tăng tỷ lệ cột để hiển thị gọn hơn
+                  barPercentage: 0.7,
                   propsForLabels: {
                     fontSize: 12,
                     rotation: -45,
@@ -257,7 +255,7 @@ const Dashboard = () => {
                   },
                   style: {
                     borderRadius: 16,
-                    paddingRight: 20, // Tăng padding để tránh cắt xén nhãn
+                    paddingRight: 20,
                   },
                   propsForBackgroundLines: {
                     stroke: colors.grayLight,
@@ -274,22 +272,23 @@ const Dashboard = () => {
           </View>
         ) : (
           <Text style={[MyStyles.eventDetail, styles.noDataText]}>
-            Không có sự kiện nổi bật để hiển thị.
+            Không có dữ liệu vé bán ra để hiển thị.
           </Text>
         )}
 
-        {dashboardData.categoryDistribution.length > 0 ? (
+        {/* Biểu đồ Doanh thu */}
+        {dashboardData.hotEvents.length > 0 ? (
           <View style={styles.chartContainer}>
             <Text style={[MyStyles.eventTitle, styles.chartTitle]}>
-              Phân Bố Theo Danh Mục
+              Doanh Thu Theo Sự Kiện
             </Text>
             <View style={styles.filterContainer}>
-              <Text style={styles.filterLabel}>Lọc danh mục: </Text>
+              <Text style={styles.filterLabel}>Lọc sự kiện: </Text>
               <View style={styles.pickerWrapper}>
                 <Picker
-                  selectedValue={categoryFilter}
+                  selectedValue={eventFilterRevenue}
                   style={styles.picker}
-                  onValueChange={(itemValue) => setCategoryFilter(itemValue)}
+                  onValueChange={(itemValue) => setEventFilterRevenue(itemValue)}
                   dropdownIconColor={colors.navy}
                 >
                   <Picker.Item label="Tất cả" value="all" />
@@ -301,19 +300,20 @@ const Dashboard = () => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScroll}>
               <BarChart
                 data={{
-                  labels: filteredCategories.map(category =>
-                    (category.name?.slice(0, 8) || 'N/A') + (category.name?.length > 8 ? '...' : '')
+                  labels: filteredEventsRevenue.map(event =>
+                    (event.title?.slice(0, 8) || 'N/A') + (event.title?.length > 8 ? '...' : '')
                   ),
                   datasets: [
                     {
-                      data: filteredCategories.map(category => category.count),
+                      data: filteredEventsRevenue.map(event => event.revenue),
                     },
                   ],
                 }}
-                width={categoryChartWidth}
-                height={250}
+                width={chartWidthRevenue}
+                height={300}
                 yAxisLabel=""
                 yAxisSuffix=""
+                yAxisInterval={1}
                 chartConfig={{
                   backgroundColor: colors.white,
                   backgroundGradientFrom: colors.white,
@@ -346,7 +346,81 @@ const Dashboard = () => {
           </View>
         ) : (
           <Text style={[MyStyles.eventDetail, styles.noDataText]}>
-            Không có dữ liệu danh mục để hiển thị.
+            Không có dữ liệu doanh thu để hiển thị.
+          </Text>
+        )}
+
+        {/* Biểu đồ Mức độ quan tâm */}
+        {dashboardData.trendingLogs.length > 0 ? (
+          <View style={styles.chartContainer}>
+            <Text style={[MyStyles.eventTitle, styles.chartTitle]}>
+              Mức Độ Quan Tâm (Dựa trên Interest Score)
+            </Text>
+            <View style={styles.filterContainer}>
+              <Text style={styles.filterLabel}>Lọc sự kiện: </Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={eventFilterTrending}
+                  style={styles.picker}
+                  onValueChange={(itemValue) => setEventFilterTrending(itemValue)}
+                  dropdownIconColor={colors.navy}
+                >
+                  <Picker.Item label="Tất cả" value="all" />
+                  <Picker.Item label="Top 5" value="top5" />
+                  <Picker.Item label="Top 10" value="top10" />
+                </Picker>
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScroll}>
+              <BarChart
+                data={{
+                  labels: filteredTrending.map(log =>
+                    (log.event_title?.slice(0, 8) || 'N/A') + (log.event_title?.length > 8 ? '...' : '')
+                  ),
+                  datasets: [
+                    {
+                      data: filteredTrending.map(log => log.interest_score),
+                    },
+                  ],
+                }}
+                width={chartWidthTrending}
+                height={300}
+                yAxisLabel=""
+                yAxisSuffix=""
+                yAxisInterval={0.1}
+                chartConfig={{
+                  backgroundColor: colors.white,
+                  backgroundGradientFrom: colors.white,
+                  backgroundGradientTo: colors.white,
+                  decimalPlaces: 2,
+                  color: (opacity = 1) => colors.orangeAccent || '#FF9800',
+                  labelColor: (opacity = 1) => colors.navy,
+                  barPercentage: 0.7,
+                  propsForLabels: {
+                    fontSize: 12,
+                    rotation: -45,
+                    dx: -10,
+                  },
+                  style: {
+                    borderRadius: 16,
+                    paddingRight: 20,
+                  },
+                  propsForBackgroundLines: {
+                    stroke: colors.grayLight,
+                    strokeDasharray: '',
+                  },
+                }}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                fromZero={true}
+                withInnerLines={true}
+              />
+            </ScrollView>
+            <Text style={styles.chartNote}>Ghi chú: Cuộn ngang để xem thêm</Text>
+          </View>
+        ) : (
+          <Text style={[MyStyles.eventDetail, styles.noDataText]}>
+            Không có dữ liệu mức độ quan tâm để hiển thị.
           </Text>
         )}
       </ScrollView>
@@ -420,6 +494,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
+    flexWrap: 'wrap',
   },
   filterLabel: {
     fontSize: 16,
@@ -436,14 +511,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    maxWidth: 220,
   },
   picker: {
-    height: 50, // Tăng chiều cao
-    width: 200, // Tăng chiều rộng để hiển thị đầy đủ chữ
+    height: 50,
+    width: 220,
     color: colors.navy,
     backgroundColor: colors.white,
     borderRadius: 6,
-    fontSize: 16, // Tăng kích thước chữ
+    fontSize: 16,
   },
   chartScroll: {
     borderRadius: 16,
