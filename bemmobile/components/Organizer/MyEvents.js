@@ -188,14 +188,18 @@ const MyEvents = () => {
       console.log('Phản hồi đánh giá:', res.data.results);
 
       if (Array.isArray(res.data.results)) {
-        const processedReviews = res.data.results.map(review => {
+        const mainReviews = res.data.results.filter(review => review.parent_review === null);
+        const replies = res.data.results.filter(review => review.parent_review !== null);
+
+        const processedReviews = mainReviews.map(review => {
+          const reviewReplies = replies.filter(reply => reply.parent_review === review.id);
           const pendingReply = pendingReplies[review.id] || [];
-          const existingReplies = Array.isArray(review.replies) ? review.replies : [];
           return {
             ...review,
-            replies: [...pendingReply, ...existingReplies],
+            replies: [...pendingReply, ...reviewReplies],
           };
         });
+
         setReviews(processedReviews);
         setPendingReplies(prev => {
           const newPending = { ...prev };
@@ -207,7 +211,7 @@ const MyEvents = () => {
         setReviews([]);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy đánh giá:", error.response ? error.response.data : error.message);
+      console.error('Lỗi khi lấy đánh giá:', error.response ? error.response.data : error.message);
       Alert.alert('Lỗi', 'Không thể lấy đánh giá. Vui lòng thử lại.');
       setReviews([]);
     } finally {
@@ -1018,100 +1022,100 @@ const MyEvents = () => {
     },
   ];
 
-if (!user || user.role !== 'organizer') {
+  if (!user || user.role !== 'organizer') {
+    return (
+      <SafeAreaView style={[styles.safeArea, { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <View style={MyStyles.container}>
+          <Text style={styles.errorText}>Chỉ có organizer mới có thể quản lý sự kiện.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.safeArea, { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-      <View style={MyStyles.container}>
-        <Text style={styles.errorText}>Chỉ có organizer mới có thể quản lý sự kiện.</Text>
-      </View>
+      <FlatList
+        data={events}
+        keyExtractor={(item) => item.id.toString()}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingBottom: Platform.OS === 'android' ? 30 : 20,
+          paddingTop: Platform.OS === 'android' ? 16 : 0,
+        }}
+        ListHeaderComponent={<Title style={styles.title}>Quản Lý Sự Kiện</Title>}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => handleSelectEvent(item)}>
+            <Card style={MyStyles.eventItem}>
+              <Card.Content>
+                <Text style={MyStyles.eventTitle}>{item.title}</Text>
+                <Text style={MyStyles.eventDetail}>Địa điểm: {item.location}</Text>
+                <Text style={MyStyles.eventDetail}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
+                <Text style={MyStyles.eventPrice}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          loading ? (
+            <Text style={styles.loadingText}>Đang tải...</Text>
+          ) : (
+            <Text style={styles.noEventsText}>Không có sự kiện nào để hiển thị.</Text>
+          )
+        }
+        showsVerticalScrollIndicator={true}
+      />
+      {selectedEvent && (
+        <Modal
+          visible={showEditModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowEditModal(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
+            keyboardVerticalOffset={Platform.OS === 'android' ? 50 : 0}
+          >
+            <View style={[styles.modalContent, { maxHeight: screenHeight * 0.95 }]}>
+              <View style={styles.header}>
+                <TouchableOpacity
+                  style={styles.closeButtonIcon}
+                  onPress={() => {
+                    setShowEditModal(false);
+                    setPoster(null);
+                    setShowImageOptions(false);
+                    setReviews([]);
+                  }}
+                >
+                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.tabContainer}>
+                {modalData.map((tab) => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[styles.tabButton, activeTab === tab.key && styles.activeTab]}
+                    onPress={() => setActiveTab(tab.key)}
+                  >
+                    <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+                      {tab.title}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <ScrollView
+                contentContainerStyle={[styles.modalScrollContent, { paddingBottom: Platform.OS === 'android' ? 50 : 20 }]}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                {modalData.find(tab => tab.key === activeTab)?.content}
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
+      )}
     </SafeAreaView>
   );
-}
-
-return (
-  <SafeAreaView style={[styles.safeArea, { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-    <FlatList
-      data={events}
-      keyExtractor={(item) => item.id.toString()}
-      style={{ flex: 1 }} // Đảm bảo FlatList chiếm toàn bộ chiều cao
-      contentContainerStyle={{
-        paddingBottom: Platform.OS === 'android' ? 30 : 20,
-        paddingTop: Platform.OS === 'android' ? 16 : 0,
-      }} // Chỉ dùng cho padding, không flexGrow
-      ListHeaderComponent={<Title style={styles.title}>Quản Lý Sự Kiện</Title>}
-      renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => handleSelectEvent(item)}>
-          <Card style={MyStyles.eventItem}>
-            <Card.Content>
-              <Text style={MyStyles.eventTitle}>{item.title}</Text>
-              <Text style={MyStyles.eventDetail}>Địa điểm: {item.location}</Text>
-              <Text style={MyStyles.eventDetail}>Thời gian: {new Date(item.start_time).toLocaleString()}</Text>
-              <Text style={MyStyles.eventPrice}>Giá vé: {item.ticket_price || 'Chưa cập nhật'} VNĐ</Text>
-            </Card.Content>
-          </Card>
-        </TouchableOpacity>
-      )}
-      ListEmptyComponent={
-        loading ? (
-          <Text style={styles.loadingText}>Đang tải...</Text>
-        ) : (
-          <Text style={styles.noEventsText}>Không có sự kiện nào để hiển thị.</Text>
-        )
-      }
-      showsVerticalScrollIndicator={true}
-    />
-    {selectedEvent && (
-      <Modal
-        visible={showEditModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}
-          keyboardVerticalOffset={Platform.OS === 'android' ? 50 : 0}
-        >
-          <View style={[styles.modalContent, { maxHeight: screenHeight * 0.95 }]}>
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.closeButtonIcon}
-                onPress={() => {
-                  setShowEditModal(false);
-                  setPoster(null);
-                  setShowImageOptions(false);
-                  setReviews([]);
-                }}
-              >
-                <MaterialIcons name="close" size={24} color={colors.blueGray} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.tabContainer}>
-              {modalData.map((tab) => (
-                <TouchableOpacity
-                  key={tab.key}
-                  style={[styles.tabButton, activeTab === tab.key && styles.activeTab]}
-                  onPress={() => setActiveTab(tab.key)}
-                >
-                  <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
-                    {tab.title}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <ScrollView
-              contentContainerStyle={[styles.modalScrollContent, { paddingBottom: Platform.OS === 'android' ? 50 : 20 }]}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-            >
-              {modalData.find(tab => tab.key === activeTab)?.content}
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    )}
-  </SafeAreaView>
-);
 };
 
 const styles = StyleSheet.create({

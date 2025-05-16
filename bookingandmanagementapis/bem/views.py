@@ -758,7 +758,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
         return queryset
 
     def perform_create(self, serializer):
-        """Gán người dùng hiện tại khi tạo review hoặc phản hồi."""
+        """Gán người dùng hiện tại khi tạo review hoặc phản hồi, và tạo thông báo nếu là phản hồi từ organizer."""
         user = self.request.user
         parent_review = serializer.validated_data.get('parent_review')
 
@@ -767,13 +767,40 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
             event = parent_review.event
             if user.role != 'organizer' or event.organizer != user:
                 raise PermissionDenied("Bạn không có quyền phản hồi đánh giá này.")
+
+            # Lưu phản hồi
+            review = serializer.save(user=user)
+
+            # Tạo thông báo cho người dùng đã viết đánh giá gốc
+            notification = Notification(
+                event=event,
+                notification_type='reply',
+                title="Phản hồi từ người tổ chức",
+                message=f"Người tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}.",
+            )
+            notification.save()
+
+            # Tạo UserNotification để liên kết với người dùng gốc
+            UserNotification.objects.get_or_create(
+                user=parent_review.user,
+                notification=notification
+            )
+
+            # Gửi email thông báo (tùy chọn)
+            send_mail(
+                subject=f"Phản hồi từ người tổ chức cho sự kiện {event.title}",
+                message=f"Kính gửi {parent_review.user.username},\n\nNgười tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}. Vui lòng kiểm tra ứng dụng để xem chi tiết.\n\nTrân trọng!",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[parent_review.user.email],
+                fail_silently=True
+            )
         else:
             # Nếu là review gốc, kiểm tra user chưa review event
             event = serializer.validated_data.get('event')
             if Review.objects.filter(user=user, event=event, parent_review__isnull=True).exists():
                 raise ValidationError("Bạn đã có đánh giá cho sự kiện này.")
 
-        serializer.save(user=user)
+            serializer.save(user=user)
 
     @action(detail=False, methods=['get'], url_path='event-reviews-organizer')
     def event_reviews_for_organizer(self, request):
