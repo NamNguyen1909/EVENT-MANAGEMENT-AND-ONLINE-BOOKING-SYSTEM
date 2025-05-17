@@ -320,7 +320,7 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return self.queryset.none()
-        return self.queryset.filter(user=self.request.user).select_related('event').order_by('-ticket__created_at')
+        return self.queryset.filter(user=self.request.user).select_related('event')
 
     #Xem chi tiết vé (xem chi tiết,hiện QR để scan check-in)
     # Chỉ cho phép người dùng xem vé của mình
