@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'bem.apps.BemConfig',
     'cloudinary_storage',
     'cloudinary',
@@ -48,6 +47,9 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'django_filters',
     'corsheaders',
+    'daphne',
+    'django.contrib.staticfiles',
+    'channels',
 ]
 
 OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
@@ -148,8 +150,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bemdb',
         'USER': 'root',
-        # 'PASSWORD': 'Admin@123',
-        'PASSWORD': 'ThanhNam*1909',
+        'PASSWORD': 'Admin@123',
+        # 'PASSWORD': 'ThanhNam*1909',
         'HOST': '' # mặc định localhost
     }
 }
@@ -210,4 +212,18 @@ CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
 CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
 # Aybym0BYHcRDVaI0LQf19UiOaHKjp7
 ALLOWED_HOSTS = ['*']
+
+# ASGI Application
+ASGI_APPLICATION = 'bookingandmanagementapis.asgi.application'
+
+# Channel Layers Configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('192.168.1.8', 6379)],
+        },
+    },
+}
+
 

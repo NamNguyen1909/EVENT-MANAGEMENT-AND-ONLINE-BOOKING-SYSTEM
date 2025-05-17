@@ -704,6 +704,17 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
         })
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
+        # Gửi tin nhắn qua WebSocket
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'chat_event_{message.event.id}',
+            {
+                'type': 'chat_message',
+                'message': ChatMessageSerializer(message, context={'request': request}).data
+            }
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
@@ -711,10 +722,10 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.List
         if event_id:
             return self.queryset.filter(event_id=event_id).filter(
                 Q(receiver=self.request.user) | Q(sender=self.request.user)
-            ).select_related('sender', 'receiver')
+            ).select_related('sender', 'receiver', 'event')
         return self.queryset.filter(
             Q(receiver=self.request.user) | Q(sender=self.request.user)
-        ).select_related('sender', 'receiver')
+        ).select_related('sender', 'receiver', 'event')
 
 # # Giả sử bạn có class ReviewOwner để kiểm tra quyền
 # class ReviewOwner(permissions.BasePermission):

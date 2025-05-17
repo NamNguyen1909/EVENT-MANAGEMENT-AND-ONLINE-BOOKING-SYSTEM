@@ -1,3 +1,4 @@
+// Profile.js
 import React, { useState, useContext, useEffect } from 'react';
 import {
   SafeAreaView,
@@ -12,6 +13,7 @@ import {
   Platform,
   StatusBar,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -42,6 +44,8 @@ const Profile = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
+  const [isChatModalVisible, setIsChatModalVisible] = useState(false);
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +53,7 @@ const Profile = () => {
       setPhone(user.phone);
       setAvatar(user.avatar);
       fetchUserStats();
+      fetchEventsForChat();
     }
   }, [user]);
 
@@ -84,6 +89,26 @@ const Profile = () => {
       } else {
         Alert.alert('Lỗi', 'Không thể lấy thống kê người dùng. Vui lòng thử lại.');
       }
+    }
+  };
+
+  const fetchEventsForChat = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
+      const api = authApis(token);
+      let eventsRes;
+      if (user.role === 'organizer') {
+        eventsRes = await api.get(endpoints.myEvents);
+      } else {
+        eventsRes = await api.get(endpoints.userTickets);
+      }
+      const eventsData = eventsRes.data?.results || eventsRes.data || [];
+      setEvents(eventsData.map(item => item.event || item));
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách sự kiện:', error);
+      Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại.');
     }
   };
 
@@ -271,17 +296,37 @@ const Profile = () => {
   };
 
   const handleNotificationsPress = async () => {
-    await fetchUserStats(); // Đảm bảo lấy dữ liệu mới trước khi mở modal
+    await fetchUserStats();
     setIsNotificationModalVisible(true);
   };
 
   const handleChatPress = () => {
-    navigation.navigate('chat');
+    if (!user || !user.username) {
+      navigation.navigate('loginStack');
+    } else {
+      setIsChatModalVisible(true);
+    }
   };
 
   const closeNotificationModal = () => {
     setIsNotificationModalVisible(false);
   };
+
+  const closeChatModal = () => {
+    setIsChatModalVisible(false);
+  };
+
+  const renderEvent = ({ item }) => (
+    <TouchableOpacity
+      style={styles.eventItem}
+      onPress={() => {
+        setIsChatModalVisible(false);
+        navigation.navigate('chat', { eventId: item.id });
+      }}
+    >
+      <Text style={styles.eventTitle}>{item.title}</Text>
+    </TouchableOpacity>
+  );
 
   if (!user) {
     return (
@@ -478,8 +523,36 @@ const Profile = () => {
               <Notifications
                 unreadNotifications={unreadNotifications}
                 onClose={closeNotificationModal}
-                onUpdateUnreadCount={() => fetchUserStats()} // Đảm bảo callback được định nghĩa rõ ràng
+                onUpdateUnreadCount={() => fetchUserStats()}
               />
+            </View>
+          </SafeAreaView>
+        </Modal>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isChatModalVisible}
+          onRequestClose={closeChatModal}
+        >
+          <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+            <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Chọn sự kiện để chat</Text>
+                <TouchableOpacity onPress={closeChatModal} style={styles.closeButton}>
+                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
+                </TouchableOpacity>
+              </View>
+              {events.length > 0 ? (
+                <FlatList
+                  data={events}
+                  renderItem={renderEvent}
+                  keyExtractor={(item) => item.id.toString()}
+                  style={styles.eventList}
+                />
+              ) : (
+                <Text style={styles.noEventsText}>Không có sự kiện nào để chat.</Text>
+              )}
             </View>
           </SafeAreaView>
         </Modal>
@@ -653,12 +726,38 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.navy,
+  },
   closeButton: {
     padding: 5,
+  },
+  eventList: {
+    paddingHorizontal: 10,
+  },
+  eventItem: {
+    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    marginVertical: 5,
+    elevation: 2,
+  },
+  eventTitle: {
+    fontSize: 16,
+    color: colors.navy,
+  },
+  noEventsText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: colors.blueGray,
+    padding: 20,
   },
 });
 

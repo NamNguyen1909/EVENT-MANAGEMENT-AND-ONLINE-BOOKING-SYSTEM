@@ -1,3 +1,4 @@
+// App.js
 import React, { useReducer, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -45,6 +46,11 @@ const EventsStackNavigator = () => {
         name="BookTicket"
         component={BookTicket}
         options={{ title: 'Đặt vé' }}
+      />
+      <EventsStack.Screen
+        name="chat"
+        component={Chat}
+        options={{ title: 'Chat' }}
       />
     </EventsStack.Navigator>
   );
@@ -210,8 +216,8 @@ const LoginStackNavigator = () => {
     </LoginStack.Navigator>
   );
 };
-const DiscountCodeStack = createNativeStackNavigator();
 
+const DiscountCodeStack = createNativeStackNavigator();
 const DiscountCodeStackNavigator = () => {
   return (
     <DiscountCodeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -227,8 +233,7 @@ const DiscountCodeStackNavigator = () => {
       />
     </DiscountCodeStack.Navigator>
   );
-}
-
+};
 
 // Khởi tạo Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -299,7 +304,7 @@ const DefaultTabs = () => (
 // Bottom Tab Navigator chính
 const TabNavigator = () => {
   const user = React.useContext(MyUserContext);
-  console.log('User:', user); // Debug giá trị user
+  console.log('User:', user);
 
   if (user === null) {
     return <UnauthenticatedTabs />;
@@ -343,6 +348,24 @@ const App = () => {
     clearTokenOnAppStart();
   }, []);
   */
+
+  // Khôi phục trạng thái người dùng từ AsyncStorage khi ứng dụng khởi động
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const userData = await AsyncStorage.getItem('user');
+          if (userData) {
+            dispatch({ type: 'login', payload: JSON.parse(userData) });
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi khôi phục trạng thái người dùng:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   return (
     <SafeAreaProvider>

@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+// EventDetails.js
+import React, { useReducer, useEffect, useState, useContext, useRef } from "react";
 import {
   View,
   Text,
@@ -24,6 +25,7 @@ import MyStyles, { colors } from "../../styles/MyStyles";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
+import { MaterialIcons } from '@expo/vector-icons';
 import RenderHtml from "react-native-render-html";
 
 const EventDetails = ({ route }) => {
@@ -68,7 +70,15 @@ const EventDetails = ({ route }) => {
     }
   };
 
-    const submitReview = async () => {
+  const handleChatPress = () => {
+    if (!user || !user.username) {
+      navigation.navigate("loginStack");
+    } else {
+      navigation.navigate('chat', { eventId: eventDetail.id });
+    }
+  };
+
+  const submitReview = async () => {
     if (rating === 0) {
       Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
       return;
@@ -99,7 +109,6 @@ const EventDetails = ({ route }) => {
       Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
     } catch (err) {
       console.error(err);
-      // Check if error response contains the specific validation message from backend
       if (err.response && err.response.data && typeof err.response.data === 'string' && err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")) {
         setReviewError("Bạn đã review event này rồi.");
       } else if (err.response && err.response.data && err.response.data.detail && typeof err.response.data.detail === 'string' && err.response.data.detail.includes("Bạn đã có đánh giá cho sự kiện này.")) {
@@ -255,7 +264,6 @@ const EventDetails = ({ route }) => {
       setError(null);
       const token = await AsyncStorage.getItem("token");
       console.log("Token in eventdetail:", token);
-      //Kết hợp kiểm tra token từ asyncStorage và user context
       if (!user || !token) {
         setError("Vui lòng đăng nhập để xem chi tiết sự kiện.");
         console.log("User token không tồn tại. Chuyển hướng");
@@ -273,10 +281,6 @@ const EventDetails = ({ route }) => {
 
       const api = token ? authApis(token) : Apis;
       const res = await api.get(endpoints.eventDetail(event.id));
-      //Cách 1: Lấy reviews từ eventDetailserializer do có trả reviews về
-      // setReviews(res.data.reviews || []);
-
-      //Cách 2: Lấy reviews từ API riêng=> có thể áp dụng phân trang đã thiết lập trong ReviewViewSet
       setEventDetail(res.data);
       const reviewsRes = await api.get(endpoints.getEventReviews(event.id));
       setReviews(reviewsRes.data.results || []);
@@ -321,7 +325,12 @@ const EventDetails = ({ route }) => {
         {eventDetail.poster && (
           <Image source={{ uri: eventDetail.poster }} style={styles.poster} />
         )}
-        <Text style={styles.title}>{eventDetail.title}</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{eventDetail.title}</Text>
+          <TouchableOpacity onPress={handleChatPress} style={styles.chatIcon}>
+            <MaterialIcons name="chat-bubble-outline" size={28} color={colors.bluePrimary} />
+          </TouchableOpacity>
+        </View>
         <View style={styles.section}>
           <InfoRow icon="tag" text={eventDetail.category} />
           <InfoRow icon="map-marker" text={eventDetail.location} />
@@ -359,8 +368,6 @@ const EventDetails = ({ route }) => {
             )}
           </View>
         </View>
-
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả</Text>
           <RenderHtml
@@ -409,7 +416,6 @@ const EventDetails = ({ route }) => {
                 }
               />
             </MapView>
-
             <Button
               mode="contained"
               onPress={() => {
@@ -434,13 +440,10 @@ const EventDetails = ({ route }) => {
             </Button>
           </View>
         )}
-        {/* Review Section */}
         <View style={styles.reviewSection}>
           <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
           {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
           {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
-          
-          {/* Add/Edit Review Form */}
           {user && user.username ? (
             <View>
               <Text style={styles.formLabel}>
@@ -488,15 +491,13 @@ const EventDetails = ({ route }) => {
               Vui lòng đăng nhập để thêm đánh giá.
             </Text>
           )}
-
-          {/* Review List */} 
           {reviews.length === 0 ? (
             <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
           ) : (
             reviews.map((review) => (
               <View key={review.id} style={[
                 styles.reviewItem,
-                user?.id === review.user && styles.myReview // Highlight my review
+                user?.id === review.user && styles.myReview
               ]}>
                 <View style={styles.reviewHeader}>
                   {review.user_infor && review.user_infor.avatar ? (
@@ -557,6 +558,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  chatIcon: {
+    padding: 10,
+  },
   poster: {
     width: "100%",
     height: 220,
@@ -567,7 +577,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "700",
     color: "#1a1a1a",
-    marginBottom: 12,
+    flex: 1,
   },
   section: {
     marginBottom: 16,

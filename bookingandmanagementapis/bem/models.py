@@ -387,6 +387,7 @@ class ChatMessage(models.Model):
     message = models.TextField()
     is_from_organizer = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
