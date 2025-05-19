@@ -1,4 +1,3 @@
-// Profile.js
 import React, { useState, useContext, useEffect } from 'react';
 import {
   SafeAreaView,
@@ -270,6 +269,7 @@ const Profile = () => {
       'Xác nhận vô hiệu hóa',
       'Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Hành động này không thể hoàn tác.',
       [
+        
         { text: 'Hủy', style: 'cancel' },
         {
           text: 'Vô hiệu hóa',
@@ -516,6 +516,7 @@ const Profile = () => {
           <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8, flex: 1 }]}>
               <View style={styles.modalHeader}>
+                <View style={{ flex: 1 }} />
                 <TouchableOpacity onPress={closeNotificationModal} style={styles.closeButton}>
                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
                 </TouchableOpacity>
@@ -538,7 +539,9 @@ const Profile = () => {
           <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Chọn sự kiện để chat</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>Chọn sự kiện để chat</Text>
+                </View>
                 <TouchableOpacity onPress={closeChatModal} style={styles.closeButton}>
                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
                 </TouchableOpacity>
@@ -728,8 +731,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
   },
   modalTitle: {
     fontSize: 18,

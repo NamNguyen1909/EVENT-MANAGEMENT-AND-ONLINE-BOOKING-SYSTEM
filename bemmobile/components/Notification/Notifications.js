@@ -279,9 +279,9 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
                             Đánh Dấu Tất Cả
                         </Button>
                     )}
-                    <TouchableOpacity onPress={onClose}>
+                    {/* <TouchableOpacity onPress={onClose}>
                         <Icon name="close" size={24} color={colors.blueGray} />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
             </View>
 
