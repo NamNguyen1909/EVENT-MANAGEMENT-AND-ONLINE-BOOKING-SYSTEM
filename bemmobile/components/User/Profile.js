@@ -1,3 +1,771 @@
+// import React, { useState, useContext, useEffect } from 'react';
+// import {
+//   SafeAreaView,
+//   View,
+//   StyleSheet,
+//   Image,
+//   ScrollView,
+//   Alert,
+//   TouchableOpacity,
+//   Modal,
+//   KeyboardAvoidingView,
+//   Platform,
+//   StatusBar,
+//   Dimensions,
+//   FlatList,
+// } from 'react-native';
+// import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
+// import { useNavigation } from '@react-navigation/native';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
+// import Apis, { endpoints, authApis } from '../../configs/Apis';
+// import * as ImagePicker from 'expo-image-picker';
+// import { MaterialIcons } from '@expo/vector-icons';
+// import Notifications from '../../components/Notification/Notifications';
+// import { colors } from '../../styles/MyStyles';
+
+// const Profile = () => {
+//   const theme = useTheme();
+//   const navigation = useNavigation();
+//   const user = useContext(MyUserContext);
+//   const dispatch = useContext(MyDispatchContext);
+//   const screenHeight = Dimensions.get('window').height;
+
+//   const [email, setEmail] = useState(user?.email || '');
+//   const [phone, setPhone] = useState(user?.phone || '');
+//   const [avatar, setAvatar] = useState(user?.avatar || null);
+//   const [password, setPassword] = useState('');
+//   const [confirmPassword, setConfirmPassword] = useState('');
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+//   const [loading, setLoading] = useState(false);
+//   const [ticketsCount, setTicketsCount] = useState(0);
+//   const [unreadNotifications, setUnreadNotifications] = useState(0);
+//   const [unreadMessages, setUnreadMessages] = useState(0);
+//   const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
+//   const [isChatModalVisible, setIsChatModalVisible] = useState(false);
+//   const [events, setEvents] = useState([]);
+
+//   useEffect(() => {
+//     if (user) {
+//       setEmail(user.email);
+//       setPhone(user.phone);
+//       setAvatar(user.avatar);
+//       fetchUserStats();
+//       fetchEventsForChat();
+//     }
+//   }, [user]);
+
+//   const fetchUserStats = async () => {
+//     try {
+//       const token = await AsyncStorage.getItem('token');
+//       if (!token) {
+//         Alert.alert('Lỗi', 'Không tìm thấy token xác thực!');
+//         return;
+//       }
+
+//       const api = authApis(token);
+
+//       const ticketsRes = await api.get(endpoints.userTickets);
+//       setTicketsCount(ticketsRes.data?.results?.length || ticketsRes.data.length || 0);
+
+//       const notificationsRes = await api.get(endpoints.userNotifications);
+//       const notifications = notificationsRes.data?.results || notificationsRes.data || [];
+//       const unreadNotifs = notifications.filter(n => !n.is_read).length;
+//       setUnreadNotifications(unreadNotifs);
+
+//       const messagesRes = await api.get(endpoints.userSentMessages);
+//       const messages = messagesRes.data?.results || messagesRes.data || [];
+//       const unreadMsgs = messages.filter(m => !m.is_read).length;
+//       setUnreadMessages(unreadMsgs);
+//     } catch (error) {
+//       console.error('Lỗi khi lấy thống kê người dùng:', error);
+//       if (error.response && error.response.status === 401) {
+//         Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
+//         await AsyncStorage.removeItem('token');
+//         await AsyncStorage.removeItem('refresh_token');
+//         dispatch({ type: 'logout' });
+//       } else {
+//         Alert.alert('Lỗi', 'Không thể lấy thống kê người dùng. Vui lòng thử lại.');
+//       }
+//     }
+//   };
+
+//   const fetchEventsForChat = async () => {
+//     try {
+//       const token = await AsyncStorage.getItem('token');
+//       if (!token) return;
+
+//       const api = authApis(token);
+//       let eventsRes;
+//       if (user.role === 'organizer') {
+//         eventsRes = await api.get(endpoints.myEvents);
+//       } else {
+//         eventsRes = await api.get(endpoints.userTickets);
+//       }
+//       const eventsData = eventsRes.data?.results || eventsRes.data || [];
+//       setEvents(eventsData.map(item => item.event || item));
+//     } catch (error) {
+//       console.error('Lỗi khi lấy danh sách sự kiện:', error);
+//       Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại.');
+//     }
+//   };
+
+//   const handleSelectAvatar = async () => {
+//     try {
+//       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//       if (!permissionResult.granted) {
+//         Alert.alert('Lỗi', 'Cần cấp quyền truy cập thư viện ảnh!');
+//         return;
+//       }
+
+//       const result = await ImagePicker.launchImageLibraryAsync({
+//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//         allowsEditing: true,
+//         aspect: [1, 1],
+//         quality: 1,
+//       });
+
+//       if (!result.canceled) {
+//         const uri = result.assets[0].uri;
+//         const fileType = uri.split('.').pop().toLowerCase();
+//         if (!['png', 'jpg', 'jpeg'].includes(fileType)) {
+//           Alert.alert('Lỗi', 'Chỉ chấp nhận file PNG, JPG, JPEG!');
+//           return;
+//         }
+
+//         const response = await fetch(uri);
+//         const blob = await response.blob();
+//         if (blob.size > 5 * 1024 * 1024) {
+//           Alert.alert('Lỗi', 'Ảnh không được lớn hơn 5MB!');
+//           return;
+//         }
+
+//         setAvatar(uri);
+//         await handleUpdateAvatar(uri);
+//       }
+//     } catch (error) {
+//       console.error('Lỗi khi chọn ảnh:', error);
+//       Alert.alert('Lỗi', 'Có lỗi khi chọn ảnh. Vui lòng thử lại!');
+//     }
+//   };
+
+//   const handleUpdateAvatar = async (uri) => {
+//     try {
+//       const token = await AsyncStorage.getItem('token');
+//       if (!token) {
+//         Alert.alert('Lỗi', 'Bạn chưa đăng nhập!');
+//         return;
+//       }
+
+//       const uriParts = uri.split('.');
+//       const fileType = uriParts[uriParts.length - 1].toLowerCase();
+//       const formData = new FormData();
+//       formData.append('avatar', {
+//         uri: uri,
+//         name: `avatar.${fileType}`,
+//         type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+//       });
+
+//       const res = await Apis.patch(endpoints.currentUser, formData, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           'Content-Type': 'multipart/form-data',
+//         },
+//       });
+
+//       dispatch({
+//         type: 'login',
+//         payload: res.data,
+//       });
+
+//       Alert.alert('Thành công', 'Cập nhật avatar thành công!');
+//     } catch (error) {
+//       console.error('Lỗi cập nhật avatar:', error);
+//       if (error.response?.data) {
+//         const errors = error.response.data;
+//         Alert.alert('Lỗi', errors.avatar ? errors.avatar[0] : 'Không thể cập nhật avatar. Vui lòng thử lại.');
+//       } else {
+//         Alert.alert('Lỗi', 'Không thể cập nhật avatar. Vui lòng thử lại.');
+//       }
+//     }
+//   };
+
+//   const handleUpdate = async () => {
+//     if (password || confirmPassword) {
+//       if (password !== confirmPassword) {
+//         Alert.alert('Lỗi', 'Mật khẩu và xác nhận mật khẩu không khớp.');
+//         return;
+//       }
+//       if (password.length < 8) {
+//         Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự.');
+//         return;
+//       }
+//     }
+
+//     setLoading(true);
+//     try {
+//       const token = await AsyncStorage.getItem('token');
+//       if (!token) {
+//         Alert.alert('Lỗi', 'Bạn chưa đăng nhập!');
+//         return;
+//       }
+
+//       const updatedData = {
+//         email: email,
+//         phone: phone,
+//       };
+
+//       if (password) {
+//         updatedData.password = password;
+//       }
+
+//       const res = await Apis.patch(endpoints.currentUser, updatedData, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       dispatch({
+//         type: 'login',
+//         payload: res.data,
+//       });
+
+//       setPassword('');
+//       setConfirmPassword('');
+
+//       Alert.alert('Thành công', 'Cập nhật hồ sơ thành công!');
+//     } catch (error) {
+//       console.error('Lỗi cập nhật:', error);
+//       if (error.response?.data) {
+//         const errors = error.response.data;
+//         Alert.alert('Lỗi',
+//           errors.email ? errors.email[0] :
+//           errors.phone ? errors.phone[0] :
+//           errors.password ? errors.password[0] :
+//           'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
+//         );
+//       } else {
+//         Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.');
+//       }
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       await AsyncStorage.removeItem('token');
+//       await AsyncStorage.removeItem('refresh_token');
+//       dispatch({ type: 'logout' });
+//     } catch (error) {
+//       console.error('Lỗi đăng xuất:', error);
+//       Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+//     }
+//   };
+
+//   const handleDeactivate = async () => {
+//     Alert.alert(
+//       'Xác nhận vô hiệu hóa',
+//       'Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Hành động này không thể hoàn tác.',
+//       [
+        
+//         { text: 'Hủy', style: 'cancel' },
+//         {
+//           text: 'Vô hiệu hóa',
+//           style: 'destructive',
+//           onPress: async () => {
+//             try {
+//               const token = await AsyncStorage.getItem('token');
+//               await Apis.post(endpoints.deactivateUser, {}, {
+//                 headers: {
+//                   Authorization: `Bearer ${token}`,
+//                 },
+//               });
+//               await AsyncStorage.removeItem('token');
+//               await AsyncStorage.removeItem('refresh_token');
+//               dispatch({ type: 'logout' });
+//             } catch (error) {
+//               console.error('Lỗi vô hiệu hóa:', error);
+//               Alert.alert('Lỗi', 'Không thể vô hiệu hóa tài khoản. Vui lòng thử lại.');
+//             }
+//           },
+//         },
+//       ]
+//     );
+//   };
+
+//   const handleNotificationsPress = async () => {
+//     await fetchUserStats();
+//     setIsNotificationModalVisible(true);
+//   };
+
+//   const handleChatPress = () => {
+//     if (!user || !user.username) {
+//       navigation.navigate('loginStack');
+//     } else {
+//       setIsChatModalVisible(true);
+//     }
+//   };
+
+//   const closeNotificationModal = () => {
+//     setIsNotificationModalVisible(false);
+//   };
+
+//   const closeChatModal = () => {
+//     setIsChatModalVisible(false);
+//   };
+
+//   const renderEvent = ({ item }) => (
+//     <TouchableOpacity
+//       style={styles.eventItem}
+//       onPress={() => {
+//         setIsChatModalVisible(false);
+//         navigation.navigate('chat', { eventId: item.id });
+//       }}
+//     >
+//       <Text style={styles.eventTitle}>{item.title}</Text>
+//     </TouchableOpacity>
+//   );
+
+//   if (!user) {
+//     return (
+//       <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+//         <View style={styles.errorContainer}>
+//           <Text style={styles.errorText}>Vui lòng đăng nhập để xem hồ sơ của bạn.</Text>
+//         </View>
+//       </SafeAreaView>
+//     );
+//   }
+
+//   return (
+//     <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+//       <KeyboardAvoidingView
+//         style={styles.keyboardAvoidingContainer}
+//         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+//         keyboardVerticalOffset={Platform.OS === 'android' ? 24 : 0}
+//       >
+//         <View style={styles.header}>
+//           <TouchableOpacity onPress={handleNotificationsPress} style={styles.iconContainer}>
+//             <MaterialIcons name="notifications-none" size={28} color={colors.bluePrimary} />
+//             {unreadNotifications > 0 && (
+//               <View style={styles.badge}>
+//                 <Text style={styles.badgeText}>{unreadNotifications}</Text>
+//               </View>
+//             )}
+//           </TouchableOpacity>
+//           <TouchableOpacity onPress={handleChatPress} style={styles.iconContainer}>
+//             <MaterialIcons name="chat-bubble-outline" size={28} color={colors.bluePrimary} />
+//             {unreadMessages > 0 && (
+//               <View style={styles.badge}>
+//                 <Text style={styles.badgeText}>{unreadMessages}</Text>
+//               </View>
+//             )}
+//           </TouchableOpacity>
+//         </View>
+//         <ScrollView
+//           style={[styles.container, { backgroundColor: colors.grayLight }]}
+//           contentContainerStyle={[styles.scrollContent, { paddingBottom: Platform.OS === 'android' ? 30 : 20 }]}
+//           showsVerticalScrollIndicator={false}
+//         >
+//           <View style={styles.avatarContainer}>
+//             <TouchableOpacity onPress={handleSelectAvatar}>
+//               {avatar ? (
+//                 <Image source={{ uri: avatar }} style={styles.avatar} />
+//               ) : (
+//                 <Avatar.Text size={100} label={user.username[0].toUpperCase()} />
+//               )}
+//               <View style={styles.editAvatarOverlay}>
+//                 <MaterialIcons name="camera-alt" size={24} color={colors.white} />
+//               </View>
+//             </TouchableOpacity>
+//           </View>
+
+//           <Title style={styles.title}>Hồ sơ</Title>
+
+//           <Card style={styles.statsCard}>
+//             <Card.Content>
+//               <View style={styles.statsRow}>
+//                 <Text style={styles.statsLabel}>Vé đã mua:</Text>
+//                 <Text style={styles.statsValue}>{ticketsCount}</Text>
+//               </View>
+//             </Card.Content>
+//           </Card>
+
+//           <View style={styles.infoContainer}>
+//             <Text style={styles.label}>Tên người dùng:</Text>
+//             <Text style={styles.value}>{user.username}</Text>
+//           </View>
+
+//           <View style={styles.infoContainer}>
+//             <Text style={styles.label}>Vai trò:</Text>
+//             <Text style={styles.value}>{user.role}</Text>
+//           </View>
+
+//           <View style={styles.infoContainer}>
+//             <Text style={styles.label}>Nhóm khách hàng:</Text>
+//             <Text style={styles.value}>{user.customer_group}</Text>
+//           </View>
+
+//           <View style={styles.infoContainer}>
+//             <Text style={styles.label}>Tổng chi tiêu:</Text>
+//             <Text style={styles.value}>{user.total_spent} VNĐ</Text>
+//           </View>
+
+//           <View style={styles.infoContainer}>
+//             <Text style={styles.label}>Ngày tham gia:</Text>
+//             <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
+//           </View>
+
+//           <Card style={styles.formCard}>
+//             <Card.Content>
+//               <TextInput
+//                 label="Email"
+//                 value={email}
+//                 onChangeText={setEmail}
+//                 style={styles.input}
+//                 mode="outlined"
+//                 outlineColor={colors.bluePrimary}
+//                 autoCapitalize="none"
+//                 keyboardType="email-address"
+//               />
+
+//               <TextInput
+//                 label="Số điện thoại"
+//                 value={phone}
+//                 onChangeText={setPhone}
+//                 style={styles.input}
+//                 mode="outlined"
+//                 outlineColor={colors.bluePrimary}
+//                 keyboardType="phone-pad"
+//               />
+
+//               <TextInput
+//                 label="Mật khẩu mới"
+//                 value={password}
+//                 onChangeText={setPassword}
+//                 style={styles.input}
+//                 mode="outlined"
+//                 outlineColor={colors.bluePrimary}
+//                 secureTextEntry={!showPassword}
+//                 autoCapitalize="none"
+//                 right={
+//                   <TextInput.Icon
+//                     icon={showPassword ? 'eye-off' : 'eye'}
+//                     onPress={() => setShowPassword(!showPassword)}
+//                   />
+//                 }
+//               />
+
+//               <TextInput
+//                 label="Xác nhận mật khẩu"
+//                 value={confirmPassword}
+//                 onChangeText={setConfirmPassword}
+//                 style={styles.input}
+//                 mode="outlined"
+//                 outlineColor={colors.bluePrimary}
+//                 secureTextEntry={!showConfirmPassword}
+//                 autoCapitalize="none"
+//                 right={
+//                   <TextInput.Icon
+//                     icon={showConfirmPassword ? 'eye-off' : 'eye'}
+//                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+//                   />
+//                 }
+//               />
+//             </Card.Content>
+//           </Card>
+
+//           <Button
+//             mode="contained"
+//             onPress={handleUpdate}
+//             loading={loading}
+//             disabled={loading}
+//             style={[styles.button, { backgroundColor: colors.blueDark }]}
+//             buttonColor={colors.blueDark}
+//             textColor={colors.white}
+//           >
+//             Cập nhật
+//           </Button>
+
+//           <Button
+//             mode="outlined"
+//             onPress={handleLogout}
+//             style={[styles.button, styles.logoutButton]}
+//             textColor={colors.redAccent}
+//           >
+//             Đăng xuất
+//           </Button>
+
+//           <Button
+//             mode="outlined"
+//             onPress={handleDeactivate}
+//             style={[styles.button, styles.deactivateButton]}
+//             textColor={colors.orangeAccent}
+//           >
+//             Vô hiệu hóa tài khoản
+//           </Button>
+//         </ScrollView>
+
+//         <Modal
+//           animationType="slide"
+//           transparent={true}
+//           visible={isNotificationModalVisible}
+//           onRequestClose={closeNotificationModal}
+//         >
+//           <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+//             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8, flex: 1 }]}>
+//               <View style={styles.modalHeader}>
+//                 <View style={{ flex: 1 }} />
+//                 <TouchableOpacity onPress={closeNotificationModal} style={styles.closeButton}>
+//                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
+//                 </TouchableOpacity>
+//               </View>
+//               <Notifications
+//                 unreadNotifications={unreadNotifications}
+//                 onClose={closeNotificationModal}
+//                 onUpdateUnreadCount={() => fetchUserStats()}
+//               />
+//             </View>
+//           </SafeAreaView>
+//         </Modal>
+
+//         <Modal
+//           animationType="slide"
+//           transparent={true}
+//           visible={isChatModalVisible}
+//           onRequestClose={closeChatModal}
+//         >
+//           <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+//             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
+//               <View style={styles.modalHeader}>
+//                 <View style={{ flex: 1 }}>
+//                   <Text style={styles.modalTitle}>Chọn sự kiện để chat</Text>
+//                 </View>
+//                 <TouchableOpacity onPress={closeChatModal} style={styles.closeButton}>
+//                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
+//                 </TouchableOpacity>
+//               </View>
+//               {events.length > 0 ? (
+//                 <FlatList
+//                   data={events}
+//                   renderItem={renderEvent}
+//                   keyExtractor={(item) => item.id.toString()}
+//                   style={styles.eventList}
+//                 />
+//               ) : (
+//                 <Text style={styles.noEventsText}>Không có sự kiện nào để chat.</Text>
+//               )}
+//             </View>
+//           </SafeAreaView>
+//         </Modal>
+//       </KeyboardAvoidingView>
+//     </SafeAreaView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   safeArea: {
+//     flex: 1,
+//     backgroundColor: colors.grayLight,
+//   },
+//   keyboardAvoidingContainer: {
+//     flex: 1,
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'flex-end',
+//     paddingHorizontal: 20,
+//     paddingVertical: 10,
+//   },
+//   iconContainer: {
+//     position: 'relative',
+//     marginLeft: 15,
+//   },
+//   badge: {
+//     position: 'absolute',
+//     top: -5,
+//     right: -5,
+//     backgroundColor: colors.redAccent,
+//     borderRadius: 10,
+//     minWidth: 20,
+//     height: 20,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   badgeText: {
+//     color: colors.white,
+//     fontSize: 12,
+//     fontWeight: 'bold',
+//   },
+//   container: {
+//     flex: 1,
+//     paddingHorizontal: 20,
+//   },
+//   scrollContent: {
+//     paddingTop: 10,
+//     paddingBottom: 20,
+//   },
+//   avatarContainer: {
+//     alignItems: 'center',
+//     marginBottom: 20,
+//     position: 'relative',
+//   },
+//   avatar: {
+//     width: 100,
+//     height: 100,
+//     borderRadius: 50,
+//     borderWidth: 2,
+//     borderColor: colors.bluePrimary,
+//   },
+//   editAvatarOverlay: {
+//     position: 'absolute',
+//     bottom: 0,
+//     right: 0,
+//     backgroundColor: colors.blackTransparent,
+//     borderRadius: 50,
+//     padding: 5,
+//   },
+//   title: {
+//     textAlign: 'center',
+//     marginBottom: 20,
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//     color: colors.navy,
+//   },
+//   statsCard: {
+//     marginBottom: 20,
+//     backgroundColor: colors.white,
+//     borderRadius: 10,
+//     elevation: Platform.OS === 'android' ? 4 : 2,
+//     shadowColor: colors.black,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+//     shadowRadius: 4,
+//   },
+//   statsRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 10,
+//   },
+//   statsLabel: {
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//     color: colors.navy,
+//   },
+//   statsValue: {
+//     fontSize: 16,
+//     color: colors.navy,
+//   },
+//   infoContainer: {
+//     flexDirection: 'row',
+//     marginBottom: 15,
+//     paddingHorizontal: 10,
+//   },
+//   label: {
+//     fontWeight: 'bold',
+//     marginRight: 10,
+//     fontSize: 16,
+//     color: colors.navy,
+//   },
+//   value: {
+//     fontSize: 16,
+//     color: colors.navy,
+//     flex: 1,
+//   },
+//   formCard: {
+//     marginBottom: 20,
+//     backgroundColor: colors.white,
+//     borderRadius: 10,
+//     elevation: Platform.OS === 'android' ? 4 : 2,
+//     shadowColor: colors.black,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+//     shadowRadius: 4,
+//   },
+//   input: {
+//     marginBottom: 15,
+//     backgroundColor: colors.white,
+//   },
+//   button: {
+//     marginTop: 10,
+//     paddingVertical: 6,
+//     borderRadius: 8,
+//   },
+//   logoutButton: {
+//     borderColor: colors.redAccent,
+//     borderWidth: 1,
+//   },
+//   deactivateButton: {
+//     borderColor: colors.orangeAccent,
+//     borderWidth: 1,
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   errorText: {
+//     textAlign: 'center',
+//     fontSize: 18,
+//     color: colors.redError,
+//   },
+//   modalContainer: {
+//     flex: 1,
+//     backgroundColor: colors.blackTransparent,
+//     justifyContent: 'center',
+//   },
+//   notificationModalContent: {
+//     backgroundColor: colors.white,
+//     borderRadius: 10,
+//     marginHorizontal: 10,
+//     paddingVertical: 10,
+//     elevation: Platform.OS === 'android' ? 4 : 2,
+//     shadowColor: colors.black,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0.2,
+//     shadowRadius: 4,
+//   },
+//   modalHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingHorizontal: 15,
+//     paddingVertical: 10,
+//   },
+//   modalTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     color: colors.navy,
+//   },
+//   closeButton: {
+//     padding: 5,
+//   },
+//   eventList: {
+//     paddingHorizontal: 10,
+//   },
+//   eventItem: {
+//     padding: 15,
+//     backgroundColor: colors.white,
+//     borderRadius: 8,
+//     marginVertical: 5,
+//     elevation: 2,
+//   },
+//   eventTitle: {
+//     fontSize: 16,
+//     color: colors.navy,
+//   },
+//   noEventsText: {
+//     textAlign: 'center',
+//     fontSize: 16,
+//     color: colors.blueGray,
+//     padding: 20,
+//   },
+// });
+
+// export default Profile;
+
 import React, { useState, useContext, useEffect } from 'react';
 import {
   SafeAreaView,
@@ -13,6 +781,7 @@ import {
   StatusBar,
   Dimensions,
   FlatList,
+  ActivityIndicator, // Thêm import
 } from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -48,9 +817,9 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
-      setEmail(user.email);
-      setPhone(user.phone);
-      setAvatar(user.avatar);
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setAvatar(user.avatar || null);
       fetchUserStats();
       fetchEventsForChat();
     }
@@ -71,20 +840,27 @@ const Profile = () => {
 
       const notificationsRes = await api.get(endpoints.userNotifications);
       const notifications = notificationsRes.data?.results || notificationsRes.data || [];
-      const unreadNotifs = notifications.filter(n => !n.is_read).length;
+      const unreadNotifs = notifications.filter((n) => !n.is_read).length;
       setUnreadNotifications(unreadNotifs);
 
       const messagesRes = await api.get(endpoints.userSentMessages);
       const messages = messagesRes.data?.results || messagesRes.data || [];
-      const unreadMsgs = messages.filter(m => !m.is_read).length;
+      const unreadMsgs = messages.filter((m) => !m.is_read).length;
       setUnreadMessages(unreadMsgs);
     } catch (error) {
       console.error('Lỗi khi lấy thống kê người dùng:', error);
       if (error.response && error.response.status === 401) {
-        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.');
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('refresh_token');
-        dispatch({ type: 'logout' });
+        Alert.alert('Lỗi', 'Xác thực thất bại. Vui lòng đăng nhập lại.', [
+          {
+            text: 'OK',
+            onPress: async () => {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('refresh_token');
+              dispatch({ type: 'logout' });
+              navigation.navigate('loginStack');
+            },
+          },
+        ]);
       } else {
         Alert.alert('Lỗi', 'Không thể lấy thống kê người dùng. Vui lòng thử lại.');
       }
@@ -92,9 +868,15 @@ const Profile = () => {
   };
 
   const fetchEventsForChat = async () => {
+    setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        Alert.alert('Lỗi', 'Vui lòng đăng nhập để xem sự kiện.', [
+          { text: 'OK', onPress: () => navigation.navigate('loginStack') },
+        ]);
+        return;
+      }
 
       const api = authApis(token);
       let eventsRes;
@@ -103,11 +885,37 @@ const Profile = () => {
       } else {
         eventsRes = await api.get(endpoints.userTickets);
       }
+
       const eventsData = eventsRes.data?.results || eventsRes.data || [];
-      setEvents(eventsData.map(item => item.event || item));
+      console.log('Raw API Data:', JSON.stringify(eventsData, null, 2));
+
+      const currentTime = new Date('2025-05-22T16:24:00+07:00');
+      const activeEvents = eventsData
+        .map((item) => {
+          const event = item.event || item;
+          console.log(`Processing event: ${event.title || 'No title'}, end_time: ${event.end_time}, is_paid: ${item.is_paid}`);
+          return { ...event, is_paid: item.is_paid }; // Gắn is_paid vào event
+        })
+        .filter((event) => {
+          const isValidTime = event.end_time && new Date(event.end_time) >= currentTime;
+          const isPaid = user.role !== 'attendee' || (event.is_paid === true || event.is_paid === undefined);
+          console.log(
+            `Event ${event.title || 'No title'}: isValidTime=${isValidTime}, isPaid=${isPaid}`
+          );
+          return event && isValidTime && isPaid;
+        });
+
+      console.log('Active Events:', JSON.stringify(activeEvents, null, 2));
+      setEvents(activeEvents);
+
+      if (activeEvents.length === 0) {
+        console.log('Không có sự kiện nào đủ điều kiện để chat.');
+      }
     } catch (error) {
       console.error('Lỗi khi lấy danh sách sự kiện:', error);
-      Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại.');
+      Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,9 +975,8 @@ const Profile = () => {
         type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
       });
 
-      const res = await Apis.patch(endpoints.currentUser, formData, {
+      const res = await authApis(token).patch(endpoints.currentUser, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -184,7 +991,10 @@ const Profile = () => {
       console.error('Lỗi cập nhật avatar:', error);
       if (error.response?.data) {
         const errors = error.response.data;
-        Alert.alert('Lỗi', errors.avatar ? errors.avatar[0] : 'Không thể cập nhật avatar. Vui lòng thử lại.');
+        Alert.alert(
+          'Lỗi',
+          errors.avatar ? errors.avatar[0] : 'Không thể cập nhật avatar. Vui lòng thử lại.'
+        );
       } else {
         Alert.alert('Lỗi', 'Không thể cập nhật avatar. Vui lòng thử lại.');
       }
@@ -199,6 +1009,10 @@ const Profile = () => {
       }
       if (password.length < 8) {
         Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự.');
+        return;
+      }
+      if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        Alert.alert('Lỗi', 'Mật khẩu phải chứa ít nhất một chữ hoa và một số.');
         return;
       }
     }
@@ -220,11 +1034,7 @@ const Profile = () => {
         updatedData.password = password;
       }
 
-      const res = await Apis.patch(endpoints.currentUser, updatedData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await authApis(token).patch(endpoints.currentUser, updatedData);
 
       dispatch({
         type: 'login',
@@ -239,11 +1049,15 @@ const Profile = () => {
       console.error('Lỗi cập nhật:', error);
       if (error.response?.data) {
         const errors = error.response.data;
-        Alert.alert('Lỗi',
-          errors.email ? errors.email[0] :
-          errors.phone ? errors.phone[0] :
-          errors.password ? errors.password[0] :
-          'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
+        Alert.alert(
+          'Lỗi',
+          errors.email
+            ? errors.email[0]
+            : errors.phone
+            ? errors.phone[0]
+            : errors.password
+            ? errors.password[0]
+            : 'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
         );
       } else {
         Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.');
@@ -254,14 +1068,24 @@ const Profile = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('refresh_token');
-      dispatch({ type: 'logout' });
-    } catch (error) {
-      console.error('Lỗi đăng xuất:', error);
-      Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
-    }
+    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('refresh_token');
+            dispatch({ type: 'logout' });
+            navigation.reset({ index: 0, routes: [{ name: 'loginStack' }] });
+          } catch (error) {
+            console.error('Lỗi đăng xuất:', error);
+            Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleDeactivate = async () => {
@@ -269,7 +1093,6 @@ const Profile = () => {
       'Xác nhận vô hiệu hóa',
       'Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Hành động này không thể hoàn tác.',
       [
-        
         { text: 'Hủy', style: 'cancel' },
         {
           text: 'Vô hiệu hóa',
@@ -277,14 +1100,11 @@ const Profile = () => {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('token');
-              await Apis.post(endpoints.deactivateUser, {}, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+              await authApis(token).delete(endpoints.deactivateUser);
               await AsyncStorage.removeItem('token');
               await AsyncStorage.removeItem('refresh_token');
               dispatch({ type: 'logout' });
+              navigation.reset({ index: 0, routes: [{ name: 'loginStack' }] });
             } catch (error) {
               console.error('Lỗi vô hiệu hóa:', error);
               Alert.alert('Lỗi', 'Không thể vô hiệu hóa tài khoản. Vui lòng thử lại.');
@@ -324,7 +1144,10 @@ const Profile = () => {
         navigation.navigate('chat', { eventId: item.id });
       }}
     >
-      <Text style={styles.eventTitle}>{item.title}</Text>
+      <Text style={styles.eventTitle}>{item.title || 'Sự kiện không tên'}</Text>
+      <Text style={styles.eventTime}>
+        Kết thúc: {item.end_time ? new Date(item.end_time).toLocaleString('vi-VN') : 'Không xác định'}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -404,17 +1227,19 @@ const Profile = () => {
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Nhóm khách hàng:</Text>
-            <Text style={styles.value}>{user.customer_group}</Text>
+            <Text style={styles.value}>{user.customer_group || 'Không xác định'}</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Tổng chi tiêu:</Text>
-            <Text style={styles.value}>{user.total_spent} VNĐ</Text>
+            <Text style={styles.value}>{user.total_spent || 0} VNĐ</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Ngày tham gia:</Text>
-            <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
+            <Text style={styles.value}>
+              {user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'Không xác định'}
+            </Text>
           </View>
 
           <Card style={styles.formCard}>
@@ -513,7 +1338,9 @@ const Profile = () => {
           visible={isNotificationModalVisible}
           onRequestClose={closeNotificationModal}
         >
-          <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+          <SafeAreaView
+            style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}
+          >
             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8, flex: 1 }]}>
               <View style={styles.modalHeader}>
                 <View style={{ flex: 1 }} />
@@ -536,7 +1363,9 @@ const Profile = () => {
           visible={isChatModalVisible}
           onRequestClose={closeChatModal}
         >
-          <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+          <SafeAreaView
+            style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}
+          >
             <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
               <View style={styles.modalHeader}>
                 <View style={{ flex: 1 }}>
@@ -546,15 +1375,38 @@ const Profile = () => {
                   <MaterialIcons name="close" size={24} color={colors.blueGray} />
                 </TouchableOpacity>
               </View>
-              {events.length > 0 ? (
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colors.bluePrimary} />
+                </View>
+              ) : events.length > 0 ? (
                 <FlatList
                   data={events}
                   renderItem={renderEvent}
                   keyExtractor={(item) => item.id.toString()}
                   style={styles.eventList}
+                  contentContainerStyle={styles.eventListContent}
+                  nestedScrollEnabled
                 />
               ) : (
-                <Text style={styles.noEventsText}>Không có sự kiện nào để chat.</Text>
+                <View style={styles.noEventsContainer}>
+                  <Text style={styles.noEventsText}>
+                    Không có sự kiện nào để chat. Hãy đặt vé hoặc tạo sự kiện!
+                  </Text>
+                  {user.role === 'organizer' && (
+                    <Button
+                      mode="contained"
+                      onPress={() => {
+                        setIsChatModalVisible(false);
+                        navigation.navigate('CreateEvent');
+                      }}
+                      style={styles.createEventButton}
+                      buttonColor={colors.bluePrimary}
+                    >
+                      Tạo sự kiện mới
+                    </Button>
+                  )}
+                </View>
               )}
             </View>
           </SafeAreaView>
@@ -744,6 +1596,10 @@ const styles = StyleSheet.create({
   },
   eventList: {
     paddingHorizontal: 10,
+    maxHeight: '60%',
+  },
+  eventListContent: {
+    paddingBottom: 10,
   },
   eventItem: {
     padding: 15,
@@ -755,11 +1611,31 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     color: colors.navy,
+    fontWeight: 'bold',
+  },
+  eventTime: {
+    fontSize: 14,
+    color: colors.blueGray,
+    marginTop: 5,
+  },
+  noEventsContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
   },
   noEventsText: {
     textAlign: 'center',
     fontSize: 16,
     color: colors.blueGray,
+    marginBottom: 10,
+  },
+  createEventButton: {
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
 });

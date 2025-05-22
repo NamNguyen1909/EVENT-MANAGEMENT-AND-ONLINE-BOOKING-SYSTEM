@@ -82,6 +82,11 @@ export const endpoints = {
 
 };
 
+// Thêm WebSocket endpoints
+export const websocketEndpoints = {
+  chat: (eventId) => `ws://192.168.1.8:8000/ws/chat/${eventId}/`,
+};
+
 // Tạo instance axios với xác thực
 export const authApis = (token) => {
   return axios.create({

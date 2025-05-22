@@ -14,19 +14,16 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from channels.auth import AuthMiddlewareStack
 
-# Thiết lập settings trước khi import bất kỳ module nào liên quan đến mô hình
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bookingandmanagementapis.settings')
-
-# Khởi tạo ứng dụng Django để tải apps
 django_asgi_app = get_asgi_application()
 
-# Import routing sau khi ứng dụng được khởi tạo
+from bem.middleware import TokenAuthMiddleware
 import bem.routing
 
 application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket': AllowedHostsOriginValidator(
-        AuthMiddlewareStack(
+        TokenAuthMiddleware(
             URLRouter(bem.routing.websocket_urlpatterns)
         )
     ),
