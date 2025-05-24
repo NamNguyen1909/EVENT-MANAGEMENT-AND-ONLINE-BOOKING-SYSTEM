@@ -150,8 +150,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bemdb',
         'USER': 'root',
-        'PASSWORD': 'Admin@123',
-        # 'PASSWORD': 'ThanhNam*1909',
+        # 'PASSWORD': 'Admin@123',
+        'PASSWORD': 'ThanhNam*1909',
         'HOST': '' # mặc định localhost
     }
 }

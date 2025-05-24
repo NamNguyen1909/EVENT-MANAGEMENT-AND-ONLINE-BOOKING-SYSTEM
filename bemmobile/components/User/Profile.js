@@ -426,6 +426,7 @@ const Profile = () => {
                 style={styles.input}
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
+                activeOutlineColor={colors.blueDark}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
@@ -437,6 +438,7 @@ const Profile = () => {
                 style={styles.input}
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
+                activeOutlineColor={colors.blueDark}
                 keyboardType="phone-pad"
               />
 
@@ -447,7 +449,8 @@ const Profile = () => {
                 style={styles.input}
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
-                secureTextEntry={!showPassword}
+                 activeOutlineColor={colors.blueDark}
+                secureTextEntry={showPassword}
                 autoCapitalize="none"
                 right={
                   <TextInput.Icon
@@ -464,7 +467,8 @@ const Profile = () => {
                 style={styles.input}
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
-                secureTextEntry={!showConfirmPassword}
+                activeOutlineColor={colors.blueDark}
+                secureTextEntry={showConfirmPassword}
                 autoCapitalize="none"
                 right={
                   <TextInput.Icon
