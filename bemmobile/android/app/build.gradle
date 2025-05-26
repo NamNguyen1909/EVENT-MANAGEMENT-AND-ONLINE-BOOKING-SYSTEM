@@ -94,7 +94,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
-        missingDimensionStrategy 'react-native-camera', 'general'
         missingDimensionStrategy 'reactnativecpp', 'reactnativecpp'
         missingDimensionStrategy 'RNVectorIcons', 'vectoricons'
         missingDimensionStrategy 'expo', 'basic'

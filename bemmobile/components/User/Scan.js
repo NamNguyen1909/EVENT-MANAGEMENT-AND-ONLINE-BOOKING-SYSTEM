@@ -1,61 +1,39 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { SafeAreaView, View, StyleSheet, Alert, Text, Platform, PermissionsAndroid } from 'react-native';
+import React, { useState, useContext, useRef } from 'react';
+import { SafeAreaView, View, StyleSheet, Alert, Text, Platform } from 'react-native';
 import { Button, Title, useTheme, ActivityIndicator } from 'react-native-paper';
-import { RNCamera } from 'react-native-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../../configs/Apis';
 import { MyUserContext } from '../../configs/MyContexts';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MyStyles ,{colors} from '../../styles/MyStyles';
 
 const Scan = () => {
   const theme = useTheme();
   const user = useContext(MyUserContext);
-  const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [facing, setFacing] = useState('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef(null);
 
-  useEffect(() => {
-    (async () => {
-      if (Platform.OS === 'android') {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-            {
-              title: 'Yêu cầu quyền truy cập camera',
-              message: 'Ứng dụng cần quyền truy cập camera để quét mã QR',
-              buttonPositive: 'Đồng ý',
-              buttonNegative: 'Hủy',
-            }
-          );
-          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-        } catch (err) {
-          console.warn(err);
-          setHasPermission(false);
-        }
-      } else {
-        // iOS permission handling can be added here if needed
-        setHasPermission(true);
-      }
-    })();
-  }, []);
 
   const handleBarCodeScanned = async ({ data }) => {
     if (scanned || loading) return;
-
     setScanned(true);
     setLoading(true);
     setScanResult(null);
 
     try {
       const token = await AsyncStorage.getItem('token');
+
       if (!token) {
         Alert.alert('Lỗi', 'Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
         setLoading(false);
         return;
       }
 
-      console.log('Scanned QR code:', data);
       const response = await authApis(token).post(endpoints.checkInTicket, { uuid: data });
 
       setScanResult({
@@ -66,7 +44,6 @@ const Scan = () => {
 
       Alert.alert('Thành công', response.data.message || 'Check-in vé thành công!');
     } catch (error) {
-      console.error('Error checking in ticket:', error);
       let errorMessage = 'Không thể check-in vé. Vui lòng thử lại.';
       if (error.response) {
         if (error.response.status === 401) {
@@ -89,6 +66,10 @@ const Scan = () => {
     setScanResult(null);
   };
 
+  const toggleCameraFacing = () => {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  };
+
   if (!user || (user.role !== 'attendee' && !user.is_staff)) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -99,13 +80,19 @@ const Scan = () => {
     );
   }
 
-  if (hasPermission === null) {
-    return <Text>Đang xin quyền truy cập camera...</Text>;
+  if (!permission) {
+    return <Text>Đang kiểm tra quyền truy cập camera...</Text>;
   }
-  if (hasPermission === false) {
-    return <Text>Bạn cần cấp quyền truy cập camera để sử dụng chức năng này.</Text>;
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Bạn cần cấp quyền truy cập camera để sử dụng chức năng này.</Text>
+        <Button mode="contained" onPress={requestPermission}>Cấp quyền</Button>
+      </View>
+    );
   }
 
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -114,24 +101,25 @@ const Scan = () => {
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {!scanned ? (
           <View style={styles.scannerContainer}>
-            <RNCamera
-              style={StyleSheet.absoluteFillObject}
-              onBarCodeRead={handleBarCodeScanned}
-              barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
-              captureAudio={false}
-              androidCameraPermissionOptions={{
-                title: 'Yêu cầu quyền truy cập camera',
-                message: 'Ứng dụng cần quyền truy cập camera để quét mã QR',
-                buttonPositive: 'Đồng ý',
-                buttonNegative: 'Hủy',
+            <CameraView
+              ref={cameraRef}
+              style={{ flex: 1 }}
+              facing={facing}
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
               }}
-            />
-            <View style={styles.overlay}>
-              <View style={styles.scanFrame}>
-                <Icon name="qrcode-scan" size={40} color="#fff" style={styles.scanIcon} />
-                <Text style={styles.scanText}>Quét mã QR của vé</Text>
+              onBarcodeScanned={handleBarCodeScanned}
+            >
+              <View style={styles.overlay}>
+                <View style={styles.scanFrame}>
+                  <Icon name="qrcode-scan" size={40} color="#fff" style={styles.scanIcon} />
+                  <Text style={styles.scanText}>Quét mã QR của vé</Text>
+                  <Button mode="outlined" onPress={toggleCameraFacing} style={{ marginTop: 16 }} labelStyle={{color: colors.chartBlue}}>
+                    Đổi camera
+                  </Button>
+                </View>
               </View>
-            </View>
+            </CameraView>
           </View>
         ) : (
           <View style={styles.resultContainer}>
@@ -160,6 +148,7 @@ const Scan = () => {
                   onPress={handleScanAgain}
                   style={styles.button}
                   disabled={loading}
+                  buttonColor={colors.bluePrimary}
                 >
                   Quét lại
                 </Button>
@@ -185,6 +174,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: colors.blueDark,
   },
   container: {
     flex: 1,
@@ -251,6 +241,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     width: '80%',
+
   },
   errorText: {
     textAlign: 'center',
