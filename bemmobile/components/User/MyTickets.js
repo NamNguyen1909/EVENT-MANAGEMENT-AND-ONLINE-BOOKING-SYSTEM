@@ -36,6 +36,20 @@ const MyTickets = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorDetail, setErrorDetail] = useState(null);
 
+  useEffect(() => {
+    if (!user) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "loginStack" }],
+      });
+      return;
+    }
+    const unsubscribe = navigation.addListener("focus", () => {
+      fetchTickets();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const fetchTickets = async (url = endpoints.userTickets, append = false, isRefresh = false) => {
     try {
       if (append) {
@@ -47,8 +61,8 @@ const MyTickets = () => {
         setError(null);
       }
       const token = await AsyncStorage.getItem("token");
-      console.log("Token in myticket: ", token);
-      if (!user || !token) {
+      console.log("Token in myticket (fetchTickets):", token, "URL:", url);
+      if (!token) {
         setError("Vui lòng đăng nhập để xem vé của bạn.");
         setLoading(false);
         setLoadingMore(false);
@@ -109,11 +123,17 @@ const MyTickets = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const fetchMoreTickets = () => {
-    if (nextPageUrl && !loadingMore && !loading) {
-      fetchTickets(nextPageUrl, true);
+const fetchMoreTickets = () => {
+  if (nextPageUrl && !loadingMore && !loading) {
+    // Chuyển nextPageUrl về path tương đối nếu là URL tuyệt đối
+    let url = nextPageUrl;
+    if (url.startsWith("http")) {
+      const u = new URL(url);
+      url = u.pathname + u.search;
     }
-  };
+    fetchTickets(url, true);
+  }
+};
 
   // Handle ticket press to open modal
   const handleTicketPress = (ticketId) => {

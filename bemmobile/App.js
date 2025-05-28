@@ -26,6 +26,7 @@ import TicketDetails from './components/User/TicketDetails';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DiscountCode from './components/Admin/DiscountCode';
 import ListDiscountCodes from './components/Admin/ListDiscountCodes';
+import VNPayScreen from './components/Payments/VNPayScreen';
 
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
@@ -46,6 +47,11 @@ const EventsStackNavigator = () => {
         name="BookTicket"
         component={BookTicket}
         options={{ title: 'Đặt vé' }}
+      />
+      <EventsStack.Screen
+        name="VNPayScreen"
+        component={VNPayScreen}
+        options={{ title: 'Thanh toán VNPay' }}
       />
       <EventsStack.Screen
         name="chat"

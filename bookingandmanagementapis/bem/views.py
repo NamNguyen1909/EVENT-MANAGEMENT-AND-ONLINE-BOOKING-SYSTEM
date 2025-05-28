@@ -1,4 +1,5 @@
 from django.forms import ValidationError
+from django.test import RequestFactory
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
 from rest_framework.decorators import action
@@ -33,7 +34,14 @@ from .perms import (
 )
 from .paginators import ItemPaginator
 
-
+import hashlib
+import hmac
+import urllib.parse
+from datetime import datetime
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     queryset = User.objects.all()
@@ -384,6 +392,80 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         return Response({"message": "Check-in thành công.", "ticket": TicketSerializer(ticket).data})
 
 
+@csrf_exempt
+def create_payment_url(request):
+    import pytz
+    tz = pytz.timezone("Asia/Ho_Chi_Minh")
+
+    vnp_TmnCode = 'GUPETCYO'
+    vnp_HashSecret = 'E2G0Y153XRTW37LVRKW8DJ1TGEQ9RK6I'
+    vnp_Url = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
+    vnp_ReturnUrl = 'https://5b04-171-243-49-111.ngrok-free.app/vnpay/redirect?from=app'
+
+    #Nhận các thông tin đơn hàng từ request
+    amount = request.GET.get("amount", "10000")  # đơn vị VND
+    order_type = "other"
+    #Tạo mã giao dịch và ngày giờ
+    order_id = datetime.now(tz).strftime('%H%M%S')
+    create_date = datetime.now(tz).strftime('%Y%m%d%H%M%S')
+    ip_address = request.META.get('REMOTE_ADDR')
+
+    #Tạo dữ liệu gửi lên VNPay
+    input_data = {
+        "vnp_Version": "2.1.0",
+        "vnp_Command": "pay",
+        "vnp_TmnCode": vnp_TmnCode,
+        "vnp_Amount": str(int(float(amount)) * 100),
+        "vnp_CurrCode": "VND",
+        "vnp_TxnRef": order_id,
+        "vnp_OrderInfo": "Thanh toan don hang",
+        "vnp_OrderType": order_type,
+        "vnp_Locale": "vn",
+        "vnp_ReturnUrl": vnp_ReturnUrl,
+        "vnp_IpAddr": ip_address,
+        "vnp_CreateDate": create_date
+    }
+    #Tạo chữ ký (vnp_SecureHash) để đảm bảo dữ liệu không bị giả mạo
+    sorted_data = sorted(input_data.items())
+    query_string = urllib.parse.urlencode(sorted_data)
+    hash_data = '&'.join([f"{k}={v}" for k, v in sorted_data])
+
+    secure_hash = hmac.new(
+        bytes(vnp_HashSecret, 'utf-8'),
+        bytes(hash_data, 'utf-8'),
+        hashlib.sha512
+    ).hexdigest()
+    # Tạo payment_url đầy đủ để redirect người dùng
+    payment_url = f"{vnp_Url}?{query_string}&vnp_SecureHash={secure_hash}"
+    #Trả kết quả về frontend
+    return JsonResponse({"payment_url": payment_url})
+
+def vnpay_redirect(request):
+    from_app = request.GET.get('from') == 'app'
+    vnp_ResponseCode = request.GET.get('vnp_ResponseCode')
+    # ... lấy các tham số khác nếu cần
+
+    # Trường hợp mở từ WebView trong app
+    if from_app:
+        # Nếu mở trong WebView (user vẫn ở trong app)
+        # Hiển thị trang xác nhận đơn giản, hoặc tự động đóng WebView bằng JS
+        return HttpResponse("""
+            <html>
+            <body>
+                <h2>Thanh toán {}!</h2>
+                <script>
+                setTimeout(function() {
+                    window.close();
+                }, 1500);
+                </script>
+            </body>
+            </html>
+        """.format("thành công" if vnp_ResponseCode == "00" else "thất bại"))
+    else:
+        # Nếu mở ngoài trình duyệt, tự động chuyển về app qua deeplink
+        deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}"
+        return redirect(deeplink)
+
 
 class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Payment.objects.all()
@@ -423,6 +505,12 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         payment.status = True
         payment.paid_at = timezone.now()
         payment.save()
+
+        # Tăng used_count cho discount_code nếu có
+        if payment.discount_code:
+            discount_obj = payment.discount_code
+            discount_obj.used_count += 1
+            discount_obj.save()
 
         tickets = payment.tickets.all()
         if tickets:
@@ -479,8 +567,6 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                     return Response({"error": "Mã giảm giá không áp dụng cho nhóm khách hàng này."}, status=status.HTTP_400_BAD_REQUEST)
                 discount = (total_amount * discount_obj.discount_percentage) / 100
                 total_amount -= discount
-                discount_obj.used_count += 1
-                discount_obj.save()
             except DiscountCode.DoesNotExist:
                 return Response({"error": "Mã giảm giá không hợp lệ hoặc đã hết hạn."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -518,7 +604,21 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         )
 
         # Giả lập payment_url cho ví dụ, thực tế cần tích hợp SDK hoặc API cổng thanh toán
-        payment_url = f"https://api.momo.vn/pay?amount={total_amount}&orderId={payment.transaction_id}"
+        payment_method = request.data.get('payment_method', 'momo')
+        payment_url = None
+
+        if payment_method == 'vnpay':
+            # Gọi trực tiếp hàm create_payment_url
+            factory = RequestFactory()
+            fake_request = factory.get(
+                '/vnpay/create_payment_url/',
+                {'amount': total_amount}
+            )
+            response = create_payment_url(fake_request)
+            payment_url = response.data['payment_url'] if hasattr(response, 'data') else json.loads(response.content)['payment_url']
+        else:
+            # MoMo hoặc phương thức khác
+            payment_url = f"https://api.momo.vn/pay?amount={total_amount}&orderId={payment.transaction_id}"
 
         return Response({
             "message": "Tạo payment thành công. Vui lòng thanh toán.",
