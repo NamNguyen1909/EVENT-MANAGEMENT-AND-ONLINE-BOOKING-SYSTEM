@@ -1,4 +1,5 @@
 from django.forms import ValidationError
+from django.test import RequestFactory
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
 from rest_framework.decorators import action
@@ -33,6 +34,16 @@ from .perms import (
 )
 from .paginators import ItemPaginator
 
+import hashlib
+import hmac
+import urllib.parse
+from datetime import datetime
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+from cloudinary.uploader import upload
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
@@ -343,29 +354,14 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         if event.tickets.filter(is_paid=True).count() >= event.total_tickets:
             return Response({"error": "Hết vé."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # B1: Tạo vé nhưng chưa lưu ảnh QR
+        #Tạo vé, KHÔNG tạo QR
         ticket = Ticket(event=event, user=request.user)
-        ticket.save()
-
-        # B2: Dùng ticket.uuid để tạo mã QR
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(str(ticket.uuid))
-        qr.make(fit=True)
-        img = qr.make_image(fill='black', back_color='white')
-        buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        # B3: Lưu ảnh QR lên Cloudinary
-        from cloudinary.uploader import upload
-        upload_result = upload(buffer, folder="ticket_qr_codes")  # hoặc tuỳ theo folder bạn chọn
-        ticket.qr_code = upload_result['secure_url']
         ticket.save()
 
         return Response({
             "message": "Vé đã được đặt thành công.",
             "ticket": TicketSerializer(ticket).data,
-            "qr_code_url": ticket.qr_code
+            "qr_code_url": None  # Chưa có QR
         }, status=status.HTTP_201_CREATED)
 
 
@@ -384,6 +380,146 @@ class TicketViewSet(viewsets.ViewSet, generics.ListAPIView,generics.UpdateAPIVie
         return Response({"message": "Check-in thành công.", "ticket": TicketSerializer(ticket).data})
 
 
+def vnpay_encode(value):
+    # Encode giống VNPay: dùng quote_plus để chuyển space thành '+'
+    from urllib.parse import quote_plus
+    return quote_plus(str(value), safe='')
+
+@csrf_exempt
+def create_payment_url(request):
+    import pytz
+    tz = pytz.timezone("Asia/Ho_Chi_Minh")
+
+    vnp_TmnCode = 'GUPETCYO'
+    vnp_HashSecret = 'E2G0Y153XRTW37LVRKW8DJ1TGEQ9RK6I'
+    vnp_Url = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
+    vnp_ReturnUrl = 'https://5031-171-243-49-111.ngrok-free.app/vnpay/redirect?from=app'
+
+    #Nhận các thông tin đơn hàng từ request
+    amount = request.GET.get("amount", "10000")  # đơn vị VND
+    order_type = "other"
+    #Tạo mã giao dịch và ngày giờ
+    order_id = datetime.now(tz).strftime('%H%M%S')
+    create_date = datetime.now(tz).strftime('%Y%m%d%H%M%S')
+    ip_address = request.META.get('REMOTE_ADDR')
+
+    #Tạo dữ liệu gửi lên VNPay
+    input_data = {
+        "vnp_Version": "2.1.0",
+        "vnp_Command": "pay",
+        "vnp_TmnCode": vnp_TmnCode,
+        "vnp_Amount": str(int(float(amount)) * 100),
+        "vnp_CurrCode": "VND",
+        "vnp_TxnRef": order_id,
+        "vnp_OrderInfo": "Thanh toan don hang",
+        "vnp_OrderType": order_type,
+        "vnp_Locale": "vn",
+        "vnp_ReturnUrl": vnp_ReturnUrl,
+        "vnp_IpAddr": ip_address,
+        "vnp_CreateDate": create_date
+    }
+    print("Input data before signing:", input_data)
+    #Tạo chữ ký (vnp_SecureHash) để đảm bảo dữ liệu không bị giả mạo
+    sorted_data = sorted(input_data.items())
+    query_string = '&'.join(
+        f"{k}={vnpay_encode(v)}"
+        for k, v in sorted(input_data.items())
+        if v
+    )
+    # Chỉ lấy các key có giá trị, không lấy vnp_SecureHash
+    hash_data = '&'.join(
+        f"{k}={vnpay_encode(v)}"
+        for k, v in sorted(input_data.items())
+        if v and k != "vnp_SecureHash"
+    )
+
+    secure_hash = hmac.new(
+        bytes(vnp_HashSecret, 'utf-8'),
+        bytes(hash_data, 'utf-8'),
+        hashlib.sha512
+    ).hexdigest()
+    # Tạo payment_url đầy đủ để redirect người dùng
+    payment_url = f"{vnp_Url}?{query_string}&vnp_SecureHash={secure_hash}"
+    #Trả kết quả về frontend
+    return JsonResponse({"payment_url": payment_url})
+
+def vnpay_response_message(code):
+    mapping = {
+        "00": "Giao dịch thành công.",
+        "07": "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).",
+        "09": "Thẻ/Tài khoản chưa đăng ký InternetBanking.",
+        "10": "Xác thực thông tin thẻ/tài khoản không đúng quá 3 lần.",
+        "11": "Hết hạn chờ thanh toán. Vui lòng thực hiện lại giao dịch.",
+        "12": "Thẻ/Tài khoản bị khóa.",
+        "13": "Sai mật khẩu xác thực giao dịch (OTP).",
+        "24": "Khách hàng hủy giao dịch.",
+        "51": "Tài khoản không đủ số dư.",
+        "65": "Tài khoản vượt quá hạn mức giao dịch trong ngày.",
+        "75": "Ngân hàng thanh toán đang bảo trì.",
+        "79": "Sai mật khẩu thanh toán quá số lần quy định.",
+        "99": "Lỗi khác hoặc không xác định.",
+    }
+    return mapping.get(code, "Lỗi không xác định.")
+
+def vnpay_redirect(request):
+    from_app = request.GET.get('from') == 'app'
+    vnp_ResponseCode = request.GET.get('vnp_ResponseCode')
+    # ... lấy các tham số khác nếu cần
+
+    if vnp_ResponseCode is None:
+        return HttpResponse("Thiếu tham số vnp_ResponseCode.", status=400)
+
+    message = vnpay_response_message(vnp_ResponseCode)
+
+    # Trường hợp mở từ WebView trong app
+    if from_app:
+        return HttpResponse(f"""
+            <html>
+            <head>
+                <meta charset="utf-8"/>
+                <style>
+                    body {{
+                        background: #f5f6fa;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        margin: 0;
+                    }}
+                    .result-box {{
+                        background: #fff;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        padding: 32px 48px;
+                        text-align: center;
+                    }}
+                    .result-title {{
+                        color: #2d8cf0;
+                        font-size: 3rem;
+                        margin-bottom: 12px;
+                    }}
+                    .result-message {{
+                        color: #333;
+                        font-size: 1.7rem;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="result-box">
+                    <div class="result-title">Kết quả thanh toán</div>
+                    <div class="result-message">{message}</div>
+                </div>
+                <script>
+                setTimeout(function() {{
+                    window.close();
+                }}, 1500);
+                </script>
+            </body>
+            </html>
+        """)
+    else:
+        deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}&message={urllib.parse.quote(message)}"
+        return redirect(deeplink)
 
 class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Payment.objects.all()
@@ -424,7 +560,34 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         payment.paid_at = timezone.now()
         payment.save()
 
+        # Cập nhật total_spent của user
+        user = payment.user
+        user.total_spent += payment.amount
+        user.save()
+
+        # Tăng used_count cho discount_code nếu có, theo số lượng vé được giảm giá
+        if payment.discount_code:
+            discount_obj = payment.discount_code
+            num_tickets = payment.tickets.count()
+            discount_obj.used_count += num_tickets
+            discount_obj.save()
+
         tickets = payment.tickets.all()
+        # Tạo QR code cho các vé vừa thanh toán thành công (nếu chưa có)
+
+        for ticket in tickets:
+            if not ticket.qr_code:
+                qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr.add_data(str(ticket.uuid))
+                qr.make(fit=True)
+                img = qr.make_image(fill='black', back_color='white')
+                buffer = io.BytesIO()
+                img.save(buffer, format="PNG")
+                buffer.seek(0)
+                upload_result = upload(buffer, folder="ticket_qr_codes")
+                ticket.qr_code = upload_result['secure_url']
+                ticket.save()
+
         if tickets:
             event = tickets.first().event
             notification = Notification(
@@ -432,10 +595,8 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 notification_type='reminder',
                 title="Thanh Toán Thành Công",
                 message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
-                # is_read=False
             )
             notification.save()
-            # Tạo UserNotification để liên kết Notification với User
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
 
         return Response({
@@ -448,21 +609,28 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         user = request.user
         event_id = request.data.get('event_id')
         discount_code_id = request.data.get('discount_code_id')
+        ticket_ids = request.data.get('ticket_ids', [])
+
         if not event_id:
             return Response({"error": "Thiếu event_id."}, status=status.HTTP_400_BAD_REQUEST)
+        if not ticket_ids or not isinstance(ticket_ids, list):
+            return Response({"error": "Thiếu danh sách ticket_ids."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:
             return Response({"error": "Sự kiện không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Vé chưa thanh toán cho sự kiện này
-        unpaid_tickets = Ticket.objects.filter(user=user, is_paid=False, event=event)
-        if not unpaid_tickets.exists():
-            return Response({"error": "Không có vé chưa thanh toán cho sự kiện này."}, status=status.HTTP_400_BAD_REQUEST)
-
+        # Chỉ lấy đúng các vé user truyền lên, chưa thanh toán, đúng event
+        unpaid_tickets = Ticket.objects.filter(
+            user=user, is_paid=False, event=event, id__in=ticket_ids
+        )
+        if unpaid_tickets.count() != len(ticket_ids):
+            return Response({"error": "Một số vé không hợp lệ hoặc đã thanh toán."}, status=status.HTTP_400_BAD_REQUEST)
+        
         total_amount = sum(ticket.event.ticket_price for ticket in unpaid_tickets)
 
+        #Xử lý mã giảm giá
         discount_obj = None
         discount = 0
         if discount_code_id:
@@ -479,11 +647,10 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                     return Response({"error": "Mã giảm giá không áp dụng cho nhóm khách hàng này."}, status=status.HTTP_400_BAD_REQUEST)
                 discount = (total_amount * discount_obj.discount_percentage) / 100
                 total_amount -= discount
-                discount_obj.used_count += 1
-                discount_obj.save()
             except DiscountCode.DoesNotExist:
                 return Response({"error": "Mã giảm giá không hợp lệ hoặc đã hết hạn."}, status=status.HTTP_400_BAD_REQUEST)
 
+        #Xử lý payment
         payment = Payment(
             user=user,
             amount=total_amount,
@@ -518,7 +685,21 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         )
 
         # Giả lập payment_url cho ví dụ, thực tế cần tích hợp SDK hoặc API cổng thanh toán
-        payment_url = f"https://api.momo.vn/pay?amount={total_amount}&orderId={payment.transaction_id}"
+        payment_method = request.data.get('payment_method', 'momo')
+        payment_url = None
+
+        if payment_method == 'vnpay':
+            # Gọi trực tiếp hàm create_payment_url
+            factory = RequestFactory()
+            fake_request = factory.get(
+                '/vnpay/create_payment_url/',
+                {'amount': total_amount}
+            )
+            response = create_payment_url(fake_request)
+            payment_url = response.data['payment_url'] if hasattr(response, 'data') else json.loads(response.content)['payment_url']
+        else:
+            # MoMo hoặc phương thức khác
+            payment_url = f"https://api.momo.vn/pay?amount={total_amount}&orderId={payment.transaction_id}"
 
         return Response({
             "message": "Tạo payment thành công. Vui lòng thanh toán.",

@@ -99,11 +99,17 @@ class TicketAdmin(admin.ModelAdmin):
 
 # Admin cho Payment
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'amount', 'payment_method', 'status', 'paid_at']
+    list_display = ['id', 'user', 'amount', 'payment_method', 'status', 'paid_at', 'list_tickets']
     search_fields = ['user__username', 'transaction_id']
     list_filter = ['payment_method', 'status', 'paid_at']
     readonly_fields = ['transaction_id']
     list_per_page = 20
+
+    def list_tickets(self, obj):
+        # Lấy danh sách ticket id hoặc thông tin khác
+        tickets = obj.tickets.all()
+        return ", ".join([str(ticket.id) for ticket in tickets])
+    list_tickets.short_description = "Tickets"
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'discount_code').prefetch_related('tickets')

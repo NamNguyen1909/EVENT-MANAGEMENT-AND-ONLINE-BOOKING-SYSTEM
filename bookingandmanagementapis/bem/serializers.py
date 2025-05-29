@@ -145,7 +145,8 @@ class EventSerializer(serializers.ModelSerializer):
         max_digits=9,
         decimal_places=2,
         min_value=Decimal('0'),
-        required=False
+        required=False,
+        # coerce_to_string=True # Chuyển đổi Decimal thành string khi serialize
     )
     from decimal import Decimal
     total_tickets = serializers.IntegerField(min_value=Decimal('0'), required=False)
@@ -177,11 +178,11 @@ class TicketSerializer(ModelSerializer):
         model = Ticket
         fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid','is_checked_in'
         ]
         read_only_fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid','is_checked_in'
         ]
 
     def create(self, validated_data):

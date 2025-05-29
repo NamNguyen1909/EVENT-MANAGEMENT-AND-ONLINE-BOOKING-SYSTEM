@@ -20,4 +20,6 @@ router.register('reviews', views.ReviewViewSet, basename='review')
 urlpatterns = [
     path('', include(router.urls)),
     path('payments/webhook/', PaymentViewSet.as_view({'post': 'payment_webhook'}), name='payment-webhook'),
+    path('vnpay/create_payment_url/', views.create_payment_url),
+    path('vnpay/redirect', views.vnpay_redirect),
 ]
