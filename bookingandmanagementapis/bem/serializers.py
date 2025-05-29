@@ -84,13 +84,18 @@ class NotificationSerializer(serializers.ModelSerializer):
 class ChatMessageSerializer(serializers.ModelSerializer):
     user_info = serializers.SerializerMethodField()
     receiver = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    participants = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
-        fields = ['id', 'event', 'sender', 'receiver', 'message', 'created_at', 'is_from_organizer', 'user_info']
+        fields = ['id', 'event', 'sender', 'receiver', 'message', 'created_at', 'is_from_organizer', 'user_info', 'participants']
 
     def get_user_info(self, obj):
         return {'username': obj.sender.username, 'id': obj.sender.id}
+
+    def get_participants(self, obj):
+        tickets = Ticket.objects.filter(event=obj.event, is_paid=True)
+        return [{'id': t.user.id, 'username': t.user.username} for t in tickets]
 
 
 # Serializer cho DiscountCode

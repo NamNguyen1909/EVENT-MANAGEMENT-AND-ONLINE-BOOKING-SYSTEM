@@ -1,5 +1,4 @@
-// EventDetails.js
-import React, { useReducer, useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import {
   View,
   Text,
@@ -16,28 +15,28 @@ import {
 } from "react-native";
 import { Button } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import Apis, { endpoints, authApis } from "../../configs/Apis";
+import Apis, { endpoints, authApis, websocketEndpoints } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import { MyUserContext } from "../../configs/MyContexts";
-import MyStyles, { colors } from "../../styles/MyStyles";
+import { colors } from "../../styles/MyStyles";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
 import { MaterialIcons } from '@expo/vector-icons';
 import RenderHtml from "react-native-render-html";
+import Toast from 'react-native-toast-message';
 
 const EventDetails = ({ route }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { event } = route.params;
+  const { event } = route?.params || {}; // Kiểm tra an toàn
   const [eventDetail, setEventDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const user = useContext(MyUserContext);
   const mapRef = useRef(null);
-
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState(null);
@@ -47,6 +46,95 @@ const EventDetails = ({ route }) => {
   const [editingReview, setEditingReview] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [chatParticipants, setChatParticipants] = useState([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    if (!event?.id) {
+      setError("Không tìm thấy thông tin sự kiện.");
+      setLoading(false);
+      return;
+    }
+
+    fetchEventDetail();
+    connectWebSocket();
+
+    return () => ws?.close();
+  }, [event?.id]);
+
+  const fetchEventDetail = async (retries = 2) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = await AsyncStorage.getItem("token");
+      if (!user || !token) {
+        setError("Vui lòng đăng nhập để xem chi tiết sự kiện.");
+        setLoading(false);
+        navigation.navigate("loginStack");
+        return;
+      }
+
+      const api = authApis(token);
+      const [eventRes, reviewsRes, messagesRes] = await Promise.all([
+        api.get(endpoints.eventDetail(event.id)),
+        api.get(endpoints.getEventReviews(event.id)),
+        api.get(endpoints.eventChatMessages(event.id)),
+      ]);
+      setEventDetail(eventRes.data);
+      setReviews(reviewsRes.data.results || []);
+      setChatParticipants(messagesRes.data.results[0]?.participants || []);
+      setUnreadMessages(messagesRes.data.results.filter(m => !m.is_read && m.user_info?.username !== user?.username).length);
+    } catch (err) {
+      console.error('Fetch event detail error:', err);
+      if (err.response?.status === 401 && retries > 0) {
+        // Retry with new token
+        const refreshToken = await AsyncStorage.getItem('refresh_token');
+        if (refreshToken) {
+          try {
+            const newToken = await refreshAccessToken(refreshToken);
+            await AsyncStorage.setItem('token', newToken);
+            return fetchEventDetail(retries - 1);
+          } catch (refreshErr) {
+            navigation.navigate("loginStack");
+          }
+        }
+      } else {
+        setError("Không thể tải chi tiết sự kiện. Vui lòng thử lại.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const connectWebSocket = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
+      const wsUrl = `${websocketEndpoints.chat(event.id)}?token=${token}`;
+      const websocket = new WebSocket(wsUrl);
+
+      websocket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.message && data.username !== user?.username) {
+          setUnreadMessages(prev => prev + 1);
+          Toast.show({
+            type: 'info',
+            text1: `Tin nhắn mới`,
+            text2: `${data.username}: ${data.message}`,
+          });
+        }
+      };
+
+      websocket.onerror = () => console.error('WebSocket error for event', event.id);
+      websocket.onclose = () => console.log('WebSocket closed for event', event.id);
+
+      setWs(websocket);
+    } catch (err) {
+      console.error('WebSocket connection error:', err);
+    }
+  };
 
   const openInGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
@@ -70,11 +158,52 @@ const EventDetails = ({ route }) => {
     }
   };
 
-  const handleChatPress = () => {
+  const handleChatPress = async () => {
     if (!user || !user.username) {
-      navigation.navigate("loginStack");
-    } else {
+      navigation.navigate('loginStack');
+      return;
+    }
+    if (!eventDetail?.id) {
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Không tìm thấy ID sự kiện.',
+      });
+      return;
+    }
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Không tìm thấy token xác thực!',
+        });
+        navigation.navigate('loginStack');
+        return;
+      }
+      const api = authApis(token);
+      const eventRes = await api.get(endpoints.eventDetail(eventDetail.id));
+      const ticketsRes = await api.get(endpoints.userTickets);
+      const hasTicket = ticketsRes.data.some(t => t.event.id === eventDetail.id && t.is_paid);
+      const isOrganizer = user.role === 'organizer' && eventRes.data.organizer.id === user.id;
+      if (!hasTicket && !isOrganizer) {
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi',
+          text2: 'Bạn cần mua vé để tham gia chat.',
+        });
+        return;
+      }
+      setUnreadMessages(0);
       navigation.navigate('chat', { eventId: eventDetail.id });
+    } catch (error) {
+      console.error('Lỗi kiểm tra quyền chat:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Lỗi',
+        text2: 'Không thể truy cập phòng chat.',
+      });
     }
   };
 
@@ -98,7 +227,6 @@ const EventDetails = ({ route }) => {
         rating: rating,
         comment: comment.trim(),
       };
-      console.log("Payload gửi đi:", payload);
       const res = await api.post(endpoints.createReview, payload);
       setReviews((prev) => [
         res.data,
@@ -109,10 +237,8 @@ const EventDetails = ({ route }) => {
       Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
     } catch (err) {
       console.error(err);
-      if (err.response && err.response.data && typeof err.response.data === 'string' && err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")) {
-        setReviewError("Bạn đã review event này rồi.");
-      } else if (err.response && err.response.data && err.response.data.detail && typeof err.response.data.detail === 'string' && err.response.data.detail.includes("Bạn đã có đánh giá cho sự kiện này.")) {
-        setReviewError("Bạn đã review event này rồi.");
+      if (err.response?.status === 400 && err.response.data?.detail?.includes("Bạn đã có đánh giá")) {
+        setReviewError("Bạn đã đánh giá sự kiện này rồi.");
       } else {
         setReviewError("Gửi đánh giá thất bại. Vui lòng thử lại.");
       }
@@ -126,7 +252,6 @@ const EventDetails = ({ route }) => {
       Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
       return;
     }
-    
     setSubmittingReview(true);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -134,22 +259,13 @@ const EventDetails = ({ route }) => {
         Alert.alert("Lỗi", "Bạn cần đăng nhập để chỉnh sửa đánh giá.");
         return;
       }
-      
       const api = authApis(token);
       const payload = {
         rating: rating,
         comment: comment.trim(),
       };
-      console.log("Payload cập nhật:", payload);
-      console.log('user id',user.id);
-      console.log('userowner id',editingReview.user);
-      
       const res = await api.patch(endpoints.updateReview(editingReview.id), payload);
-      console.log("resPatch:", res.data);
-      setReviews(prev => prev.map(r => 
-        r.id === editingReview.id ? res.data : r
-      ));
-      
+      setReviews(prev => prev.map(r => r.id === editingReview.id ? res.data : r));
       setEditingReview(null);
       setRating(0);
       setComment("");
@@ -163,34 +279,46 @@ const EventDetails = ({ route }) => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        Alert.alert("Lỗi", "Bạn cần đăng nhập để thực hiện thao tác này.");
-        return;
-      }
-      
-      const api = authApis(token);
-      await api.delete(endpoints.deleteReview(reviewId));
-      
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
-      Alert.alert("Thành công", "Đánh giá đã được xóa.");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Lỗi", "Xóa đánh giá thất bại. Vui lòng thử lại.");
-    } finally {
-      setModalVisible(false);
-    }
+    Alert.alert(
+      "Xóa đánh giá",
+      "Bạn có chắc muốn xóa đánh giá này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("token");
+              if (!token) {
+                Alert.alert("Lỗi", "Bạn cần đăng nhập để thực hiện thao tác này.");
+                return;
+              }
+              const api = authApis(token);
+              await api.delete(endpoints.deleteReview(reviewId));
+              setReviews(prev => prev.filter(r => r.id !== reviewId));
+              Alert.alert("Thành công", "Đánh giá đã được xóa.");
+            } catch (err) {
+              console.error(err);
+              Alert.alert("Lỗi", "Xóa đánh giá thất bại. Vui lòng thử lại.");
+            } finally {
+              setModalVisible(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleEditReview = (review) => {
     setEditingReview(review);
     setRating(review.rating);
     setComment(review.comment);
+    setModalVisible(false);
   };
 
   const ReviewMenu = ({ review }) => {
-    if (!user || user.id !== review.user) {
+    if (!user || user.id !== (typeof review.user === 'object' ? review.user.id : review.user)) {
       return null;
     }
 
@@ -204,7 +332,6 @@ const EventDetails = ({ route }) => {
         >
           <Icon name="dots-vertical" size={24} color="#666" />
         </TouchableOpacity>
-
         <Modal
           animationType="fade"
           transparent={true}
@@ -218,10 +345,7 @@ const EventDetails = ({ route }) => {
             <View style={styles.menuModal}>
               <TouchableOpacity 
                 style={styles.menuItem}
-                onPress={() => {
-                  handleEditReview(review);
-                  setModalVisible(false);
-                }}
+                onPress={() => handleEditReview(review)}
               >
                 <Text style={styles.menuText}>Sửa đánh giá</Text>
               </TouchableOpacity>
@@ -258,47 +382,10 @@ const EventDetails = ({ route }) => {
     );
   };
 
-  const fetchEventDetail = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const token = await AsyncStorage.getItem("token");
-      console.log("Token in eventdetail:", token);
-      if (!user || !token) {
-        setError("Vui lòng đăng nhập để xem chi tiết sự kiện.");
-        console.log("User token không tồn tại. Chuyển hướng");
-        setLoading(false);
-
-        setTimeout(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "loginStack" }],
-          });
-        }, 2000);
-
-        return;
-      }
-
-      const api = token ? authApis(token) : Apis;
-      const res = await api.get(endpoints.eventDetail(event.id));
-      setEventDetail(res.data);
-      const reviewsRes = await api.get(endpoints.getEventReviews(event.id));
-      setReviews(reviewsRes.data.results || []);
-    } catch (err) {
-      setError("Không thể tải chi tiết sự kiện.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEventDetail();
-  }, [event.id, navigation]);
-
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1a73e8" />
+        <ActivityIndicator size="large" color={colors.bluePrimary} />
       </View>
     );
   }
@@ -306,7 +393,7 @@ const EventDetails = ({ route }) => {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -314,7 +401,7 @@ const EventDetails = ({ route }) => {
   if (!eventDetail) {
     return (
       <View style={styles.center}>
-        <Text>Không có dữ liệu sự kiện.</Text>
+        <Text style={styles.errorText}>Không có dữ liệu sự kiện.</Text>
       </View>
     );
   }
@@ -329,6 +416,14 @@ const EventDetails = ({ route }) => {
           <Text style={styles.title}>{eventDetail.title}</Text>
           <TouchableOpacity onPress={handleChatPress} style={styles.chatIcon}>
             <MaterialIcons name="chat-bubble-outline" size={28} color={colors.bluePrimary} />
+            {unreadMessages > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadMessages}</Text>
+              </View>
+            )}
+            <Text style={styles.chatInfo}>
+              {chatParticipants.length} người tham gia
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.section}>
@@ -349,13 +444,11 @@ const EventDetails = ({ route }) => {
           />
           <InfoRow
             icon="currency-usd"
-            text={`Giá vé: ${
-              eventDetail.ticket_price ? eventDetail.ticket_price + " VND" : "N/A"
-            }`}
+            text={`Giá vé: ${eventDetail.ticket_price ? eventDetail.ticket_price + " VND" : "Miễn phí"}`}
           />
         </View>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tags</Text>
+          <Text style={styles.sectionTitle}>Thẻ</Text>
           <View style={styles.tagsContainer}>
             {eventDetail.tags && eventDetail.tags.length > 0 ? (
               eventDetail.tags.map((tag, index) => (
@@ -376,21 +469,21 @@ const EventDetails = ({ route }) => {
             baseStyle={styles.description}
           />
         </View>
-        {eventDetail.latitude && eventDetail.longitude && (
+        {eventDetail.latitude && eventDetail.longitude ? (
           <View style={styles.mapContainer}>
             <View style={styles.mapHeader}>
               <Text style={styles.sectionTitle}>Vị trí trên bản đồ</Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text
-                  style={styles.openMapButton}
-                  onPress={() =>
-                    openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
-                  }
+                <TouchableOpacity
+                  onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}
                 >
-                  Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
-                </Text>
+                  <Text style={styles.openMapButton}>
+                    Mở trong Google Maps
+                    <Icon name="map-marker" size={18} color={colors.bluePrimary} />
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={centerMap} style={{ marginLeft: 12 }}>
-                  <Icon name="crosshairs-gps" size={22} color="#1a73e8" />
+                  <Icon name="crosshairs-gps" size={22} color={colors.bluePrimary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -411,9 +504,7 @@ const EventDetails = ({ route }) => {
                 }}
                 title={eventDetail.title}
                 description={eventDetail.location}
-                onPress={() =>
-                  openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
-                }
+                onPress={() => openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)}
               />
             </MapView>
             <Button
@@ -435,14 +526,17 @@ const EventDetails = ({ route }) => {
                 borderRadius: 8,
               }}
               buttonColor={colors.bluePrimary}
+              accessibilityLabel="Đặt vé cho sự kiện"
             >
-              Đặt vé ngay!
+              <Text style={styles.buttonText}>Đặt vé ngay!</Text>
             </Button>
           </View>
+        ) : (
+          <Text style={styles.errorText}>Không có thông tin vị trí.</Text>
         )}
         <View style={styles.reviewSection}>
           <Text style={styles.sectionTitle}>Đánh giá sự kiện</Text>
-          {reviewLoading && <ActivityIndicator size="small" color="#1a73e8" />}
+          {reviewLoading && <ActivityIndicator size="small" color={colors.bluePrimary} />}
           {reviewError && <Text style={styles.errorText}>{reviewError}</Text>}
           {user && user.username ? (
             <View>
@@ -456,6 +550,7 @@ const EventDetails = ({ route }) => {
                 multiline
                 value={comment}
                 onChangeText={setComment}
+                accessibilityLabel="Nhập bình luận đánh giá"
               />
               <View style={styles.buttonGroup}>
                 {editingReview && (
@@ -467,8 +562,9 @@ const EventDetails = ({ route }) => {
                       setComment("");
                     }}
                     style={styles.cancelButton}
+                    accessibilityLabel="Hủy chỉnh sửa đánh giá"
                   >
-                    Hủy
+                    <Text style={styles.buttonText}>Hủy</Text>
                   </Button>
                 )}
                 <Button
@@ -478,18 +574,18 @@ const EventDetails = ({ route }) => {
                   disabled={submittingReview || rating === 0}
                   buttonColor={colors.blueAccent}
                   style={styles.submitButton}
+                  accessibilityLabel={editingReview ? "Cập nhật đánh giá" : "Gửi đánh giá"}
                 >
-                  {editingReview ? "Cập nhật" : "Gửi đánh giá"}
+                  <Text style={styles.buttonText}>{editingReview ? "Cập nhật" : "Gửi đánh giá"}</Text>
                 </Button>
               </View>
             </View>
           ) : (
-            <Text
-              style={styles.loginPrompt}
-              onPress={() => navigation.navigate("loginStack")}
-            >
-              Vui lòng đăng nhập để thêm đánh giá.
-            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("loginStack")}>
+              <Text style={styles.loginPrompt}>
+                Vui lòng đăng nhập để thêm đánh giá.
+              </Text>
+            </TouchableOpacity>
           )}
           {reviews.length === 0 ? (
             <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
@@ -497,7 +593,7 @@ const EventDetails = ({ route }) => {
             reviews.map((review) => (
               <View key={review.id} style={[
                 styles.reviewItem,
-                user?.id === review.user && styles.myReview
+                user?.id === (typeof review.user === 'object' ? review.user.id : review.user) && styles.myReview
               ]}>
                 <View style={styles.reviewHeader}>
                   {review.user_infor && review.user_infor.avatar ? (
@@ -566,6 +662,7 @@ const styles = StyleSheet.create({
   },
   chatIcon: {
     padding: 10,
+    alignItems: 'center',
   },
   poster: {
     width: "100%",
@@ -596,11 +693,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   openMapButton: {
-    color: "#1a73e8",
+    color: colors.bluePrimary,
     fontWeight: "600",
     fontSize: 14,
-    flexDirection: "row",
-    alignItems: "center",
   },
   map: {
     flex: 1,
@@ -720,7 +815,7 @@ const styles = StyleSheet.create({
   },
   loginPrompt: {
     marginTop: 10,
-    color: "#1a73e8",
+    color: colors.bluePrimary,
     textAlign: "center",
     textDecorationLine: "underline",
   },
@@ -778,6 +873,32 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 2,
+  },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: colors.redAccent,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  chatInfo: {
+    fontSize: 12,
+    color: colors.blueGray,
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
   },
 });
 

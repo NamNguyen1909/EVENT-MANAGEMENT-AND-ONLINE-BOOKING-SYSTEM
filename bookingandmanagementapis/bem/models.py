@@ -382,7 +382,7 @@ class UserNotification(models.Model):
 # Tin nhắn trò chuyện
 # bem/models.py
 class ChatMessage(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='chat_messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_messages')
     message = models.TextField()
