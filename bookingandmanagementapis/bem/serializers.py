@@ -145,7 +145,8 @@ class EventSerializer(serializers.ModelSerializer):
         max_digits=9,
         decimal_places=2,
         min_value=Decimal('0'),
-        required=False
+        required=False,
+        # coerce_to_string=True # Chuyển đổi Decimal thành string khi serialize
     )
     from decimal import Decimal
     total_tickets = serializers.IntegerField(min_value=Decimal('0'), required=False)
