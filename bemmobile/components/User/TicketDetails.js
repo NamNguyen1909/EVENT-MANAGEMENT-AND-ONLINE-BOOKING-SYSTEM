@@ -43,6 +43,7 @@ const TicketDetail = () => {
       const api = authApis(token);
       const res = await api.get(endpoints.ticketDetail(ticketId));
       setTicketDetail(res.data);
+      console.log("Ticket Detail:", res.data);
     } catch (err) {
       console.error(err);
       setError("Không thể tải chi tiết vé.");
@@ -86,10 +87,13 @@ const TicketDetail = () => {
       ) : (
         <Text>Không có mã QR.</Text>
       )}
-      <Text style={styles.title}>{ticketDetail.event_title || "Chi tiết vé"}</Text>
+      <Text style={styles.title}>
+        {ticketDetail.event_title || "Chi tiết vé"}
+      </Text>
       <View style={styles.section}>
         <Text style={styles.labelValue}>
-          Username: <Text style={styles.value}>{ticketDetail.username || "N/A"}</Text>
+          Username:
+          <Text style={styles.value}>{ticketDetail.username || "N/A"}</Text>
         </Text>
       </View>
       <View style={styles.section}>
@@ -99,7 +103,7 @@ const TicketDetail = () => {
       </View>
       <View style={styles.section}>
         <Text style={styles.labelValue}>
-          Ngày mua:{" "}
+          Ngày mua:
           <Text style={styles.value}>
             {ticketDetail.purchase_date
               ? new Date(ticketDetail.purchase_date).toLocaleString()
@@ -109,12 +113,15 @@ const TicketDetail = () => {
       </View>
       <View style={styles.section}>
         <Text style={styles.labelValue}>
-          Địa điểm: <Text style={styles.value}>{ticketDetail.event_location || "N/A"}</Text>
+          Địa điểm:
+          <Text style={styles.value}>
+            {ticketDetail.event_location || "N/A"}
+          </Text>
         </Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.labelValue}>
-          Thời gian bắt đầu:{" "}
+          Thời gian bắt đầu:
           <Text style={styles.value}>
             {ticketDetail.event_start_time
               ? new Date(ticketDetail.event_start_time).toLocaleString()
@@ -124,7 +131,7 @@ const TicketDetail = () => {
       </View>
       <View style={styles.section}>
         <Text style={styles.labelValue}>
-          Trạng thái:{" "}
+          Trạng thái:
           <Text
             style={[
               styles.value,
@@ -133,9 +140,34 @@ const TicketDetail = () => {
           >
             {ticketDetail.is_paid ? "Đã thanh toán" : "Chưa thanh toán"}
           </Text>
-          {"  "}
           {ticketDetail.is_paid ? (
-            <FontAwesome name="check-circle" size={16} color={colors.blueDark} />
+            <FontAwesome
+              name="check-circle"
+              size={16}
+              color={colors.blueDark}
+            />
+          ) : (
+            <FontAwesome name="times-circle" size={16} color="red" />
+          )}
+        </Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.labelValue}>
+          Check-in:
+          <Text
+            style={[
+              styles.value,
+              { color: ticketDetail.is_checked_in ? colors.blueDark : "red" },
+            ]}
+          >
+            {ticketDetail.is_checked_in ? "Đã check-in" : "Chưa check-in"}
+          </Text>
+          {ticketDetail.is_checked_in ? (
+            <FontAwesome
+              name="check-circle"
+              size={16}
+              color={colors.blueDark}
+            />
           ) : (
             <FontAwesome name="times-circle" size={16} color="red" />
           )}

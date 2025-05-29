@@ -15,7 +15,7 @@ import {
   FlatList,
 } from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyUserContext, MyDispatchContext } from '../../configs/MyContexts';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
@@ -54,7 +54,15 @@ const Profile = () => {
       fetchUserStats();
       fetchEventsForChat();
     }
+
   }, [user]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserStats();
+      fetchEventsForChat();
+    }, [user])
+  );
 
   const fetchUserStats = async () => {
     try {

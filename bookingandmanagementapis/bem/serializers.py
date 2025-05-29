@@ -178,11 +178,11 @@ class TicketSerializer(ModelSerializer):
         model = Ticket
         fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid','is_checked_in'
         ]
         read_only_fields = [
             'id', 'username', 'email', 'purchase_date', 'qr_code',
-            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid'
+            'event_title', 'event_start_time', 'event_location', 'event_id','is_paid','uuid','is_checked_in'
         ]
 
     def create(self, validated_data):

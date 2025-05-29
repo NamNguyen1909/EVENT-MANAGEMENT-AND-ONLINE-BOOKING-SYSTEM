@@ -274,10 +274,7 @@ class Payment(models.Model):
                 if not ticket.is_paid:
                     ticket.mark_as_paid(self.paid_at)
 
-            # Update discount code usage count
-            if self.discount_code and self.discount_code.is_valid():
-                self.discount_code.used_count += 1
-                self.discount_code.save()
+
 
     def get_display_transaction_id(self):
         return f"****{self.transaction_id[-4:]}"  # Hiển thị 4 ký tự cuối để bảo mật

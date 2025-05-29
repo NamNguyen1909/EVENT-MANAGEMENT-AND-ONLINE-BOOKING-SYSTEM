@@ -4,7 +4,7 @@ import axios from "axios";
 // Sử dụng địa chỉ IP của máy tính chạy backend
   // const BASE_URL = "http://192.168.1.8:8000/";
 
-const BASE_URL = "https://5ad5-171-243-49-111.ngrok-free.app/";
+const BASE_URL = "https://5031-171-243-49-111.ngrok-free.app/";
 
 // const BASE_URL = "http://192.168.44.105:8000/";
 // const BASE_URL = "http://192.168.254.171:8000/";

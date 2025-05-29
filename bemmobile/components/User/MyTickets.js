@@ -161,14 +161,14 @@ const fetchMoreTickets = () => {
       <Text>Username: {item.username}</Text>
       <Text>Email: {item.email}</Text>
       <Text>
-        Ngày mua:{" "}
+        Ngày mua:
         {item.purchase_date
           ? new Date(item.purchase_date).toLocaleString()
           : "N/A"}
       </Text>
       <Text>Địa điểm: {item.event_location || "N/A"}</Text>
       <Text>
-        Thời gian bắt đầu:{" "}
+        Thời gian bắt đầu:
         {item.event_start_time
           ? new Date(item.event_start_time).toLocaleString()
           : "N/A"}
@@ -186,7 +186,7 @@ const fetchMoreTickets = () => {
         </Text>
       </Text>
 
-      {item.qr_code && (
+      {/* {item.qr_code && (
         <Text>
           QR:
           <FontAwesome
@@ -195,7 +195,7 @@ const fetchMoreTickets = () => {
             color={item.qr_code ? colors.blueDark : "red"}
           />
         </Text>
-      )}
+      )} */}
     </TouchableOpacity>
   );
 
@@ -293,7 +293,7 @@ const fetchMoreTickets = () => {
                   </View>
                   <View style={styles.section}>
                     <Text style={styles.labelValue}>
-                      Ngày mua:{" "}
+                      Ngày mua:
                       <Text style={styles.value}>
                         {ticketDetail.purchase_date
                           ? new Date(ticketDetail.purchase_date).toLocaleString()
@@ -308,7 +308,7 @@ const fetchMoreTickets = () => {
                   </View>
                   <View style={styles.section}>
                     <Text style={styles.labelValue}>
-                      Thời gian bắt đầu:{" "}
+                      Thời gian bắt đầu:
                       <Text style={styles.value}>
                         {ticketDetail.event_start_time
                           ? new Date(ticketDetail.event_start_time).toLocaleString()
@@ -318,7 +318,7 @@ const fetchMoreTickets = () => {
                   </View>
                   <View style={styles.section}>
                     <Text style={styles.labelValue}>
-                      Trạng thái:{" "}
+                      Trạng thái:
                       <Text
                         style={[
                           styles.value,
@@ -330,6 +330,28 @@ const fetchMoreTickets = () => {
                       {"  "}
                       {ticketDetail.is_paid ? (
                         <FontAwesome name="check-circle" size={16} color={colors.blueDark} />
+                      ) : (
+                        <FontAwesome name="times-circle" size={16} color="red" />
+                      )}
+                    </Text>
+                  </View>
+                  <View style={styles.section}>
+                    <Text style={styles.labelValue}>
+                      Check-in:
+                      <Text
+                        style={[
+                          styles.value,
+                          { color: ticketDetail.is_checked_in ? colors.blueDark : "red" },
+                        ]}
+                      >
+                        {ticketDetail.is_checked_in ? "Đã check-in" : "Chưa check-in"}
+                      </Text>
+                      {ticketDetail.is_checked_in ? (
+                        <FontAwesome
+                          name="check-circle"
+                          size={16}
+                          color={colors.blueDark}
+                        />
                       ) : (
                         <FontAwesome name="times-circle" size={16} color="red" />
                       )}
@@ -392,7 +414,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
-    maxHeight: "80%",
+    maxHeight: "90%",
   },
   modalCloseButton: {
     alignSelf: "flex-end",

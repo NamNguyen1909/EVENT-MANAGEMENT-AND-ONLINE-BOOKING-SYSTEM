@@ -36,12 +36,12 @@ const EventsStackNavigator = () => {
       <EventsStack.Screen
         name="HomeScreen"
         component={Home}
-        options={{ title: 'Events' }}
+        options={{ title: 'Sự kiện' }}
       />
       <EventsStack.Screen
         name="EventDetails"
         component={EventDetails}
-        options={{ title: 'Event Details' }}
+        options={{ title: 'Chi tiết sự kiện' }}
       />
       <EventsStack.Screen
         name="BookTicket"
@@ -52,6 +52,11 @@ const EventsStackNavigator = () => {
         name="VNPayScreen"
         component={VNPayScreen}
         options={{ title: 'Thanh toán VNPay' }}
+      />
+      <EventsStack.Screen
+        name="MyTicketsScreen"
+        component={MyTickets}
+        options={{ title: 'Vé của tôi' }}
       />
       <EventsStack.Screen
         name="chat"

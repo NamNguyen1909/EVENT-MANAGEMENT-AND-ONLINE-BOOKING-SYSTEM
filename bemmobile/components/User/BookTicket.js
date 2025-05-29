@@ -13,7 +13,7 @@ import {
   useTheme,
   Menu,
 } from "react-native-paper";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute,useFocusEffect } from "@react-navigation/native";
 import Apis, { endpoints, authApis } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -41,6 +41,7 @@ const BookTicket = () => {
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
   const [unpaidTicketCount, setUnpaidTicketCount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("momo");
+  const [unpaidTickets, setUnpaidTickets] = useState([]);
 
   useEffect(() => {
     if (eventId) {
@@ -50,6 +51,17 @@ const BookTicket = () => {
       fetchDiscountCodes();
     }
   }, [eventId]);
+
+  // Sử dụng useFocusEffect để đảm bảo load lại số lượng vé đúng sau khi thanh toán
+  useFocusEffect(
+    React.useCallback(() => {
+      if (eventId) {
+        fetchUnpaidTicketsQuantity();
+        fetchEventDetails();
+        fetchDiscountCodes();
+      }
+    }, [eventId])
+  );
 
   // Fetch số lượng vé chưa thanh toán của user cho event hiện tại
   const fetchUnpaidTicketsQuantity = async () => {
@@ -67,7 +79,7 @@ const BookTicket = () => {
         return;
       }
       const res = await api.get(endpoints.userTickets);
-      console.log("res.data: ", res.data);
+      console.log("Res.data of unpaid tickets: ", res.data);
 
       // Kiểm tra res.data có phải là mảng không, nếu không thì lấy res.data.results
       const ticketsData = Array.isArray(res.data)
@@ -78,12 +90,11 @@ const BookTicket = () => {
       const unpaidTickets = ticketsData.filter(
         (ticket) => !ticket.is_paid && ticket.event_id === eventId
       );
+
+      setUnpaidTickets(unpaidTickets);
       setUnpaidTicketCount(unpaidTickets.length);
-      // unpaidTickets.forEach(ticket => {
-      //   console.log('Ticket event_id:', ticket.event_id, 'Target eventId:', eventId);
-      // });
-      console.log("Unpaid tickets:", unpaidTickets.length);
       setQuantity(unpaidTickets.length);
+      console.log("Unpaid tickets:", unpaidTickets.length);
     } catch (error) {
       console.log("Error fetching unpaid tickets quantity:", error);
     }
@@ -109,6 +120,7 @@ const BookTicket = () => {
     return authApis(token);
   };
 
+  // Lấy thông tin sự kiện và giá vé
   const fetchEventDetails = async () => {
     try {
       const api = await getApiWithToken();
@@ -133,6 +145,7 @@ const BookTicket = () => {
     }
   };
 
+  // Lấy danh sách mã giảm giá của user
   const fetchDiscountCodes = async () => {
     try {
       const api = await getApiWithToken();
@@ -154,86 +167,98 @@ const BookTicket = () => {
     setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
   };
 
-  const handlePayment = async () => {
-    if (quantity <= 0) {
-      setMsg("Số lượng vé phải lớn hơn 0.");
+  //Hàm xử lý thanh toán
+const handlePayment = async () => {
+  if (quantity <= 0) {
+    setMsg("Số lượng vé phải lớn hơn 0.");
+    return;
+  }
+  setLoading(true);
+  setMsg(null);
+  try {
+    const api = await getApiWithToken();
+    if (!api) {
+      setMsg("Vui lòng đăng nhập để đặt vé.");
+      setLoading(false);
       return;
     }
-    setLoading(true);
-    setMsg(null);
-    try {
-      const api = await getApiWithToken();
-      if (!api) {
-        setMsg("Vui lòng đăng nhập để đặt vé.");
-        setLoading(false);
-        return;
-      }
-      // 1. Đặt vé
-      console.log("Fquantity: ", quantity);
-
-      let actualQuantity=0;
-      if (quantity > unpaidTicketCount) {
-        //Trường hợp đặt thêm vé mới
-        actualQuantity = quantity - unpaidTicketCount; //Chỉ tạo thêm số lượng vé mới cần đặt
-      } 
-      //Trường hợp giảm số lượng vé đã đặt|| không tạo thêm vé mới|| số vé thanh toán nhỏ hơn vé đã tạo sẵn
-      // Không cần đặt thêm vé, chỉ cần thanh toán cho vé đã đặt
-      console.log("actualQuantity: ", actualQuantity);
-
-      // Đặt vé nhiều lần tương ứng actualQuantity
-      for (let i = 0; i < actualQuantity; i++) {
-        const bookPayload = {
-          event_id: eventId,
-        };
-        const bookRes = await api.post(endpoints.bookTicket, bookPayload);
-        console.log("bookPayload: ", bookPayload);
-        console.log("bookRes: ", bookRes.data);
-        if (!bookRes || bookRes.status >= 400) {
-          setMsg("Đặt vé thất bại. Vui lòng thử lại.");
-          console.log("Booking error:", bookRes.data);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // 2. Tạo payment và lấy payment_url
-      const payPayload = {
-        event_id: eventId,
-        payment_method: paymentMethod,
-      };
-      console.log("paymentPayload: ", payPayload);
-      if (selectedDiscountCode) {
-        payPayload.discount_code_id = selectedDiscountCode.id;
-      }
-      const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
-      console.log("payRes: ", payRes.data);
-      if (!payRes || payRes.status >= 400) {
-        setMsg("Tạo payment thất bại. Vui lòng thử lại.");
-        console.log("Payment error:", payRes.data);
-        setLoading(false);
-        return;
-      }
-
-      const paymentId = payRes?.data?.payment?.id;
-      const paymentUrl = payRes?.data?.payment_url;
-      if (!paymentUrl || !paymentId) {
-        setMsg("Không nhận được đường dẫn thanh toán hoặc paymentId.");
-        setLoading(false);
-        return;
-      }
-
-      // 3. Mở cổng thanh toán (WebView hoặc deeplink)
-      navigation.navigate("VNPayScreen", { paymentUrl, paymentId });
-
-      // // 4. Xử lý callback thanh toán (webhook backend sẽ cập nhật trạng thái)
-      // setMsg('Vui lòng hoàn tất thanh toán trên cổng thanh toán.');
-    } catch (error) {
-      setMsg("Đặt vé thất bại. Vui lòng thử lại.");
-      console.log("Booking error:", error);
-    } finally {
-      setLoading(false);
+    // 1. Đặt vé mới nếu cần
+    let actualQuantity = 0;
+    if (quantity > unpaidTicketCount) {
+      actualQuantity = quantity - unpaidTicketCount;
     }
-  };
+    for (let i = 0; i < actualQuantity; i++) {
+      const bookPayload = { event_id: eventId };
+      const bookRes = await api.post(endpoints.bookTicket, bookPayload);
+      if (!bookRes || bookRes.status >= 400) {
+        setMsg("Đặt vé thất bại. Vui lòng thử lại.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // **Fetch lại unpaidTickets để lấy vé mới vừa tạo**
+    // const res = await api.get(endpoints.userTickets);
+    // const ticketsData = Array.isArray(res.data)
+    //   ? res.data
+    //   : res.data.results || [];
+    // const unpaidTicketsNew = ticketsData.filter(
+    //   (ticket) => !ticket.is_paid && ticket.event_id === eventId
+    // );
+
+    // Sau khi tạo vé mới
+    let unpaidTicketsNew = [];
+    for (let retry = 0; retry < 5; retry++) {
+      const res = await api.get(endpoints.userTickets);
+      const ticketsData = Array.isArray(res.data) ? res.data : res.data.results || [];
+      unpaidTicketsNew = ticketsData.filter(
+        (ticket) => !ticket.is_paid && ticket.event_id === eventId
+      );
+      if (unpaidTicketsNew.length >= quantity) break;
+      await new Promise(resolve => setTimeout(resolve, 200)); // đợi 200ms rồi thử lại
+    }
+
+    // 2. Tạo payment và lấy payment_url
+    const ticketsToPay = unpaidTicketsNew.slice(0, quantity).map(t => t.id);
+
+    if (!ticketsToPay.length) {
+      setMsg("Không tìm thấy vé để thanh toán.");
+      setLoading(false);
+      return;
+    }
+
+    const payPayload = {
+      event_id: eventId,
+      payment_method: paymentMethod,
+      ticket_ids: ticketsToPay,
+    };
+    if (selectedDiscountCode) {
+      payPayload.discount_code_id = selectedDiscountCode.id;
+    }
+
+    const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
+    if (!payRes || payRes.status >= 400) {
+      setMsg("Tạo payment thất bại. Vui lòng thử lại.");
+      setLoading(false);
+      return;
+    }
+
+    const paymentId = payRes?.data?.payment?.id;
+    const paymentUrl = payRes?.data?.payment_url;
+    if (!paymentUrl || !paymentId) {
+      setMsg("Không nhận được đường dẫn thanh toán hoặc paymentId.");
+      setLoading(false);
+      return;
+    }
+
+    navigation.navigate("VNPayScreen", { paymentUrl, paymentId, eventId });
+  } catch (error) {
+    setMsg("Đặt vé thất bại. Vui lòng thử lại.");
+    console.log("Booking error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const openMenu = () => setMenuVisible(true);
   const closeMenu = () => setMenuVisible(false);
