@@ -85,12 +85,14 @@ from cloudinary.utils import cloudinary_url
 
 # Configuration
 cloudinary.config(
-    cloud_name = "dncgine9e",
-    api_key = "257557947612624",
-    api_secret = "88EDQ7-Ltwzn1oaI4tT_UIb_bWI", # Click 'View API Keys' above to copy your API secret
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
