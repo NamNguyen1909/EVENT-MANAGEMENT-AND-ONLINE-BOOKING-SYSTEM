@@ -1,0 +1,22 @@
+databases:
+  - name: bemdb
+    plan: free
+    databaseName: bemdb
+    user: bemuser
+
+services:
+  - type: web
+    plan: free
+    name: bemapp
+    runtime: python
+    buildCommand: 'bash bookingandmanagementapis/build.sh'
+    startCommand: 'cd bookingandmanagementapis && gunicorn bookingandmanagementapis.asgi:application -k uvicorn.workers.UvicornWorker'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bemdb
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
