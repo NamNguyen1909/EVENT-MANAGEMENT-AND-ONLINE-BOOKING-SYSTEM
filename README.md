@@ -1,5 +1,5 @@
 # EVENT-MANAGEMENT-AND-ONLINE-BOOKING-SYSTEM
-##HỆ THỐNG QUẢN LÝ SỰ KIỆN VÀ ĐẶT VÉ TRỰC TUYẾN
+## HỆ THỐNG QUẢN LÝ SỰ KIỆN VÀ ĐẶT VÉ TRỰC TUYẾN
 - Đăng ký tài khoản: người dùng có thể đăng ký với vai trò quản trị viên, nhà tổ chức sự
 kiện, hoặc khách tham gia.
 - Tạo sự kiện: nhà tổ chức đăng tải sự kiện với các thông tin chi tiết như ngày giờ, địa
