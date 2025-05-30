@@ -85,20 +85,29 @@ export const endpoints = {
 };
 
 // Tạo instance axios với xác thực
-export const authApis = (token) => {
-  return axios.create({
-    baseURL: BASE_URL,
-    adapter: ["fetch", "xhr", "http"],
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'User-Agent': 'EventManagementApp/1.0',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Content-Type': 'application/json',
-    },
-    withCredentials: false,
-    maxRedirects: 5,
-  });
-};
+// export const authApis = (token) => {
+//   return axios.create({
+//     baseURL: BASE_URL,
+//     // adapter: ["fetch", "xhr", "http"],
+//     headers: {
+//       'Authorization': `Bearer ${token}`,
+//       'User-Agent': 'EventManagementApp/1.0',
+//       'Accept-Encoding': 'gzip, deflate, br',
+//       'Content-Type': 'application/json',
+//     },
+//     withCredentials: false,
+//     maxRedirects: 5,
+//   });
+// };
+export const authApis = (token) => axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: false,
+});
 
 // Tạo instance axios không cần xác thực
 export const Apis = axios.create({

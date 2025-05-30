@@ -68,6 +68,8 @@ const Login = () => {
         type: 'login',
         payload: u.data,
       });
+      console.log('Current user fetched(Login):', u.data);
+      console.log('Type of user data:', typeof u.data);
 
       setMsg('Đăng nhập thành công!');
 
