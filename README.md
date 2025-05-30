@@ -1,5 +1,12 @@
 # EVENT-MANAGEMENT-AND-ONLINE-BOOKING-SYSTEM
-## HỆ THỐNG QUẢN LÝ SỰ KIỆN VÀ ĐẶT VÉ TRỰC TUYẾN
+
+## Table of Contents
+- [Introduction](#introduction)
+- [Technologies Used](#technologies-used)
+- [Features](#features)
+
+## Introduction
+### HỆ THỐNG QUẢN LÝ SỰ KIỆN VÀ ĐẶT VÉ TRỰC TUYẾN
 - Đăng ký tài khoản: người dùng có thể đăng ký với vai trò quản trị viên, nhà tổ chức sự
 kiện, hoặc khách tham gia.
 - Tạo sự kiện: nhà tổ chức đăng tải sự kiện với các thông tin chi tiết như ngày giờ, địa
@@ -18,3 +25,5 @@ doanh thu, và mức độ quan tâm qua biểu đồ trực quan.
 với nhau trước sự kiện qua chat trực tuyến.
 - Tính năng nổi bật: gợi ý sự kiện dựa trên sở thích, tạo mã giảm giá cho từng nhóm
 khách hàng, và theo dõi xu hướng sự kiện hot.
+## Technologies Used
+## Features
