@@ -57,7 +57,7 @@ class User(AbstractBaseUser):
     phone = models.CharField(max_length=15, null=True, blank=True)
     avatar = CloudinaryField('avatar', null=True, blank=True)
 
-    total_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    total_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0'))])
     tags = models.ManyToManyField('Tag', blank=True, related_name='users')
 
     is_active = models.BooleanField(default=True)
@@ -128,12 +128,12 @@ class Event(models.Model):
     is_active = models.BooleanField(default=True)
 
     location = models.CharField(max_length=500)
-    latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
-    longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    latitude = models.FloatField(validators=[MinValueValidator(Decimal('-90')), MaxValueValidator(Decimal('90'))])
+    longitude = models.FloatField(validators=[MinValueValidator(Decimal('-180')), MaxValueValidator(Decimal('180'))])
 
-    total_tickets = models.IntegerField(validators=[MinValueValidator(0)])
+    total_tickets = models.IntegerField(validators=[MinValueValidator(Decimal('0'))])
     ticket_price = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    sold_tickets = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    sold_tickets = models.IntegerField(default=0, validators=[MinValueValidator(Decimal('0'))])
 
     tags = models.ManyToManyField('Tag', blank=True, related_name='events')
 
@@ -237,7 +237,7 @@ class Payment(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0'))])
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
@@ -285,7 +285,7 @@ class Review(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_reviews')
     rating = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('5'))],
         default=0  # Đảm bảo default=0 để phù hợp với phản hồi
     )
     comment = models.TextField(null=True, blank=True)
@@ -310,7 +310,7 @@ class Review(models.Model):
 class DiscountCode(models.Model):
     code = models.CharField(max_length=50, unique=True, db_index=True)
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2,
-                                              validators=[MinValueValidator(0), MaxValueValidator(100)])
+                                              validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     user_group = models.CharField(

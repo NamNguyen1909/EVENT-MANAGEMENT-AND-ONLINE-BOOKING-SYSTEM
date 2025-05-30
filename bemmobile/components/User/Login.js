@@ -62,6 +62,8 @@ const Login = () => {
       const u = await authApis(res.data.access_token).get(endpoints.currentUser);
       console.log('Current user fetched:', u.data);
 
+      await AsyncStorage.setItem('user', JSON.stringify(u.data));
+      
       dispatch({
         type: 'login',
         payload: u.data,
