@@ -393,7 +393,7 @@ def create_payment_url(request):
     vnp_TmnCode = 'GUPETCYO'
     vnp_HashSecret = 'E2G0Y153XRTW37LVRKW8DJ1TGEQ9RK6I'
     vnp_Url = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    vnp_ReturnUrl = 'https://5031-171-243-49-111.ngrok-free.app/vnpay/redirect?from=app'
+    vnp_ReturnUrl = 'https://7031-171-243-49-111.ngrok-free.app/vnpay/redirect?from=app'
 
     #Nhận các thông tin đơn hàng từ request
     amount = request.GET.get("amount", "10000")  # đơn vị VND
