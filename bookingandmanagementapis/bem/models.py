@@ -449,3 +449,13 @@ class EventTrendingLog(models.Model):
             models.Index(fields=['event', 'last_updated']),
         ]
         ordering = ['-trending_score']
+
+class DeviceToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'token']),
+        ]

@@ -16,6 +16,9 @@ sys.modules['json'] = json
 from pathlib import Path
 from django.conf.global_settings import AUTH_USER_MODEL
 
+import dj_database_url 
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -148,15 +151,24 @@ WSGI_APPLICATION = 'bookingandmanagementapis.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'bemdb',
+#         'USER': 'root',
+#         # 'PASSWORD': 'Admin@123',
+#         'PASSWORD': 'ThanhNam*1909',
+#         'HOST': '' # mặc định localhost
+#     }
+# }
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bemdb',
-        'USER': 'root',
-        # 'PASSWORD': 'Admin@123',
-        'PASSWORD': 'ThanhNam*1909',
-        'HOST': '' # mặc định localhost
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 AUTH_USER_MODEL = 'bem.User'
@@ -211,9 +223,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'django.contrib.auth.backends.ModelBackend',
 # ]
 
-CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
-CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
-# Aybym0BYHcRDVaI0LQf19UiOaHKjp7
+CLIENT_ID = 'SJ61STYu3n0mTxWaOWpgaaGp2DA7Ray7OHUGmLgE'
+CLIENT_SECRET = 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010beM5QFCmVyrDcSfJMQlpUiycVx6wkS3e0MFfViHBHTa2mrKlM9ut4BikkU1y2cjwo'
+
 ALLOWED_HOSTS = ['*']
 
 # ASGI Application
