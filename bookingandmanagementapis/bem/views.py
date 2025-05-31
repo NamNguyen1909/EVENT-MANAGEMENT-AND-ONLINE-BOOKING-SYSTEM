@@ -590,15 +590,16 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
         if tickets:
             event = tickets.first().event
-            notification = Notification(
+            notification, created = Notification.objects.get_or_create(
                 event=event,
                 notification_type='reminder',
                 title="Thanh Toán Thành Công",
-                message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
+                message=(
+                    f"Thanh toán <b>{payment.amount}</b> cho <b>{tickets.count()}</b> vé sự kiện {event.title} đã hoàn tất."
+                ),
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
-
         return Response({
             "message": "Thanh toán xác nhận thành công.",
             "payment": PaymentSerializer(payment).data
@@ -974,7 +975,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
                 message=f"Người tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}.",
             )
             notification.save()
-            
+
             # Tạo UserNotification để liên kết với người dùng gốc
             UserNotification.objects.get_or_create(
                 user=parent_review.user,
