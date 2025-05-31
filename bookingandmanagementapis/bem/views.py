@@ -664,14 +664,14 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             ticket.payment = payment
             ticket.save()
 
-        notification = Notification(
-            event=event,
-            notification_type='reminder',
-            title="Tạo Payment - Vui lòng thanh toán",
-            message=f"Payment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.",
-            # is_read=False
-        )
-        notification.save()
+        # notification = Notification(
+        #     event=event,
+        #     notification_type='reminder',
+        #     title="Tạo Payment - Vui lòng thanh toán",
+        #     message=f"Payment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.",
+        #     # is_read=False
+        # )
+        # notification.save()
 
         # Tạo UserNotification để liên kết Notification với User
         # UserNotification.objects.get_or_create(user=user, notification=notification)
@@ -829,14 +829,14 @@ class NotificationViewSet(viewsets.ViewSet):
         )
         notification.save()
 
-        # # Tạo UserNotification cho các user có vé
-        # if event:
-        #     ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
-        #     user_notifications = [
-        #         UserNotification(user_id=user_id, notification=notification)
-        #         for user_id in ticket_owners
-        #     ]
-        #     UserNotification.objects.bulk_create(user_notifications)
+        # Tạo UserNotification cho các user có vé
+        if event:
+            ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
+            user_notifications = [
+                UserNotification(user_id=user_id, notification=notification)
+                for user_id in ticket_owners
+            ]
+            UserNotification.objects.bulk_create(user_notifications)
 
         return Response({
             "message": "Thông báo đã được tạo thành công.",
@@ -974,7 +974,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
                 message=f"Người tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}.",
             )
             notification.save()
-
+            
             # Tạo UserNotification để liên kết với người dùng gốc
             UserNotification.objects.get_or_create(
                 user=parent_review.user,

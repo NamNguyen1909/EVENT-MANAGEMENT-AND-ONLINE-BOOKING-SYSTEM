@@ -140,12 +140,11 @@ class NotificationAdmin(admin.ModelAdmin):
     form = NotificationForm
     list_per_page = 20
 
-    def get_ticket_owners(self, obj):
-        if obj.event:
-            ticket_owners = Ticket.objects.filter(event=obj.event).values_list('user__username', flat=True).distinct()
-            return ", ".join(ticket_owners) or "No users"
-        return "No event"
-    get_ticket_owners.short_description = "Ticket Owners"
+    def get_ticket_owner(self, obj):
+        if hasattr(obj, 'ticket') and obj.ticket:
+            return obj.ticket.user.username
+        return "No ticket"
+    get_ticket_owner.short_description = "Ticket Owner"
 
     def get_is_read_status(self, obj):
         """
