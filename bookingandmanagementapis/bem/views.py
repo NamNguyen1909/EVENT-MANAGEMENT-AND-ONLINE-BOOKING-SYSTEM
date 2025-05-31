@@ -595,7 +595,7 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 notification_type='reminder',
                 title="Thanh Toán Thành Công",
                 message=(
-                    f"Thanh toán <b>{payment.amount}</b> cho <b>{tickets.count()}</b> vé sự kiện {event.title} đã hoàn tất."
+                    f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
                 ),
             )
             notification.save()
