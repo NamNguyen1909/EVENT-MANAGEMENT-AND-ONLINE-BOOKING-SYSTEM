@@ -134,7 +134,7 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 
 # Admin cho Notification
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'notification_type', 'title', 'created_at', 'get_ticket_owners', 'get_is_read_status']
+    list_display = ['id', 'event', 'notification_type', 'title', 'created_at', 'get_ticket_owner', 'get_is_read_status']
     search_fields = ['title', 'message']
     list_filter = ['notification_type', 'created_at']
     form = NotificationForm
