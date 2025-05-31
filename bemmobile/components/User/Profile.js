@@ -12,7 +12,6 @@ import {
   Platform,
   StatusBar,
   Dimensions,
-  FlatList,
 } from 'react-native';
 import { TextInput, Button, Title, Text, useTheme, Avatar, Card } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -25,7 +24,7 @@ import Notifications from '../../components/Notification/Notifications';
 import { colors } from '../../styles/MyStyles';
 
 const Profile = () => {
-  const theme = useTheme();
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const user = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
@@ -43,8 +42,6 @@ const Profile = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
-  const [isChatModalVisible, setIsChatModalVisible] = useState(false);
-  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -52,10 +49,10 @@ const Profile = () => {
       setPhone(user.phone);
       setAvatar(user.avatar);
       fetchUserStats();
-      fetchEventsForChat();
+    } else {
+      navigation.navigate('loginStack');
     }
-
-  }, [user]);
+  }, [user, navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -96,26 +93,6 @@ const Profile = () => {
       } else {
         Alert.alert('Lỗi', 'Không thể lấy thống kê người dùng. Vui lòng thử lại.');
       }
-    }
-  };
-
-  const fetchEventsForChat = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) return;
-
-      const api = authApis(token);
-      let eventsRes;
-      if (user.role === 'organizer') {
-        eventsRes = await api.get(endpoints.myEvents);
-      } else {
-        eventsRes = await api.get(endpoints.userTickets);
-      }
-      const eventsData = eventsRes.data?.results || eventsRes.data || [];
-      setEvents(eventsData.map(item => item.event || item));
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách sự kiện:', error);
-      Alert.alert('Lỗi', 'Không thể lấy danh sách sự kiện. Vui lòng thử lại.');
     }
   };
 
@@ -175,9 +152,8 @@ const Profile = () => {
         type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
       });
 
-      const res = await Apis.patch(endpoints.currentUser, formData, {
+      const res = await authApis(token).patch(endpoints.currentUser, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -190,12 +166,8 @@ const Profile = () => {
       Alert.alert('Thành công', 'Cập nhật avatar thành công!');
     } catch (error) {
       console.error('Lỗi cập nhật avatar:', error);
-      if (error.response?.data) {
-        const errors = error.response.data;
-        Alert.alert('Lỗi', errors.avatar ? errors.avatar[0] : 'Không thể cập nhật avatar. Vui lòng thử lại.');
-      } else {
-        Alert.alert('Lỗi', 'Không thể cập nhật avatar. Vui lòng thử lại.');
-      }
+      const errorMessage = error.response?.data?.avatar?.[0] || 'Không thể cập nhật avatar. Vui lòng thử lại.';
+      Alert.alert('Lỗi', errorMessage);
     }
   };
 
@@ -205,8 +177,8 @@ const Profile = () => {
         Alert.alert('Lỗi', 'Mật khẩu và xác nhận mật khẩu không khớp.');
         return;
       }
-      if (password.length < 8) {
-        Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự.');
+      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+        Alert.alert('Lỗi', 'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.');
         return;
       }
     }
@@ -228,11 +200,7 @@ const Profile = () => {
         updatedData.password = password;
       }
 
-      const res = await Apis.patch(endpoints.currentUser, updatedData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await authApis(token).patch(endpoints.currentUser, updatedData);
 
       dispatch({
         type: 'login',
@@ -245,17 +213,10 @@ const Profile = () => {
       Alert.alert('Thành công', 'Cập nhật hồ sơ thành công!');
     } catch (error) {
       console.error('Lỗi cập nhật:', error);
-      if (error.response?.data) {
-        const errors = error.response.data;
-        Alert.alert('Lỗi',
-          errors.email ? errors.email[0] :
-          errors.phone ? errors.phone[0] :
-          errors.password ? errors.password[0] :
-          'Không thể cập nhật hồ sơ. Vui lòng thử lại.'
-        );
-      } else {
-        Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.');
-      }
+      const errorMessage = error.response?.data
+        ? Object.values(error.response.data).flat().join(' ')
+        : 'Không thể cập nhật hồ sơ. Vui lòng thử lại.';
+      Alert.alert('Lỗi', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -277,7 +238,6 @@ const Profile = () => {
       'Xác nhận vô hiệu hóa',
       'Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Hành động này không thể hoàn tác.',
       [
-        
         { text: 'Hủy', style: 'cancel' },
         {
           text: 'Vô hiệu hóa',
@@ -285,11 +245,7 @@ const Profile = () => {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('token');
-              await Apis.post(endpoints.deactivateUser, {}, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+              await authApis(token).post(endpoints.deactivateUser, {});
               await AsyncStorage.removeItem('token');
               await AsyncStorage.removeItem('refresh_token');
               dispatch({ type: 'logout' });
@@ -312,39 +268,13 @@ const Profile = () => {
     if (!user || !user.username) {
       navigation.navigate('loginStack');
     } else {
-      setIsChatModalVisible(true);
+      navigation.navigate('chat');
     }
   };
 
   const closeNotificationModal = () => {
     setIsNotificationModalVisible(false);
   };
-
-  const closeChatModal = () => {
-    setIsChatModalVisible(false);
-  };
-
-  const renderEvent = ({ item }) => (
-    <TouchableOpacity
-      style={styles.eventItem}
-      onPress={() => {
-        setIsChatModalVisible(false);
-        navigation.navigate('chat', { eventId: item.id });
-      }}
-    >
-      <Text style={styles.eventTitle}>{item.title}</Text>
-    </TouchableOpacity>
-  );
-
-  if (!user) {
-    return (
-      <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Vui lòng đăng nhập để xem hồ sơ của bạn.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
@@ -381,7 +311,7 @@ const Profile = () => {
               {avatar ? (
                 <Image source={{ uri: avatar }} style={styles.avatar} />
               ) : (
-                <Avatar.Text size={100} label={user.username[0].toUpperCase()} />
+                <Avatar.Text size={100} label={user?.username?.[0]?.toUpperCase() || ''} />
               )}
               <View style={styles.editAvatarOverlay}>
                 <MaterialIcons name="camera-alt" size={24} color={colors.white} />
@@ -402,27 +332,27 @@ const Profile = () => {
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Tên người dùng:</Text>
-            <Text style={styles.value}>{user.username}</Text>
+            <Text style={styles.value}>{user?.username}</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Vai trò:</Text>
-            <Text style={styles.value}>{user.role}</Text>
+            <Text style={styles.value}>{user?.role}</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Nhóm khách hàng:</Text>
-            <Text style={styles.value}>{user.customer_group}</Text>
+            <Text style={styles.value}>{user?.customer_group}</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Tổng chi tiêu:</Text>
-            <Text style={styles.value}>{user.total_spent} VNĐ</Text>
+            <Text style={styles.value}>{user?.total_spent} VNĐ</Text>
           </View>
 
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Ngày tham gia:</Text>
-            <Text style={styles.value}>{new Date(user.created_at).toLocaleDateString()}</Text>
+            <Text style={styles.value}>{user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}</Text>
           </View>
 
           <Card style={styles.formCard}>
@@ -457,8 +387,8 @@ const Profile = () => {
                 style={styles.input}
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
-                 activeOutlineColor={colors.blueDark}
-                secureTextEntry={showPassword}
+                activeOutlineColor={colors.blueDark}
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 right={
                   <TextInput.Icon
@@ -476,7 +406,7 @@ const Profile = () => {
                 mode="outlined"
                 outlineColor={colors.bluePrimary}
                 activeOutlineColor={colors.blueDark}
-                secureTextEntry={showConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 right={
                   <TextInput.Icon
@@ -538,36 +468,6 @@ const Profile = () => {
                 onClose={closeNotificationModal}
                 onUpdateUnreadCount={() => fetchUserStats()}
               />
-            </View>
-          </SafeAreaView>
-        </Modal>
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isChatModalVisible}
-          onRequestClose={closeChatModal}
-        >
-          <SafeAreaView style={[styles.modalContainer, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-            <View style={[styles.notificationModalContent, { maxHeight: screenHeight * 0.8 }]}>
-              <View style={styles.modalHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>Chọn sự kiện để chat</Text>
-                </View>
-                <TouchableOpacity onPress={closeChatModal} style={styles.closeButton}>
-                  <MaterialIcons name="close" size={24} color={colors.blueGray} />
-                </TouchableOpacity>
-              </View>
-              {events.length > 0 ? (
-                <FlatList
-                  data={events}
-                  renderItem={renderEvent}
-                  keyExtractor={(item) => item.id.toString()}
-                  style={styles.eventList}
-                />
-              ) : (
-                <Text style={styles.noEventsText}>Không có sự kiện nào để chat.</Text>
-              )}
             </View>
           </SafeAreaView>
         </Modal>
@@ -712,17 +612,6 @@ const styles = StyleSheet.create({
     borderColor: colors.orangeAccent,
     borderWidth: 1,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    textAlign: 'center',
-    fontSize: 18,
-    color: colors.redError,
-  },
   modalContainer: {
     flex: 1,
     backgroundColor: colors.blackTransparent,
@@ -753,26 +642,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
-  },
-  eventList: {
-    paddingHorizontal: 10,
-  },
-  eventItem: {
-    padding: 15,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    marginVertical: 5,
-    elevation: 2,
-  },
-  eventTitle: {
-    fontSize: 16,
-    color: colors.navy,
-  },
-  noEventsText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: colors.blueGray,
-    padding: 20,
   },
 });
 

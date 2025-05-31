@@ -16,23 +16,16 @@ sys.modules['json'] = json
 from pathlib import Path
 from django.conf.global_settings import AUTH_USER_MODEL
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
+ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -55,7 +48,16 @@ INSTALLED_APPS = [
     'channels',
 ]
 
-OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
+OAUTH2_PROVIDER = {
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+        'websocket': 'WebSocket scope',
+    },
+    'DEFAULT_SCOPES': ['read', 'write', 'websocket'],
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -65,7 +67,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-'DEFAULT_RENDERER_CLASSES': [
+    'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PARSER_CLASSES': [
@@ -75,16 +77,11 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 import cloudinary
-import cloudinary.uploader
-from cloudinary.utils import cloudinary_url
-
-# Configuration
 cloudinary.config(
-    cloud_name = "dncgine9e",
-    api_key = "257557947612624",
-    api_secret = "88EDQ7-Ltwzn1oaI4tT_UIb_bWI", # Click 'View API Keys' above to copy your API secret
+    cloud_name="dncgine9e",
+    api_key="257557947612624",
+    api_secret="88EDQ7-Ltwzn1oaI4tT_UIb_bWI",
     secure=True
 )
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
@@ -102,8 +99,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Chỉ dùng trong môi trường dev, thay bằng danh sách cụ thể trong production
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -143,18 +139,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'bookingandmanagementapis.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+ASGI_APPLICATION = 'bookingandmanagementapis.asgi.application'
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bemdb',
         'USER': 'root',
-        # 'PASSWORD': 'Admin@123',
-        'PASSWORD': 'ThanhNam*1909',
+        'PASSWORD': 'Admin@123',
+        # 'PASSWORD': 'ThanhNam*1909',
         'HOST': '' # mặc định localhost
     }
 }
@@ -163,9 +156,6 @@ AUTH_USER_MODEL = 'bem.User'
 
 import pymysql
 pymysql.install_as_MySQLdb()
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -182,51 +172,44 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Chưa chạy được lỗi cả đăng nhập bình thường
-# AUTHENTICATION_BACKENDS = [
-#     'bookingandmanagementapis.bem.authentication.EmailOrUsernameModelBackend',
-#     'django.contrib.auth.backends.ModelBackend',
-# ]
 
 CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
 CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
-# Aybym0BYHcRDVaI0LQf19UiOaHKjp7
-ALLOWED_HOSTS = ['*']
 
-# ASGI Application
-ASGI_APPLICATION = 'bookingandmanagementapis.asgi.application'
-
-# Channel Layers Configuration
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('192.168.1.8', 6379)],
+            'hosts': [('127.0.0.1', 6379)],
         },
     },
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        # Loại bỏ hoặc bình luận handler 'file'
+        # 'file': {
+        #     'class': 'logging.FileHandler',
+        #     'filename': 'debug.log',
+        # },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],  # Chỉ giữ 'console', loại bỏ 'file'
+            'level': 'DEBUG',
+        },
+    },
+}
 

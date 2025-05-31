@@ -176,3 +176,5 @@ cython_debug/
 # Android build artifacts
 android/app/.cxx/
 android/app/build/
+#node_module
+node_modules/
