@@ -240,14 +240,29 @@ CLIENT_SECRET = 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010
 ALLOWED_HOSTS = ['*']
 
 
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [('127.0.0.1', 6379)],
+#         },
+#     },
+# }
+
+import os
+
+import os
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get("REDIS_URL", "rediss://:<default_password>@renewed-glider-13998.upstash.io:6379")],
         },
     },
 }
+
+
 
 LOGGING = {
     'version': 1,
