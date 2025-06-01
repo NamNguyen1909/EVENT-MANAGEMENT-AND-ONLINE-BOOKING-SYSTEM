@@ -1,4 +1,3 @@
-// App.js
 import React, { useReducer, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -27,6 +26,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DiscountCode from './components/Admin/DiscountCode';
 import ListDiscountCodes from './components/Admin/ListDiscountCodes';
 import VNPayScreen from './components/Payments/VNPayScreen';
+import Toast from 'react-native-toast-message'; // Thêm import Toast
 
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
@@ -342,24 +342,6 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  // Xóa token cũ khi ứng dụng khởi động (bỏ comment nếu cần)
-  /*
-  useEffect(() => {
-    const clearTokenOnAppStart = async () => {
-      try {
-        await AsyncStorage.removeItem('token');
-        console.log('Token removed on app start');
-        dispatch({ type: 'LOGOUT' });
-        const stillThere = await AsyncStorage.getItem('token');
-        console.log('Check token after removal:', stillThere);
-      } catch (error) {
-        console.log('Error removing token on start:', error);
-      }
-    };
-    clearTokenOnAppStart();
-  }, []);
-  */
-
   // Khôi phục trạng thái người dùng từ AsyncStorage khi ứng dụng khởi động
 useEffect(() => {
   const clearUserOnAppStart = async () => {
@@ -404,6 +386,7 @@ useEffect(() => {
           <PaperProvider>
             <NavigationContainer>
               <TabNavigator />
+              <Toast /> {/* Thêm Toast component */}
             </NavigationContainer>
           </PaperProvider>
         </MyDispatchContext.Provider>

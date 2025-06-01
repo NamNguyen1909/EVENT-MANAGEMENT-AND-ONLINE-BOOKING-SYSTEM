@@ -899,49 +899,27 @@ class NotificationViewSet(viewsets.ViewSet):
 
         return Response({"message": "Thông báo đã được đánh dấu là đã đọc."}, status=status.HTTP_200_OK)
 
-class ChatMessageViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
-    queryset = ChatMessage.objects.all()
+class ChatMessageViewSet(viewsets.ModelViewSet):
     serializer_class = ChatMessageSerializer
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = ItemPaginator
-
-    def get_permissions(self):
-        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            return [IsChatMessageSender()]
-        return [permissions.IsAuthenticated()]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data={
-            'sender': request.user.pk,
-            'event': request.data.get('event'),
-            'receiver': request.data.get('receiver'),
-            'message': request.data.get('message'),
-            'is_from_organizer': request.user.role == 'organizer' and request.data.get('is_from_organizer', False)
-        })
-        serializer.is_valid(raise_exception=True)
-        message = serializer.save()
-        # Gửi tin nhắn qua WebSocket
-        from channels.layers import get_channel_layer
-        from asgiref.sync import async_to_sync
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f'chat_event_{message.event.id}',
-            {
-                'type': 'chat_message',
-                'message': ChatMessageSerializer(message, context={'request': request}).data
-            }
-        )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
-        event_id = self.request.query_params.get('event')
-        if event_id:
-            return self.queryset.filter(event_id=event_id).filter(
-                Q(receiver=self.request.user) | Q(sender=self.request.user)
-            ).select_related('sender', 'receiver', 'event')
-        return self.queryset.filter(
-            Q(receiver=self.request.user) | Q(sender=self.request.user)
-        ).select_related('sender', 'receiver', 'event')
+        event_id = self.request.query_params.get('event_id')
+        if not event_id:
+            return ChatMessage.objects.none()
+        return ChatMessage.objects.filter(
+            event_id=event_id
+        ).filter(
+            Q(receiver_id=self.request.user.id) |
+            Q(sender_id=self.request.user.id) |
+            Q(receiver_id__isnull=True)
+        ).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        event_id = request.query_params.get('event_id')
+        if not event_id:
+            return Response({"error_code": "MISSING_EVENT_ID", "detail": "Event ID is required."}, status=400)
+        return super().list(request, *args, **kwargs)
 
 # # Giả sử bạn có class ReviewOwner để kiểm tra quyền
 # class ReviewOwner(permissions.BasePermission):

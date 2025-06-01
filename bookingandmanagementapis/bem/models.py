@@ -377,26 +377,20 @@ class UserNotification(models.Model):
 
 
 # Tin nhắn trò chuyện
+# bem/models.py
 class ChatMessage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='chat_messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_messages')
     message = models.TextField()
-    is_from_organizer = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
+    is_from_organizer = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
-            models.Index(fields=['event', 'sender', 'receiver']),
+            models.Index(fields=['event', 'created_at']),
+            models.Index(fields=['receiver', 'created_at']),
         ]
-
-    def save(self, *args, **kwargs):
-        if self.is_from_organizer and self.sender.role != 'organizer':
-            raise ValidationError("Chỉ có người tổ chức mới có thể gửi tin nhắn với tư cách người tổ chức.")
-        super().save(*args, **kwargs)
-
-    # Chưa có cơ chế hỗ trợ chat real-time (cần tích hợp WebSocket hoặc Django Channels).
 
 
 import math

@@ -1,10 +1,27 @@
+// import Config from 'react-native-config';
+// import { Platform } from 'react-native';
+// import axios from 'axios';
+
+// const isDev = __DEV__;
+
+// const BASE_URL = isDev 
+//   ? 'http://192.168.1.8:8000/' 
+//   : 'https://0ffd-2402-800-6346-a652-19c1-2fb5-cf7e-b45f.ngrok-free.app/';
+
+// const WS_BASE_URL = isDev 
+//   ? 'ws://192.168.1.8:8000/' 
+//   : 'wss://0ffd-2402-800-6346-a652-19c1-2fb5-cf7e-b45f.ngrok-free.app/';
 // configs/Apis.js
 import axios from "axios";
 
 // Sử dụng địa chỉ IP của máy tính chạy backend
-  // const BASE_URL = "http://192.168.1.8:8000/";
+const BASE_URL = "http://192.168.1.8:8000/";
+
 
 const BASE_URL = "https://event-management-and-online-booking.onrender.com/";
+
+
+
 
 // const BASE_URL = "http://192.168.44.105:8000/";
 // const BASE_URL = "http://192.168.1.8:8000/";
