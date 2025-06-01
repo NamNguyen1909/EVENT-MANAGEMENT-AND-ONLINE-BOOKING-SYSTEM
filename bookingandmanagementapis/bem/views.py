@@ -45,9 +45,37 @@ import json
 
 from cloudinary.uploader import upload
 
+
 def ping_view(request):
     """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
     return JsonResponse({"status": "alive"})
+
+def auto_create_notifications_for_upcoming_events(request):
+    """
+    Tạo notification và usernotification cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
+    """
+    today = timezone.now().date()
+    upcoming_events = Event.objects.filter(
+        start_time__date__in=[today + timedelta(days=7), today + timedelta(days=1)]
+    )
+
+    count = 0
+    for event in upcoming_events:
+        # Tạo hoặc lấy notification
+        notification, created = Notification.objects.get_or_create(
+            event=event,
+            notification_type='reminder',
+            title="Sự kiện sắp diễn ra",
+            message=f"Sự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!",
+        )
+        # Lấy tất cả user có vé đã thanh toán cho event này
+        ticket_owners = Ticket.objects.filter(event=event, is_paid=True).values_list('user', flat=True).distinct()
+        # Tạo UserNotification cho từng user (nếu chưa có)
+        for user_id in ticket_owners:
+            UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
+        count += 1
+
+    return Response({"message": f"Đã tạo notification cho {count} sự kiện sắp diễn ra."})
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
