@@ -8,7 +8,3 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 
 python manage.py migrate
-
-python load_dummy_data.py
-
-python manage.py loaddata apps.json
