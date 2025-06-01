@@ -45,6 +45,10 @@ import json
 
 from cloudinary.uploader import upload
 
+def ping_view(request):
+    """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
+    return JsonResponse({"status": "alive"})
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     queryset = User.objects.all()
