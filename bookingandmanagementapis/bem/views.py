@@ -45,11 +45,12 @@ import json
 
 from cloudinary.uploader import upload
 
-
+@csrf_exempt
 def ping_view(request):
     """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
     return JsonResponse({"status": "alive"})
 
+@csrf_exempt
 def auto_create_notifications_for_upcoming_events(request):
     """
     Tạo notification và usernotification cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
@@ -75,7 +76,8 @@ def auto_create_notifications_for_upcoming_events(request):
             UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
         count += 1
 
-    return Response({"message": f"Đã tạo notification cho {count} sự kiện sắp diễn ra."})
+    return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện sắp diễn ra."})
+
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
