@@ -240,7 +240,7 @@ CLIENT_SECRET = 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://.event-management-and-online-booking.onrender.com",
+    "https://event-management-and-online-booking.onrender.com",
     
     # Thêm domain của cron-job.org nếu cần
 ]
