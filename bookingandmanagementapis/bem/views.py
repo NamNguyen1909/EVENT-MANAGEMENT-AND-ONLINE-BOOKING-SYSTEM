@@ -76,7 +76,7 @@ def auto_create_notifications_for_upcoming_events(request):
             UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
         count += 1
 
-    return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện sắp diễn ra."})
+    return JsonResponse({"message": f"Created {count} notifications for upcoming events."})
 
 
 
