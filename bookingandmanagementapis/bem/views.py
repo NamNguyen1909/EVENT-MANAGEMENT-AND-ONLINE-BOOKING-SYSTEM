@@ -599,6 +599,16 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
 
+            # Tạo tin nhắn từ organizer đến attendee
+            organizer = event.organizer
+            ChatMessage.objects.create(
+                event=event,
+                sender=organizer,
+                receiver=user,
+                message="Tôi có thể giúp gì cho bạn ?",
+                is_from_organizer=True
+            )
+
         return Response({
             "message": "Thanh toán xác nhận thành công.",
             "payment": PaymentSerializer(payment).data
