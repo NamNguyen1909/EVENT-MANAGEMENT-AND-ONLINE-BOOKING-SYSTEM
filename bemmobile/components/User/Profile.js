@@ -57,7 +57,6 @@ const Profile = () => {
   useFocusEffect(
     React.useCallback(() => {
       fetchUserStats();
-      fetchEventsForChat();
     }, [user])
   );
 
