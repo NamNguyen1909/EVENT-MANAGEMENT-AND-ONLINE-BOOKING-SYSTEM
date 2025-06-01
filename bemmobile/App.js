@@ -343,22 +343,41 @@ const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
   // Khôi phục trạng thái người dùng từ AsyncStorage khi ứng dụng khởi động
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
+useEffect(() => {
+  const clearUserOnAppStart = async () => {
+    try {
+      await AsyncStorage.removeItem('user');
+      console.log('Đã xóa user khỏi AsyncStorage khi khởi động app');
+    } catch (error) {
+      console.log('Lỗi khi xóa user khỏi AsyncStorage:', error);
+    }
+  };
+  clearUserOnAppStart();
+
+  const loadUser = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        try {
           const userData = await AsyncStorage.getItem('user');
           if (userData) {
-            dispatch({ type: 'login', payload: JSON.parse(userData) });
+            try {
+              dispatch({ type: 'login', payload: JSON.parse(userData) });
+            } catch (e) {
+              await AsyncStorage.removeItem('user');
+              console.log('Đã xóa user lỗi khỏi AsyncStorage');
+            }
           }
+        } catch (error) {
+          console.error('Lỗi khi khôi phục trạng thái người dùng:', error);
         }
-      } catch (error) {
-        console.error('Lỗi khi khôi phục trạng thái người dùng:', error);
       }
-    };
-    loadUser();
-  }, []);
+    } catch (error) {
+      console.error('Lỗi khi khôi phục trạng thái người dùng:', error);
+    }
+  };
+  loadUser();
+}, []);
 
   return (
     <SafeAreaProvider>

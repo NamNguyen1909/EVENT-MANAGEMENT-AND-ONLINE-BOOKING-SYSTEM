@@ -41,24 +41,6 @@ def create_notification_for_event_update(sender, instance, created, update_field
         UserNotification.objects.bulk_create(user_notifications, ignore_conflicts=True)
 
 
-# Tự động tạo UserNotification khi Notification được tạo thủ công
-@receiver(post_save, sender=Notification)
-def create_usernotification_for_manual_notification(sender, instance, created, **kwargs):
-    if created:
-        with transaction.atomic():
-            User = get_user_model()
-            if instance.event:
-                # Lấy user có vé sự kiện
-                ticket_owners = Ticket.objects.filter(event=instance.event).select_related('user').values_list('user', flat=True).distinct()
-            else:
-                # Nếu không có event, lấy tất cả user
-                ticket_owners = User.objects.all().values_list('id', flat=True)
-
-            user_notifications = [
-                UserNotification(user_id=user_id, notification=instance)
-                for user_id in ticket_owners
-            ]
-            UserNotification.objects.bulk_create(user_notifications, ignore_conflicts=True)
 
 
 # Tạo tag và superuser mặc định sau khi migrate

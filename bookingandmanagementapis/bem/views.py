@@ -45,6 +45,40 @@ import json
 
 from cloudinary.uploader import upload
 
+@csrf_exempt
+def ping_view(request):
+    """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
+    return JsonResponse({"status": "alive"})
+
+@csrf_exempt
+def auto_create_notifications_for_upcoming_events(request):
+    """
+    Tạo notification và usernotification cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
+    """
+    today = timezone.now().date()
+    upcoming_events = Event.objects.filter(
+        start_time__date__in=[today + timedelta(days=7), today + timedelta(days=1)]
+    )
+
+    count = 0
+    for event in upcoming_events:
+        # Tạo hoặc lấy notification
+        notification, created = Notification.objects.get_or_create(
+            event=event,
+            notification_type='reminder',
+            title="Sự kiện sắp diễn ra",
+            message=f"Sự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!",
+        )
+        # Lấy tất cả user có vé đã thanh toán cho event này
+        ticket_owners = Ticket.objects.filter(event=event, is_paid=True).values_list('user', flat=True).distinct()
+        # Tạo UserNotification cho từng user (nếu chưa có)
+        for user_id in ticket_owners:
+            UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
+        count += 1
+
+    return JsonResponse({"message": f"Created {count} notifications for upcoming events."})
+
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     queryset = User.objects.all()
@@ -393,7 +427,7 @@ def create_payment_url(request):
     vnp_TmnCode = 'GUPETCYO'
     vnp_HashSecret = 'E2G0Y153XRTW37LVRKW8DJ1TGEQ9RK6I'
     vnp_Url = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    vnp_ReturnUrl = 'https://7031-171-243-49-111.ngrok-free.app/vnpay/redirect?from=app'
+    vnp_ReturnUrl = 'https://event-management-and-online-booking.onrender.com/vnpay/redirect?from=app'
 
     #Nhận các thông tin đơn hàng từ request
     amount = request.GET.get("amount", "10000")  # đơn vị VND
@@ -590,15 +624,16 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
         if tickets:
             event = tickets.first().event
-            notification = Notification(
+            notification, created = Notification.objects.get_or_create(
                 event=event,
                 notification_type='reminder',
                 title="Thanh Toán Thành Công",
-                message=f"Thanh toán cho vé sự kiện {event.title} đã hoàn tất.",
+                message=(
+                    f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
+                ),
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
-
         return Response({
             "message": "Thanh toán xác nhận thành công.",
             "payment": PaymentSerializer(payment).data
@@ -664,14 +699,14 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             ticket.payment = payment
             ticket.save()
 
-        notification = Notification(
-            event=event,
-            notification_type='reminder',
-            title="Tạo Payment - Vui lòng thanh toán",
-            message=f"Payment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.",
-            # is_read=False
-        )
-        notification.save()
+        # notification = Notification(
+        #     event=event,
+        #     notification_type='reminder',
+        #     title="Tạo Payment - Vui lòng thanh toán",
+        #     message=f"Payment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.",
+        #     # is_read=False
+        # )
+        # notification.save()
 
         # Tạo UserNotification để liên kết Notification với User
         # UserNotification.objects.get_or_create(user=user, notification=notification)
@@ -829,14 +864,14 @@ class NotificationViewSet(viewsets.ViewSet):
         )
         notification.save()
 
-        # # Tạo UserNotification cho các user có vé
-        # if event:
-        #     ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
-        #     user_notifications = [
-        #         UserNotification(user_id=user_id, notification=notification)
-        #         for user_id in ticket_owners
-        #     ]
-        #     UserNotification.objects.bulk_create(user_notifications)
+        # Tạo UserNotification cho các user có vé
+        if event:
+            ticket_owners = Ticket.objects.filter(event=event).values_list('user', flat=True).distinct()
+            user_notifications = [
+                UserNotification(user_id=user_id, notification=notification)
+                for user_id in ticket_owners
+            ]
+            UserNotification.objects.bulk_create(user_notifications)
 
         return Response({
             "message": "Thông báo đã được tạo thành công.",

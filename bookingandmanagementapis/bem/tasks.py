@@ -1,6 +1,6 @@
 # from celery import shared_task
 from django.utils.timezone import now, timedelta
-from events.models import Event, Notification
+from bem.models import Event, Notification
 
 
 # PAUSE celery không chạy interval task trên pythonanywhere được => Cron Jobs

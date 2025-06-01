@@ -16,6 +16,12 @@ sys.modules['json'] = json
 from pathlib import Path
 from django.conf.global_settings import AUTH_USER_MODEL
 
+
+import dj_database_url 
+import os
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
@@ -79,17 +85,26 @@ REST_FRAMEWORK = {
 
 import cloudinary
 cloudinary.config(
-    cloud_name="dncgine9e",
-    api_key="257557947612624",
-    api_secret="88EDQ7-Ltwzn1oaI4tT_UIb_bWI",
+
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+
+#     cloud_name="dncgine9e",
+#     api_key="257557947612624",
+#     api_secret="88EDQ7-Ltwzn1oaI4tT_UIb_bWI",
+
     secure=True
 )
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,15 +156,35 @@ TEMPLATES = [
 WSGI_APPLICATION = 'bookingandmanagementapis.wsgi.application'
 ASGI_APPLICATION = 'bookingandmanagementapis.asgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'bemdb',
+#         'USER': 'root',
+#         # 'PASSWORD': 'Admin@123',
+#         'PASSWORD': 'ThanhNam*1909',
+#         'HOST': '' # mặc định localhost
+#     }
+# }
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bemdb',
-        'USER': 'root',
-        'PASSWORD': 'Admin@123',
-        # 'PASSWORD': 'ThanhNam*1909',
-        'HOST': '' # mặc định localhost
-    }
+
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'bemdb',
+#         'USER': 'root',
+#         'PASSWORD': 'Admin@123',
+#         # 'PASSWORD': 'ThanhNam*1909',
+#         'HOST': '' # mặc định localhost
+#     }
+
 }
 
 AUTH_USER_MODEL = 'bem.User'
@@ -178,10 +213,32 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+
+# This production code might break development mode, so we check whether we're in DEBUG mode
+if not DEBUG:
+    # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
+    # and renames the files with unique names for each version to support long-term caching
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CLIENT_ID = 'RJFfAM4tZxPYdoSjzdNZST8CTc1DK97SSgPD6kBN'
-CLIENT_SECRET = 'aEtR93os7a1tfDQU1ReVb8CbNV9Jjk9UM9BCJTWevRsqVy591LjBBK9A8gfjvipsXRmLjcStwQGZIewChg6IBotk2i98ZY2p8HvvAIyMkBdXx6zzly4O0ioYdwnVMd8V'
+# Chưa chạy được lỗi cả đăng nhập bình thường
+# AUTHENTICATION_BACKENDS = [
+#     'bookingandmanagementapis.bem.authentication.EmailOrUsernameModelBackend',
+#     'django.contrib.auth.backends.ModelBackend',
+# ]
+
+CLIENT_ID = 'SJ61STYu3n0mTxWaOWpgaaGp2DA7Ray7OHUGmLgE'
+CLIENT_SECRET = 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010beM5QFCmVyrDcSfJMQlpUiycVx6wkS3e0MFfViHBHTa2mrKlM9ut4BikkU1y2cjwo'
+
+ALLOWED_HOSTS = ['*']
+
 
 CHANNEL_LAYERS = {
     'default': {
@@ -213,3 +270,4 @@ LOGGING = {
     },
 }
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

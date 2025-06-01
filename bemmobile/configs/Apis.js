@@ -17,10 +17,14 @@ import axios from "axios";
 // Sử dụng địa chỉ IP của máy tính chạy backend
 const BASE_URL = "http://192.168.1.8:8000/";
 
-// const BASE_URL = "https://7031-171-243-49-111.ngrok-free.app/";
+
+const BASE_URL = "https://event-management-and-online-booking.onrender.com/";
+
+
+
 
 // const BASE_URL = "http://192.168.44.105:8000/";
-// const BASE_URL = "http://192.168.254.171:8000/";
+// const BASE_URL = "http://192.168.1.8:8000/";
 
 
 
@@ -98,20 +102,29 @@ export const endpoints = {
 };
 
 // Tạo instance axios với xác thực
-export const authApis = (token) => {
-  return axios.create({
-    baseURL: BASE_URL,
-    adapter: ["fetch", "xhr", "http"],
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'User-Agent': 'EventManagementApp/1.0',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Content-Type': 'application/json',
-    },
-    withCredentials: false,
-    maxRedirects: 5,
-  });
-};
+// export const authApis = (token) => {
+//   return axios.create({
+//     baseURL: BASE_URL,
+//     // adapter: ["fetch", "xhr", "http"],
+//     headers: {
+//       'Authorization': `Bearer ${token}`,
+//       'User-Agent': 'EventManagementApp/1.0',
+//       'Accept-Encoding': 'gzip, deflate, br',
+//       'Content-Type': 'application/json',
+//     },
+//     withCredentials: false,
+//     maxRedirects: 5,
+//   });
+// };
+export const authApis = (token) => axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: false,
+});
 
 // Tạo instance axios không cần xác thực
 export const Apis = axios.create({

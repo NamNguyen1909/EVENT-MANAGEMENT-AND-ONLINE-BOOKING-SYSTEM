@@ -51,7 +51,7 @@ const MainHome = () => {
         const res = await Apis.get(url);
 
         console.log('API response status:', res.status);
-        console.log('API response data:', res.data);
+        // console.log('API response data:', res.data);
 
         const newEvents = Array.isArray(res.data.results) ? res.data.results : [];
         console.log('Events data:', newEvents);
