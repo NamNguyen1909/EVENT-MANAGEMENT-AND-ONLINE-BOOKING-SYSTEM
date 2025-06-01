@@ -23,5 +23,5 @@ urlpatterns = [
     path('vnpay/create_payment_url/', views.create_payment_url),
     path('vnpay/redirect', views.vnpay_redirect),
     path("ping/", views.ping_view),
-    path('auto-create-notfications/', views.auto_create_notifications_for_upcoming_events)
+    path('auto-create-notifications/', views.auto_create_notifications_for_upcoming_events)
 ]
