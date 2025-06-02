@@ -134,30 +134,15 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 
 # Admin cho Notification
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'notification_type', 'title', 'created_at', 'get_ticket_owner', 'get_is_read_status']
+    list_display = ['id', 'event', 'notification_type', 'title', 'created_at']
     search_fields = ['title', 'message']
     list_filter = ['notification_type', 'created_at']
     form = NotificationForm
     list_per_page = 20
 
-    def get_ticket_owner(self, obj):
-        if hasattr(obj, 'ticket') and obj.ticket:
-            return obj.ticket.user.username
-        return "No ticket"
-    get_ticket_owner.short_description = "Ticket Owner"
 
-    def get_is_read_status(self, obj):
-        """
-        Hiển thị trạng thái is_read của thông báo dựa trên UserNotification.
-        Nếu có ít nhất một UserNotification liên quan chưa đọc, trả về 'Chưa đọc'.
-        """
-        user_notifications = obj.user_notifications.all()
-        if not user_notifications.exists():
-            return "Không có người nhận"
-        if user_notifications.filter(is_read=False).exists():
-            return "Chưa đọc"
-        return "Đã đọc"
-    get_is_read_status.short_description = "Trạng thái đọc"
+
+
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('event')
@@ -198,13 +183,19 @@ class EventTrendingLogAdmin(admin.ModelAdmin):
 
 # Admin cho UserNotification
 class UserNotificationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'notification', 'is_read', 'read_at', 'created_at']
+    list_display = ['id', 'user', 'notification', 'is_read', 'read_at', 'created_at','notification_id_display']
     search_fields = ['user__username', 'notification__title']
     list_filter = ['is_read', 'created_at']
     list_per_page = 20
 
+    def notification_id_display(self, obj):
+        return obj.notification.id
+    notification_id_display.short_description = "Notification ID"
+    
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'notification')
+    
+
 
 # Custom Admin Site
 class MyAdminSite(admin.AdminSite):
