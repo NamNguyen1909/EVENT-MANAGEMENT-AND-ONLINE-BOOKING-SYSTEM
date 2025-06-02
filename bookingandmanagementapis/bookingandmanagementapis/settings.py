@@ -280,10 +280,36 @@ LOGGING = {
         #     'filename': 'debug.log',
         # },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console'],  # Chỉ giữ 'console', loại bỏ 'file'
-            'level': 'DEBUG',
+    # 'loggers': {
+    #     '': {
+    #         'handlers': ['console'],  # Chỉ giữ 'console', loại bỏ 'file'
+    #         'level': 'DEBUG',
+    #     },
+
+      'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',  # Chỉ log WARNING trở lên
+    },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+                'propagate': False,
+            },
+        'httpcore': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'httpx': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'oauthlib': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
         },
     },
 }
