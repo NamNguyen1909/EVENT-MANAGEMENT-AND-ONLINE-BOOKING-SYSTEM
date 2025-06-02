@@ -74,6 +74,13 @@ def auto_create_notifications_for_upcoming_events(request):
         # Tạo UserNotification cho từng user (nếu chưa có)
         for user_id in ticket_owners:
             UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
+            send_mail(
+                subject="Sự kiện sắp diễn ra",
+                message=f"Kính gửi {User.objects.get(id=user_id).username},\n\nSự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!\n\nTrân trọng!",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[User.objects.get(id=user_id).email],
+                fail_silently=False,
+            )
         count += 1
 
     return JsonResponse({"message": f"Created {count} notifications for upcoming events."})
@@ -627,13 +634,14 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             notification, created = Notification.objects.get_or_create(
                 event=event,
                 notification_type='reminder',
-                title="Thanh Toán Thành Công",
+                title="Thanh toán thành công",
                 message=(
                     f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
                 ),
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
+
 
             # Tạo tin nhắn từ organizer đến attendee
             organizer = event.organizer
@@ -644,6 +652,13 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 message="Tôi có thể giúp gì cho bạn ?",
                 is_from_organizer=True
             )
+        send_mail(
+            subject=f"Thanh toán thành công ",
+            message=f"Kính gửi {user.username},\n\nThanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã được xác nhận thành công.\n\nTrân trọng!",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
 
         return Response({
             "message": "Thanh toán xác nhận thành công.",
@@ -722,13 +737,13 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         # Tạo UserNotification để liên kết Notification với User
         # UserNotification.objects.get_or_create(user=user, notification=notification)
 
-        send_mail(
-            subject=f"Xác Nhận Tạo Payment cho {event.title}",
-            message=f"Kính gửi {user.username},\n\nPayment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.\n\nTrân trọng!",
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email],
-            fail_silently=True
-        )
+        # send_mail(
+        #     subject=f"Xác Nhận Tạo Payment cho {event.title}",
+        #     message=f"Kính gửi {user.username},\n\nPayment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.\n\nTrân trọng!",
+        #     from_email=settings.EMAIL_HOST_USER,
+        #     recipient_list=[user.email],
+        #     fail_silently=False,
+        # )
 
         # Giả lập payment_url cho ví dụ, thực tế cần tích hợp SDK hoặc API cổng thanh toán
         payment_method = request.data.get('payment_method', 'momo')
@@ -1011,7 +1026,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
                 message=f"Kính gửi {parent_review.user.username},\n\nNgười tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}. Vui lòng kiểm tra ứng dụng để xem chi tiết.\n\nTrân trọng!",
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[parent_review.user.email],
-                fail_silently=True
+                fail_silently=False,
             )
         else:
             # Nếu là review gốc, kiểm tra user chưa review event
