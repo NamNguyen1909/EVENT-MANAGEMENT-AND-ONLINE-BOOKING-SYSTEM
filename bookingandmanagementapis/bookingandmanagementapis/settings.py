@@ -293,7 +293,7 @@ LOGGING = {
         'loggers': {
             'django': {
                 'handlers': ['console'],
-                'level': 'WARNING',
+                'level': 'INFO',
                 'propagate': False,
             },
         'httpcore': {
