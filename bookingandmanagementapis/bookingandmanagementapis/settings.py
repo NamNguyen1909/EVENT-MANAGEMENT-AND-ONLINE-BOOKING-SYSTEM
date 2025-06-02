@@ -274,41 +274,45 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
-        # Loại bỏ hoặc bình luận handler 'file'
-        # 'file': {
-        #     'class': 'logging.FileHandler',
-        #     'filename': 'debug.log',
-        # },
     },
-    # 'loggers': {
-    #     '': {
-    #         'handlers': ['console'],  # Chỉ giữ 'console', loại bỏ 'file'
-    #         'level': 'DEBUG',
-    #     },
-
-      'root': {
+    'root': {
         'handlers': ['console'],
-        'level': 'WARNING',  # Chỉ log WARNING trở lên
+        'level': 'WARNING',
     },
-        'loggers': {
-            'django': {
-                'handlers': ['console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
+    'loggers': {
+        'django.server': {  # Access log của Django runserver
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',  # Ẩn info log của Django
+            'propagate': False,
+        },
         'httpcore': {
             'handlers': ['console'],
-            'level': 'WARNING',
+            'level': 'CRITICAL',
             'propagate': False,
         },
         'httpx': {
             'handlers': ['console'],
-            'level': 'WARNING',
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'uvicorn': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'daphne': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
             'propagate': False,
         },
         'oauthlib': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': 'CRITICAL',
             'propagate': False,
         },
     },
