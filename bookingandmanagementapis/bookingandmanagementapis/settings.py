@@ -287,7 +287,7 @@ LOGGING = {
         },
         'django': {
             'handlers': ['console'],
-            'level': 'WARNING',  # Ẩn info log của Django
+            'level': 'INFO',  # Ẩn info log của Django
             'propagate': False,
         },
         'httpcore': {
