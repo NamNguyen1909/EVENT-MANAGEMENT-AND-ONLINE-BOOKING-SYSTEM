@@ -97,7 +97,8 @@ def auto_create_notifications_for_upcoming_events(request):
     )
     print("Upcoming events:", list(upcoming_events))
 
-    return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện."})
+    # return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện."})
+    return JsonResponse({"message": "Đã kiểm tra sự kiện sắp diễn ra."})
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
