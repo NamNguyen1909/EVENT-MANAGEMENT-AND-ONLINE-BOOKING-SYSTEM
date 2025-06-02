@@ -53,9 +53,8 @@ def ping_view(request):
 @csrf_exempt
 def auto_create_notifications_for_upcoming_events(request):
     """
-    Tạo notification và usernotification cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
-    Nếu event đổi ngày, cập nhật lại message notification.
-    Nếu có user mới mua vé, tạo UserNotification cho user đó.
+    Luôn tạo notification mới cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
+    Nếu event đổi ngày, đến mốc mới sẽ lại tạo notification mới.
     """
     today = timezone.now().date()
     upcoming_events = Event.objects.filter(
@@ -65,34 +64,28 @@ def auto_create_notifications_for_upcoming_events(request):
     count = 0
     for event in upcoming_events:
         message = f"Sự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!"
-        notification, created = Notification.objects.get_or_create(
+        notification = Notification.objects.create(
             event=event,
             notification_type='reminder',
             title="Sự kiện sắp diễn ra",
-            defaults={'message': message},
+            message=message,
         )
-        # Nếu notification đã tồn tại nhưng message cũ, cập nhật lại message
-        if not created and notification.message != message:
-            notification.message = message
-            notification.save()
 
         # Lấy tất cả user có vé đã thanh toán cho event này
         ticket_owners = Ticket.objects.filter(event=event, is_paid=True).values_list('user', flat=True).distinct()
         for user_id in ticket_owners:
-            user_notification, user_created = UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
-            if user_created:
-                user = User.objects.get(id=user_id)
-                send_mail(
-                    subject="Sự kiện sắp diễn ra",
-                    message=f"Kính gửi {user.username},\n\n{message}\n\nTrân trọng!",
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
+            UserNotification.objects.create(user_id=user_id, notification=notification)
+            user = User.objects.get(id=user_id)
+            send_mail(
+                subject="Sự kiện sắp diễn ra",
+                message=f"Kính gửi {user.username},\n\n{message}\n\nTrân trọng!",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
         count += 1
 
-    return JsonResponse({"message": f"Đã tạo/cập nhật notification cho {count} sự kiện."})
-
+    return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện."})
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
