@@ -62,6 +62,13 @@ def save_fcm_token(request):
         token=fcm_token,
         defaults={'updated_at': timezone.now()}
     )
+
+    send_fcm_v1(
+        user,
+        title="Chào mừng bạn đến với ứng dụng!",
+        body="Bạn đã đăng nhập thành công. Chúng tôi sẽ gửi thông báo đến bạn qua FCM.",
+        data={"type": "welcome"}
+    )
     return Response({'message': 'Token saved'})
 
 
