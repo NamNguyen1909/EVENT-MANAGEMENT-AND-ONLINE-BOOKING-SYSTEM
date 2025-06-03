@@ -7,7 +7,7 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.urls import path
 from .models import (
     User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification,
-    ChatMessage, EventTrendingLog, UserNotification
+    ChatMessage, EventTrendingLog, UserNotification,DeviceToken
 )
 
 # Form tùy chỉnh cho Event
@@ -239,3 +239,4 @@ admin_site.register(Notification, NotificationAdmin)
 admin_site.register(ChatMessage, ChatMessageAdmin)
 admin_site.register(EventTrendingLog, EventTrendingLogAdmin)
 admin_site.register(UserNotification, UserNotificationAdmin)
+admin_site.register(DeviceToken)
