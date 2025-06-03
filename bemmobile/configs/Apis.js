@@ -23,7 +23,7 @@ const BASE_URL = "https://event-management-and-online-booking.onrender.com/";
 
 
 
-// const BASE_URL = "http://192.168.44.105:8000/";
+// const BASE_URL = "http://192.168.44.102:8000/";
 // const BASE_URL = "http://192.168.1.8:8000/";
 
 
