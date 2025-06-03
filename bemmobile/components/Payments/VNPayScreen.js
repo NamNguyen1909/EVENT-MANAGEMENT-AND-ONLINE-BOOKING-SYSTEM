@@ -8,17 +8,21 @@ const VNPayScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const { paymentUrl, paymentId } = route.params;
   const webviewRef = useRef();
+  const confirmedRef = useRef(false);
 
   const handleNavigationChange = async (navState) => {
     const { url } = navState;
 
-if (url.includes('/vnpay/redirect')) {
-  const urlParams = new URLSearchParams(url.split('?')[1]);
-  const responseCode = urlParams.get('vnp_ResponseCode');
+    if (
+      url.includes('/vnpay/redirect') &&
+      !confirmedRef.current // Chỉ xử lý lần đầu
+    ) {
+      confirmedRef.current = true; // Đánh dấu đã xác nhận
+      const urlParams = new URLSearchParams(url.split('?')[1]);
+      const responseCode = urlParams.get('vnp_ResponseCode');
       if (responseCode === '00') {
-        // Thêm delay trước khi xác nhận thanh toán
         try {
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Đợi 1.5 giây
+          await new Promise(resolve => setTimeout(resolve, 1500));
           const token = await AsyncStorage.getItem("token");
           if (token && paymentId) {
             const api = authApis(token);

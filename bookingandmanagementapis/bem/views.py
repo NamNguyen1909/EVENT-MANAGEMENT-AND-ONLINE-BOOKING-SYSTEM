@@ -52,9 +52,6 @@ def ping_view(request):
 
 @csrf_exempt
 def auto_create_notifications_for_upcoming_events(request):
-    """
-    Tạo notification và usernotification cho các sự kiện sắp diễn ra (7 ngày và 1 ngày tới).
-    """
     today = timezone.now().date()
     upcoming_events = Event.objects.filter(
         start_time__date__in=[today + timedelta(days=7), today + timedelta(days=1)]
@@ -62,23 +59,34 @@ def auto_create_notifications_for_upcoming_events(request):
 
     count = 0
     for event in upcoming_events:
-        # Tạo hoặc lấy notification
-        notification, created = Notification.objects.get_or_create(
-            event=event,
-            notification_type='reminder',
-            title="Sự kiện sắp diễn ra",
-            message=f"Sự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!",
-        )
-        # Lấy tất cả user có vé đã thanh toán cho event này
-        ticket_owners = Ticket.objects.filter(event=event, is_paid=True).values_list('user', flat=True).distinct()
-        # Tạo UserNotification cho từng user (nếu chưa có)
-        for user_id in ticket_owners:
-            UserNotification.objects.get_or_create(user_id=user_id, notification=notification)
-        count += 1
+        try:
+            message = f"Sự kiện '{event.title}' sẽ diễn ra vào {event.start_time.date()}!"
+            notification = Notification.objects.create(
+                event=event,
+                notification_type='reminder',
+                title="Sự kiện sắp diễn ra",
+                message=message,
+            )
+            print(f"Created notification for event: {event.title}")
 
-    return JsonResponse({"message": f"Created {count} notifications for upcoming events."})
+            ticket_owners = Ticket.objects.filter(event=event, is_paid=True).values_list('user', flat=True).distinct()
+            for user_id in ticket_owners:
+                UserNotification.objects.create(user_id=user_id, notification=notification)
+                user = User.objects.get(id=user_id)
+                print(f"Created UserNotification for user: {user.username}")
+                send_mail(
+                    subject="Sự kiện sắp diễn ra",
+                    message=f"Kính gửi {user.username},\n\n{message}\n\nTrân trọng!",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                print(f"Sent mail to: {user.email}")
+            count += 1
+        except Exception as e:
+            print(f"Error for event {event.title}: {e}")
 
-
+    return JsonResponse({"message": f"Đã tạo notification cho {count} sự kiện."})
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
     queryset = User.objects.all()
@@ -624,16 +632,21 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
         if tickets:
             event = tickets.first().event
+
+            event.sold_tickets = event.tickets.filter(is_paid=True).count()
+            event.save(update_fields=['sold_tickets'])
+            
             notification, created = Notification.objects.get_or_create(
                 event=event,
                 notification_type='reminder',
-                title="Thanh Toán Thành Công",
+                title="Thanh toán thành công",
                 message=(
                     f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
                 ),
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
+
 
             # Tạo tin nhắn từ organizer đến attendee
             organizer = event.organizer
@@ -644,6 +657,13 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
                 message="Tôi có thể giúp gì cho bạn ?",
                 is_from_organizer=True
             )
+        send_mail(
+            subject=f"Thanh toán thành công ",
+            message=f"Kính gửi {user.username},\n\nThanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã được xác nhận thành công.\n\nTrân trọng!",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
 
         return Response({
             "message": "Thanh toán xác nhận thành công.",
@@ -722,13 +742,13 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         # Tạo UserNotification để liên kết Notification với User
         # UserNotification.objects.get_or_create(user=user, notification=notification)
 
-        send_mail(
-            subject=f"Xác Nhận Tạo Payment cho {event.title}",
-            message=f"Kính gửi {user.username},\n\nPayment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.\n\nTrân trọng!",
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email],
-            fail_silently=True
-        )
+        # send_mail(
+        #     subject=f"Xác Nhận Tạo Payment cho {event.title}",
+        #     message=f"Kính gửi {user.username},\n\nPayment cho vé sự kiện {event.title} đã được tạo. Vui lòng hoàn tất thanh toán.\n\nTrân trọng!",
+        #     from_email=settings.EMAIL_HOST_USER,
+        #     recipient_list=[user.email],
+        #     fail_silently=False,
+        # )
 
         # Giả lập payment_url cho ví dụ, thực tế cần tích hợp SDK hoặc API cổng thanh toán
         payment_method = request.data.get('payment_method', 'momo')
@@ -1011,7 +1031,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Updat
                 message=f"Kính gửi {parent_review.user.username},\n\nNgười tổ chức đã phản hồi đánh giá của bạn cho sự kiện {event.title}. Vui lòng kiểm tra ứng dụng để xem chi tiết.\n\nTrân trọng!",
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[parent_review.user.email],
-                fail_silently=True
+                fail_silently=False,
             )
         else:
             # Nếu là review gốc, kiểm tra user chưa review event

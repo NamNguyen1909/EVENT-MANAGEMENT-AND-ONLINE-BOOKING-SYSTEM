@@ -274,18 +274,60 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
-        # Loại bỏ hoặc bình luận handler 'file'
-        # 'file': {
-        #     'class': 'logging.FileHandler',
-        #     'filename': 'debug.log',
-        # },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
     },
     'loggers': {
-        '': {
-            'handlers': ['console'],  # Chỉ giữ 'console', loại bỏ 'file'
-            'level': 'DEBUG',
+        'django.server': {  # Access log của Django runserver
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',  # Ẩn info log của Django
+            'propagate': False,
+        },
+        'httpcore': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'httpx': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'uvicorn': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'daphne': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'oauthlib': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
         },
     },
 }
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'namnguyen19092004@gmail.com'
+EMAIL_HOST_PASSWORD = 'ejoy hwyc qice jgow'  # App password vừa tạo
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = 'Event management and online booking system <namnguyen19092004@gmail.com>'
+
