@@ -6,7 +6,7 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyDispatchContext } from '../../configs/MyContexts';
 import MyStyles ,{colors} from '../../styles/MyStyles';
-import messaging from '@react-native-firebase/messaging';
+import { getToken, getMessaging } from '@react-native-firebase/messaging';
 import axios from 'axios';
 
 const requestUserPermission = async () => {
@@ -19,7 +19,7 @@ const requestUserPermission = async () => {
 
 const getFcmToken = async () => {
   try {
-    const token = await messaging().getToken();
+    const token = await getToken(getMessaging());
     console.log('FCM Token:', token);
     return token;
   } catch (error) {
