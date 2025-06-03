@@ -930,9 +930,10 @@ class NotificationViewSet(viewsets.ViewSet):
 
         return Response({"message": "Thông báo đã được đánh dấu là đã đọc."}, status=status.HTTP_200_OK)
 
-class ChatMessageViewSet(viewsets.ModelViewSet):
+class ChatMessageViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     serializer_class = ChatMessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = ItemPaginator
 
     def get_queryset(self):
         event_id = self.request.query_params.get('event_id')
@@ -950,7 +951,32 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         event_id = request.query_params.get('event_id')
         if not event_id:
             return Response({"error_code": "MISSING_EVENT_ID", "detail": "Event ID is required."}, status=400)
-        return super().list(request, *args, **kwargs)
+        
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page or queryset, many=True)
+        return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Kiểm tra quyền và logic trước khi tạo
+        event_id = request.data.get('event_id')
+        if not event_id:
+            return Response({"error_code": "MISSING_EVENT_ID", "detail": "Event ID is required."}, status=400)
+        
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            return Response({"error": "Sự kiện không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Kiểm tra xem user có quyền gửi tin nhắn (ví dụ: có vé hoặc là organizer)
+        if not (request.user == event.organizer or Ticket.objects.filter(user=request.user, event=event, is_paid=True).exists()):
+            return Response({"error": "Bạn không có quyền gửi tin nhắn trong sự kiện này."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer.save(sender=request.user, event=event)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # # Giả sử bạn có class ReviewOwner để kiểm tra quyền
 # class ReviewOwner(permissions.BasePermission):
