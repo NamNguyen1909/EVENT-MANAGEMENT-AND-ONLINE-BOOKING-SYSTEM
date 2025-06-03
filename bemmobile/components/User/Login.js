@@ -6,7 +6,7 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyDispatchContext } from '../../configs/MyContexts';
 import MyStyles ,{colors} from '../../styles/MyStyles';
-import { getToken, getMessaging } from '@react-native-firebase/messaging';
+import messaging,{ getToken, getMessaging } from '@react-native-firebase/messaging';
 import axios from 'axios';
 
 const requestUserPermission = async () => {
@@ -14,6 +14,11 @@ const requestUserPermission = async () => {
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  if (enabled) {
+    console.log('Notification permission granted.');
+  } else {
+    console.log('Notification permission denied.');
+  }
   return enabled;
 };
 

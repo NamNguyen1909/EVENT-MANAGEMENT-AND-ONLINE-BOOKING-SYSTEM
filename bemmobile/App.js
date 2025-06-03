@@ -28,6 +28,9 @@ import ListDiscountCodes from './components/Admin/ListDiscountCodes';
 import VNPayScreen from './components/Payments/VNPayScreen';
 import Toast from 'react-native-toast-message'; // Thêm import Toast
 
+import messaging from '@react-native-firebase/messaging';
+import { Alert } from 'react-native';
+
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
 const EventsStackNavigator = () => {
@@ -337,6 +340,13 @@ const TabNavigator = () => {
       return <DefaultTabs />;
   }
 };
+
+useEffect(() => {
+  const unsubscribe = messaging().onMessage(async remoteMessage => {
+    Alert.alert('Thông báo mới', remoteMessage.notification?.body || 'Bạn có thông báo mới!');
+  });
+  return unsubscribe;
+}, []);
 
 // App chính
 const App = () => {
