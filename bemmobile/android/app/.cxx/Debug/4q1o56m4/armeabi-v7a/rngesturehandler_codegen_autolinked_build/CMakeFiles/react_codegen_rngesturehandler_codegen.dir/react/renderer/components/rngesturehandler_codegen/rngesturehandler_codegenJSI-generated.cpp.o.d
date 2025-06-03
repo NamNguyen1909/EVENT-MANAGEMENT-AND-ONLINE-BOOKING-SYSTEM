@@ -1,7 +1,7 @@
 rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o: \
   F:/Nam/CODE/University/HKVIII/CCNLTHD/EMB/bemmobile/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp \
   F:/Nam/CODE/University/HKVIII/CCNLTHD/EMB/bemmobile/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/TurboModule.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/TurboModule.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/memory \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__assert \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__config \
@@ -759,7 +759,7 @@ rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehand
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__hash_table \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__iterator/ranges_iterator_traits.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__node_handle \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/jsi.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/jsi.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/cassert \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/assert.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/functional \
@@ -836,9 +836,9 @@ rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehand
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__functional/pointer_to_binary_function.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__functional/pointer_to_unary_function.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__functional/unary_negate.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/jsi-inl.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/CallInvoker.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/SchedulerPriority.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/jsi-inl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/CallInvoker.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/ReactCommon/SchedulerPriority.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/chrono \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__chrono/calendar.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__chrono/convert_to_tm.h \
@@ -892,178 +892,178 @@ rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehand
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__charconv/from_chars_integral.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__charconv/from_chars_result.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__charconv/to_chars.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/EventEmitter.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Function.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Base.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Convert.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/CallbackWrapper.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/LongLivedObject.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/EventEmitter.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Function.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Base.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Convert.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/CallbackWrapper.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/LongLivedObject.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/unordered_set \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Bridging.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/AString.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Array.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Bridging.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/AString.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Array.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/deque \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/list \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/set \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__tree \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Bool.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Class.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Dynamic.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/dynamic.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/dynamic.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Expected.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CPortability.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Config.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CppAttributes.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Portability.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Likely.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Builtin.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Preprocessor.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Traits.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Unit.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Utility.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Exception.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/fmt/format.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/fmt/base.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Assume.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Hint.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/SafeAssert.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CArray.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Hint-inl.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Thunk.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/New.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/functional/Invoke.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/expr_iif.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/config/config.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/is_empty_variadic.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/punctuation/is_begin_parens.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/punctuation/detail/is_begin_parens.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/detail/is_empty.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/has_opt.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/detail/has_opt.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/for_each.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/for_each_i.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/inc.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/config/limits.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/limits/inc_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/adt.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/is_binary.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/check.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/cat.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/compl.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/eat.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/for.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/dec.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/limits/dec_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/debug/error.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/empty.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/bool.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/limits/bool_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/auto_rec.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/iif.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/limits/auto_rec_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/detail/for.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/detail/limits/for_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/limits/for_256.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/elem.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/expand.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/overload.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/size.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/check_empty.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/limits/size_64.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/rem.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/detail/is_single_return.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/elem.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/limits/elem_64.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/not.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/to_list.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/if.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/size.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/limits/to_list_64.hpp \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CustomizationPoint.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/StaticConst.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/TypeInfo.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Range.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/SpookyHashV2.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CString.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Constexpr.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CpuId.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/RangeCommon.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/RangeSse42.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Access.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/F14Map.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/View.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/F14Map-fwd.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Defaults.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/HeterogeneousAccess-fwd.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/MemoryResource.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Bool.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Class.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Dynamic.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/dynamic.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/dynamic.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Expected.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CPortability.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Config.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CppAttributes.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Portability.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Likely.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Builtin.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Preprocessor.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Traits.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Unit.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Utility.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Exception.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/fmt/format.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/fmt/base.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Assume.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Hint.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/SafeAssert.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CArray.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Hint-inl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Thunk.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/New.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/functional/Invoke.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/expr_iif.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/config/config.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/is_empty_variadic.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/punctuation/is_begin_parens.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/punctuation/detail/is_begin_parens.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/detail/is_empty.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/has_opt.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/detail/has_opt.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/for_each.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/for_each_i.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/inc.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/config/limits.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/limits/inc_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/list/adt.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/is_binary.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/check.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/cat.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/compl.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/eat.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/for.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/dec.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/arithmetic/limits/dec_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/debug/error.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/empty.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/bool.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/limits/bool_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/auto_rec.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/iif.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/detail/limits/auto_rec_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/detail/for.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/detail/limits/for_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/repetition/limits/for_256.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/elem.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/expand.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/overload.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/size.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/facilities/check_empty.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/limits/size_64.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/rem.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/detail/is_single_return.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/elem.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/variadic/limits/elem_64.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/logical/not.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/to_list.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/control/if.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/size.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/boost/preprocessor/tuple/limits/to_list_64.hpp \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CustomizationPoint.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/StaticConst.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/TypeInfo.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Range.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/SpookyHashV2.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CString.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Constexpr.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/CpuId.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/RangeCommon.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/RangeSse42.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Access.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/F14Map.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/View.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/F14Map-fwd.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Defaults.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/HeterogeneousAccess-fwd.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/MemoryResource.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/memory_resource \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__memory_resource/monotonic_buffer_resource.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__memory_resource/pool_options.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__memory_resource/synchronized_pool_resource.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/__memory_resource/unsynchronized_pool_resource.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Iterator.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/RValueReferenceWrapper.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14MapFallback.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Optional.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/traits.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Table.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Bits.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Bits.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Iterator.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/RValueReferenceWrapper.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14MapFallback.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Optional.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/traits.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Table.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Bits.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Bits.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/cinttypes \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/inttypes.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/lib/clang/18/include/inttypes.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/inttypes.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ConstexprMath.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CheckedMath.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Builtins.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Memory.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Align.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/Malloc.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Malloc.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/detail/MallocImpl.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ScopeGuard.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/UncaughtExceptions.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Pretty.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/HeterogeneousAccess.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/Hash.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/functional/ApplyTuple.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/MurmurHash.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/SpookyHashV1.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14IntrinsicsAvailability.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Mask.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/Util.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Policy.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json_pointer.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/json_pointer.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/dynamic-inl.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Conv.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/double-conversion/double-conversion.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/double-conversion/utils.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Demangle.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FBString.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/ToAscii.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Math.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Format.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FormatArg.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/String.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ExceptionString.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/SimpleSimdStringUtils.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/SplitStringSimd.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/String-inl.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Reserve.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Format-inl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ConstexprMath.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/CheckedMath.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Builtins.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Memory.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Align.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/Malloc.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Malloc.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/memory/detail/MallocImpl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ScopeGuard.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/UncaughtExceptions.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/Pretty.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/HeterogeneousAccess.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/Hash.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/functional/ApplyTuple.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/MurmurHash.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/hash/SpookyHashV1.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14IntrinsicsAvailability.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Mask.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/Util.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/detail/F14Policy.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json_pointer.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/json_pointer.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/json/dynamic-inl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Conv.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/double-conversion/double-conversion.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/double-conversion/utils.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Demangle.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FBString.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/lang/ToAscii.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Math.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Format.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FormatArg.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/String.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/ExceptionString.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/SimpleSimdStringUtils.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/SplitStringSimd.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/String-inl.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/Reserve.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Format-inl.h \
   C:/Users/THANH_NAM/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/c++/v1/map \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Exception.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/SysTypes.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FormatTraits.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/MapUtil.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/MapUtil.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Windows.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/Iterators.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/JSIDynamic.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Error.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Number.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Object.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Promise.h \
-  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/4921e399dc760d526b20c10474ed13ea/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Value.h
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/Exception.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/SysTypes.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/FormatTraits.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/MapUtil.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/container/MapUtil.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/portability/Windows.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/folly/detail/Iterators.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/jsi/include/jsi/JSIDynamic.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Error.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Number.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Object.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Promise.h \
+  C:/Users/THANH_NAM/.gradle/caches/8.13/transforms/e13d266f5433c5258ad3e7babe2b9064/transformed/react-android-0.79.2-debug/prefab/modules/reactnative/include/react/bridging/Value.h

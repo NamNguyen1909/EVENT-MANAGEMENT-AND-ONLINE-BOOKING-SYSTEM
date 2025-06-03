@@ -675,6 +675,14 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
+            # Gửi thông báo FCM
+            send_fcm_v1(
+                user,
+                title="Thanh toán thành công",
+                body=message,
+                data={"event_id": event.id, "notification_id": notification.id}
+            )
+            print(f"Sent FCM notification to user: {user.username}")
 
 
             # Tạo tin nhắn từ organizer đến attendee
