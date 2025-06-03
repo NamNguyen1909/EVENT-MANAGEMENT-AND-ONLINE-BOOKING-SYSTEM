@@ -99,6 +99,8 @@ export const endpoints = {
   replyReview: "reviews/", // POST (tạo phản hồi)
 
 
+  saveFcmToken: "save-fcm-token/",
+
 };
 
 // Tạo instance axios với xác thực

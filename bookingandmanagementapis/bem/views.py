@@ -2,7 +2,7 @@ from django.forms import ValidationError
 from django.test import RequestFactory
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -20,7 +20,7 @@ import io
 import base64
 from .models import (
     User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification,
-    ChatMessage, EventTrendingLog, UserNotification
+    ChatMessage, EventTrendingLog, UserNotification,DeviceToken
 )
 from .serializers import (
     UserSerializer, UserDetailSerializer, EventSerializer, EventDetailSerializer,
@@ -44,6 +44,26 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from cloudinary.uploader import upload
+
+from .utils import send_fcm_v1
+
+from django.conf import settings
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def save_fcm_token(request):
+    fcm_token = request.data.get('fcm_token')
+    if not fcm_token:
+        return Response({'error': 'Missing token'}, status=status.HTTP_400_BAD_REQUEST)
+    user = request.user
+    # Xóa token cũ nếu đã tồn tại (tránh trùng token do chuyển thiết bị)
+    DeviceToken.objects.update_or_create(
+        user=user,
+        token=fcm_token,
+        defaults={'updated_at': timezone.now()}
+    )
+    return Response({'message': 'Token saved'})
+
 
 @csrf_exempt
 def ping_view(request):
@@ -74,6 +94,7 @@ def auto_create_notifications_for_upcoming_events(request):
                 UserNotification.objects.create(user_id=user_id, notification=notification)
                 user = User.objects.get(id=user_id)
                 print(f"Created UserNotification for user: {user.username}")
+                
                 send_mail(
                     subject="Sự kiện sắp diễn ra",
                     message=f"Kính gửi {user.username},\n\n{message}\n\nTrân trọng!",
@@ -82,6 +103,14 @@ def auto_create_notifications_for_upcoming_events(request):
                     fail_silently=False,
                 )
                 print(f"Sent mail to: {user.email}")
+                # Gửi thông báo FCM
+                send_fcm_v1(
+                    user,
+                    title="Sự kiện sắp diễn ra",
+                    body=message,
+                    data={"event_id": event.id, "notification_id": notification.id}
+                )
+                print(f"Sent FCM notification to user: {user.username}")
             count += 1
         except Exception as e:
             print(f"Error for event {event.title}: {e}")

@@ -6,6 +6,27 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyDispatchContext } from '../../configs/MyContexts';
 import MyStyles ,{colors} from '../../styles/MyStyles';
+import messaging from '@react-native-firebase/messaging';
+import axios from 'axios';
+
+const requestUserPermission = async () => {
+  const authStatus = await messaging().requestPermission();
+  const enabled =
+    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  return enabled;
+};
+
+const getFcmToken = async () => {
+  try {
+    const token = await messaging().getToken();
+    console.log('FCM Token:', token);
+    return token;
+  } catch (error) {
+    console.log('FCM Token error:', error);
+    return null;
+  }
+};
 
 const Login = () => {
   const theme = useTheme();
@@ -70,6 +91,25 @@ const Login = () => {
       });
       console.log('Current user fetched(Login):', u.data);
       console.log('Type of user data:', typeof u.data);
+
+      // New code to request permission and get FCM token
+      const permission = await requestUserPermission();
+      if (permission) {
+        const fcmToken = await getFcmToken();
+
+        if (fcmToken) {
+          try {
+            await axios.post(
+              `${Apis.defaults.baseURL}${endpoints.saveFcmToken}`,
+              { fcm_token: fcmToken },
+              { headers: { Authorization: `Bearer ${res.data.access_token}` } }
+            );
+            console.log('FCM token sent to server successfully');
+          } catch (error) {
+            console.log('Error sending FCM token to server:', error);
+          }
+        }
+      }
 
       setMsg('Đăng nhập thành công!');
 

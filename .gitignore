@@ -178,3 +178,7 @@ android/app/.cxx/
 android/app/build/
 #node_module
 node_modules/
+
+#Thiết lập gửi push notification với Firebase HTTP V1 API
+# bemmobile/android/app/google-services.json
+bookingandmanagementapis/bem/bemmobile-np-firebase-adminsdk-fbsvc-049b00bb3d.json

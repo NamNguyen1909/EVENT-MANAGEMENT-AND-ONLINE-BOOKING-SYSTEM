@@ -33,6 +33,20 @@ DEBUG = True
 # Application definition
 ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
 
+#Setting của Firebase push notification HTTP V1 API
+
+# Đường dẫn file service account (trùng với utils.py)
+SERVICE_ACCOUNT_PATH = os.path.join(
+    os.path.dirname(__file__), '..', 'bem', 'bemmobile-np-firebase-adminsdk-fbsvc-049b00bb3d.json'
+)
+
+firebase_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+if firebase_json:
+    with open(SERVICE_ACCOUNT_PATH, "w") as f:
+        f.write(firebase_json)
+
+#End setting của Firebase push notification HTTP V1 API
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -330,4 +344,3 @@ EMAIL_HOST_USER = 'namnguyen19092004@gmail.com'
 EMAIL_HOST_PASSWORD = 'ejoy hwyc qice jgow'  # App password vừa tạo
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = 'Event management and online booking system <namnguyen19092004@gmail.com>'
-
