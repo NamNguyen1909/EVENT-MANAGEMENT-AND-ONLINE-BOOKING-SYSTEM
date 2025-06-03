@@ -664,14 +664,13 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
             event.sold_tickets = event.tickets.filter(is_paid=True).count()
             event.save(update_fields=['sold_tickets'])
-            
+
+            message=(f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất.")
             notification, created = Notification.objects.get_or_create(
                 event=event,
                 notification_type='reminder',
                 title="Thanh toán thành công",
-                message=(
-                    f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
-                ),
+                message=message
             )
             notification.save()
             UserNotification.objects.get_or_create(user=request.user, notification=notification)
