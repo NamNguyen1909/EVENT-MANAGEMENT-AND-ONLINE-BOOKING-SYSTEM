@@ -335,11 +335,11 @@ const ChatDetail = ({ route, navigation }) => {
         wsRef.current = null;
       }
 
-      const wsUrl = `ws://192.168.1.8:8000/ws/chat/${eventId}/?token=${token}`;
+      const wsUrl = `wss://event-management-and-online-booking.onrender.com/ws/chat/${eventId}/?token=${token}`;
       const websocket = new WebSocket(wsUrl, [], {
         headers: {
           Authorization: `Bearer ${token}`,
-          Origin: 'http://192.168.1.8:8000',
+          Origin: 'https://event-management-and-online-booking.onrender.com',
         },
       });
 

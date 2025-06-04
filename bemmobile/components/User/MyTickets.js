@@ -52,16 +52,17 @@ const MyTickets = () => {
 
   const fetchTickets = async (url = endpoints.userTickets, append = false, isRefresh = false) => {
     try {
-      if (append) {
-        setLoadingMore(true);
-      } else if (isRefresh) {
+      // Xử lý trạng thái loading/refresh trước khi fetch
+      if (isRefresh) {
         setRefreshing(true);
+      } else if (append) {
+        setLoadingMore(true);
       } else {
         setLoading(true);
         setError(null);
       }
+
       const token = await AsyncStorage.getItem("token");
-      console.log("Token in myticket (fetchTickets):", token, "URL:", url);
       if (!token) {
         setError("Vui lòng đăng nhập để xem vé của bạn.");
         setLoading(false);
@@ -75,10 +76,14 @@ const MyTickets = () => {
       }
       const api = authApis(token);
       const response = await api.get(url);
-      // console.log("Myticket res: ", response.data);
       const newTickets = response.data.results || response.data || [];
+
       if (append) {
-        setTickets((prevTickets) => [...prevTickets, ...newTickets]);
+        setTickets((prevTickets) => {
+          const ids = new Set(prevTickets.map(t => t.id));
+          const uniqueNewTickets = newTickets.filter(t => !ids.has(t.id));
+          return [...prevTickets, ...uniqueNewTickets];
+        });
       } else {
         setTickets(newTickets);
       }

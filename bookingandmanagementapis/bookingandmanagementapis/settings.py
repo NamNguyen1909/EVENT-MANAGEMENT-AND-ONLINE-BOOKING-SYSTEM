@@ -31,7 +31,7 @@ DEBUG = True
 
 
 # Application definition
-ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
+# ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
 
 #Setting của Firebase push notification HTTP V1 API
 

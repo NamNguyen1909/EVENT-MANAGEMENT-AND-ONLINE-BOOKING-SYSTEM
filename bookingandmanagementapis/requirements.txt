@@ -13,6 +13,7 @@ cachetools==5.5.2
 certifi==2025.1.31
 cffi==1.17.1
 channels==4.2.2
+channels_redis==4.2.1
 charset-normalizer==3.4.1
 click==8.1.7
 click-didyoumean==0.3.1
@@ -60,6 +61,7 @@ kiwisolver==1.4.8
 kombu==5.5.2
 MarkupSafe==3.0.2
 matplotlib==3.10.1
+msgpack==1.1.0
 multidict==6.4.4
 mysqlclient==2.2.7
 numpy==2.2.3
