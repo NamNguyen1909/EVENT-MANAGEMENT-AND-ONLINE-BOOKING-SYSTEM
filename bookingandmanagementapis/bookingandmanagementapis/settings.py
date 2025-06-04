@@ -287,7 +287,7 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'stream': sys.stdout,  # đảm bảo ra stdout (hữu ích khi chạy bằng `daphne`)
+            'stream': sys.stdout,
         },
     },
     'root': {
@@ -302,7 +302,12 @@ LOGGING = {
         },
         'django.request': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # log cả request
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.db.backends': {  # Thêm hoặc chỉnh sửa logger này
+            'handlers': ['console'],
+            'level': 'INFO',      # Đổi từ DEBUG thành INFO để tắt log SQL
             'propagate': False,
         },
         'daphne': {
