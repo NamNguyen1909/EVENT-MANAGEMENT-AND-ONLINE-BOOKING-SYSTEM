@@ -12,15 +12,14 @@ const VNPayScreen = ({ route, navigation }) => {
 
   const handleNavigationChange = async (navState) => {
     const { url } = navState;
-
+    // Nếu backend vẫn redirect về /vnpay/redirect?...
     if (
       url.includes('/vnpay/redirect') &&
-      !confirmedRef.current // Chỉ xử lý lần đầu
+      !confirmedRef.current
     ) {
-      confirmedRef.current = true; // Đánh dấu đã xác nhận
+      confirmedRef.current = true;
       const urlParams = new URLSearchParams(url.split('?')[1]);
       const responseCode = urlParams.get('vnp_ResponseCode');
-      console.log('VNPayScreen responseCode:', responseCode);
       if (responseCode === '00') {
         try {
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -28,18 +27,43 @@ const VNPayScreen = ({ route, navigation }) => {
           if (token && paymentId) {
             const api = authApis(token);
             await api.post(endpoints.confirmPayment(paymentId));
-            console.log('VNPayScreen Payment confirmed successfully');
           }
           Alert.alert('Thanh toán thành công!');
         } catch (err) {
           Alert.alert('Thanh toán thành công, nhưng cập nhật trạng thái thất bại!');
-          console.error('VNPayScreen Error confirming payment:', err);
         }
       } else {
         Alert.alert('Thanh toán thất bại hoặc bị hủy');
       }
       navigation.navigate("MyTicketsScreen");
-      console.log('VNPayScreen Navigation to MyTicketsScreen');
+    }
+  };
+
+  const handleWebViewMessage = async (event) => {
+    if (confirmedRef.current) return;
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.vnp_ResponseCode) {
+        confirmedRef.current = true;
+        if (data.vnp_ResponseCode === '00') {
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const token = await AsyncStorage.getItem("token");
+            if (token && paymentId) {
+              const api = authApis(token);
+              await api.post(endpoints.confirmPayment(paymentId));
+            }
+            Alert.alert('Thanh toán thành công!');
+          } catch (err) {
+            Alert.alert('Thanh toán thành công, nhưng cập nhật trạng thái thất bại!');
+          }
+        } else {
+          Alert.alert('Thanh toán thất bại hoặc bị hủy');
+        }
+        navigation.navigate("MyTicketsScreen");
+      }
+    } catch (e) {
+      // Không phải message hợp lệ, bỏ qua
     }
   };
 
@@ -51,6 +75,7 @@ const VNPayScreen = ({ route, navigation }) => {
         source={{ uri: paymentUrl }}
         onLoadEnd={() => setLoading(false)}
         onNavigationStateChange={handleNavigationChange}
+        onMessage={handleWebViewMessage}
         startInLoadingState
       />
     </View>
