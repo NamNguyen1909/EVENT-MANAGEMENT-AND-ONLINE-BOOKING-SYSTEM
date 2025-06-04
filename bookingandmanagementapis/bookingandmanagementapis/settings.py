@@ -291,46 +291,32 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',
+        'level': 'DEBUG',  # ✅ Cho hiện toàn bộ log (DEBUG trở lên)
     },
     'loggers': {
-        'django.server': {  # Access log của Django runserver
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',  # Ẩn info log của Django
-            'propagate': False,
+            'level': 'DEBUG',  # ✅ Cho phép log DEBUG/INFO
+            'propagate': True,  # ✅ Đẩy log lên root
+        },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
         },
         'httpcore': {
             'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
-        },
-        'httpx': {
-            'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
+            'level': 'ERROR',  # Ít log rác
+            'propagate': True,
         },
         'uvicorn': {
             'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
-        },
-        'daphne': {
-            'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
-        },
-        'oauthlib': {
-            'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
+            'level': 'ERROR',
+            'propagate': True,
         },
     },
 }
+
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
