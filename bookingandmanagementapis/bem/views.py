@@ -604,7 +604,28 @@ def vnpay_redirect(request):
         #     </body>
         #     </html>
         # """)
-        return redirect(f"/vnpay/redirect?{request.META['QUERY_STRING']}")
+        # return redirect(f"/vnpay/redirect?{request.META['QUERY_STRING']}")
+        return HttpResponse(f"""
+            <html>
+            <head>
+                <meta charset="utf-8"/>
+                <script>
+                setTimeout(function() {{
+                    if (window.ReactNativeWebView) {{
+                    window.ReactNativeWebView.postMessage(JSON.stringify({{
+                        vnp_ResponseCode: "{vnp_ResponseCode}",
+                        message: "{message}"
+                    }}));
+                    }}
+                }}, 500);
+                </script>
+            </head>
+            <body>
+                <h2>Kết quả thanh toán</h2>
+                <p>{message}</p>
+            </body>
+            </html>
+        """)
     else:
         deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}&message={urllib.parse.quote(message)}"
         return redirect(deeplink)
