@@ -312,7 +312,7 @@ LOGGING = {
         },
         'daphne': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # log của Daphne (cần thiết)
+            'level': 'WARNING',  # log của Daphne (cần thiết)
             'propagate': False,
         },
         'httpcore': {
