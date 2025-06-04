@@ -82,7 +82,7 @@ class TagAdmin(admin.ModelAdmin):
 
 # Admin cho Ticket
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at']
+    list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at','purchase_date']
     search_fields = ['event__title', 'user__username', 'uuid']
     list_filter = ['is_paid', 'is_checked_in', 'created_at']
     readonly_fields = ['qr_code_view']
