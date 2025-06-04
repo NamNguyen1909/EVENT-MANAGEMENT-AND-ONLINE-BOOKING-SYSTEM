@@ -246,6 +246,7 @@ const handlePayment = async () => {
 
     const paymentId = payRes?.data?.payment?.id;
     const paymentUrl = payRes?.data?.payment_url;
+    console.log("paymentId:", paymentId, "paymentUrl:", paymentUrl);
     if (!paymentUrl || !paymentId) {
       setMsg("Không nhận được đường dẫn thanh toán hoặc paymentId.");
       setLoading(false);

@@ -353,7 +353,7 @@ const DefaultTabs = () => (
 // Bottom Tab Navigator chính
 const TabNavigator = () => {
   const user = React.useContext(MyUserContext);
-  console.log("User:", user);
+  // console.log("User:", user);
 
   if (user === null) {
     return <UnauthenticatedTabs />;

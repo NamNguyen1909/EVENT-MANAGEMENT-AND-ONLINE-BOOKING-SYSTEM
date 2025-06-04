@@ -128,8 +128,8 @@ const fetchMoreTickets = () => {
     // Chuyển nextPageUrl về path tương đối nếu là URL tuyệt đối
     let url = nextPageUrl;
     if (url.startsWith("http")) {
-      const u = new URL(url);
-      url = u.pathname + u.search;
+      const idx = url.indexOf("/", 8); // Bỏ qua "https://"
+      url = idx !== -1 ? url.substring(idx) : url;
     }
     fetchTickets(url, true);
   }

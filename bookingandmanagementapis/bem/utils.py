@@ -30,6 +30,8 @@ def send_fcm_v1(user, title, body, data=None):
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json; UTF-8",
     }
+     # Convert all data values to string
+    data_str = {str(k): str(v) for k, v in (data or {}).items()}
     for token in tokens:
         message = {
             "message": {
@@ -38,7 +40,7 @@ def send_fcm_v1(user, title, body, data=None):
                     "title": title,
                     "body": body,
                 },
-                "data": data or {}
+                "data": data_str
             }
         }
         response = requests.post(url, headers=headers, data=json.dumps(message))
