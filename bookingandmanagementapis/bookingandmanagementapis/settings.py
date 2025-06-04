@@ -287,26 +287,32 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'stream': sys.stdout,  # đảm bảo ra stdout (hữu ích khi chạy bằng `daphne`)
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',  # ✅ Cho hiện toàn bộ log (DEBUG trở lên)
+        'level': 'DEBUG',
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # ✅ Cho phép log DEBUG/INFO
-            'propagate': True,  # ✅ Đẩy log lên root
-        },
-        'django.server': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # log cả request
+            'propagate': False,
+        },
+        'daphne': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # log của Daphne (cần thiết)
+            'propagate': False,
         },
         'httpcore': {
             'handlers': ['console'],
-            'level': 'ERROR',  # Ít log rác
+            'level': 'ERROR',
             'propagate': True,
         },
         'uvicorn': {
@@ -314,8 +320,14 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'channels': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
+
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
