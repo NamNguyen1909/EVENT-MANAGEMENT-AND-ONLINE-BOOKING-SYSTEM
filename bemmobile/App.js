@@ -28,8 +28,8 @@ import ListDiscountCodes from "./components/Admin/ListDiscountCodes";
 import VNPayScreen from "./components/Payments/VNPayScreen";
 import Toast from "react-native-toast-message"; // Thêm import Toast
 
-import messaging from "@react-native-firebase/messaging";
-import { Alert } from "react-native";
+import { getMessaging, onMessage, requestPermission, AuthorizationStatus } from '@react-native-firebase/messaging'
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
@@ -379,12 +379,42 @@ const TabNavigator = () => {
 // App chính
 const App = () => {
   useEffect(() => {
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-      Alert.alert(
-        "Thông báo mới",
-        remoteMessage.notification?.body || "Bạn có thông báo mới!"
-      );
+    const askNotificationPermission = async () => {
+      console.log('Đang xin quyền notification...');
+      const status = await requestPermission(getMessaging());
+      console.log('Kết quả xin quyền notification:', status);
+      if (
+        status === AuthorizationStatus.AUTHORIZED ||
+        status === AuthorizationStatus.PROVISIONAL
+      ) {
+        console.log('Notification permission granted.');
+      } else {
+        console.log('Notification permission denied.');
+      }
+    };
+    askNotificationPermission();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onMessage(getMessaging(), async remoteMessage => {
+      // Hiển thị notification local khi app foreground
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title || 'Thông báo mới',
+        body: remoteMessage.notification?.body || 'Bạn có thông báo mới!',
+        android: {
+          channelId: 'default',
+          importance: AndroidImportance.HIGH,
+        },
+      });
     });
+
+    // Tạo channel nếu chưa có (Android)
+    notifee.createChannel({
+      id: 'default',
+      name: 'Default Channel',
+      importance: AndroidImportance.HIGH,
+    });
+
     return unsubscribe;
   }, []);
 

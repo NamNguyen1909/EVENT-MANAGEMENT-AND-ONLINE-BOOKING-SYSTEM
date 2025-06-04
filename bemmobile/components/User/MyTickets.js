@@ -75,7 +75,7 @@ const MyTickets = () => {
       }
       const api = authApis(token);
       const response = await api.get(url);
-      console.log("Myticket res: ", response.data);
+      // console.log("Myticket res: ", response.data);
       const newTickets = response.data.results || response.data || [];
       if (append) {
         setTickets((prevTickets) => [...prevTickets, ...newTickets]);

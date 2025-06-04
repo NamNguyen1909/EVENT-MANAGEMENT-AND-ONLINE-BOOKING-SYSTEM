@@ -76,13 +76,14 @@ def save_fcm_token(request):
 def ping_view(request):
     """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
     
-    user = User.objects.get(id=9)  # Lấy user có id=9
-    send_fcm_v1(
-        user,
-        title="Ping",
-        body="Server is alive!",
-        data={"type": "ping"}
-    )
+    #Test push notification khi ứng dụng đóng/kill
+    # user = User.objects.get(id=9)  # Lấy user có id=9
+    # send_fcm_v1(
+    #     user,
+    #     title="Ping",
+    #     body="Server is alive!",
+    #     data={"type": "ping"}
+    # )
     return JsonResponse({"status": "alive"})
 
 @csrf_exempt

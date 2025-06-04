@@ -79,13 +79,13 @@ const BookTicket = () => {
         return;
       }
       const res = await api.get(endpoints.userTickets);
-      console.log("Res.data of unpaid tickets: ", res.data);
+      // console.log("Res.data of unpaid tickets: ", res.data);
 
       // Kiểm tra res.data có phải là mảng không, nếu không thì lấy res.data.results
       const ticketsData = Array.isArray(res.data)
         ? res.data
         : res.data.results || [];
-      console.log("Tickets data:", ticketsData);
+      // console.log("Tickets data:", ticketsData);
       // Lọc vé chưa thanh toán cho event hiện tại
       const unpaidTickets = ticketsData.filter(
         (ticket) => !ticket.is_paid && ticket.event_id === eventId
