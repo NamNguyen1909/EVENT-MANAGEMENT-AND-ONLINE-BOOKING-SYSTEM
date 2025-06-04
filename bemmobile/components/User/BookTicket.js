@@ -237,6 +237,7 @@ const handlePayment = async () => {
     }
 
     const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
+    console.log("BookTicket-handlepyament Payment response:", payRes);
     if (!payRes || payRes.status >= 400) {
       setMsg("Tạo payment thất bại. Vui lòng thử lại.");
       setLoading(false);
@@ -252,6 +253,7 @@ const handlePayment = async () => {
     }
 
     navigation.navigate("VNPayScreen", { paymentUrl, paymentId, eventId });
+    console.log("Navigating to VNPayScreen with paymentUrl:", paymentUrl);
   } catch (error) {
     setMsg("Đặt vé thất bại. Vui lòng thử lại.");
     console.log("Booking error:", error);
