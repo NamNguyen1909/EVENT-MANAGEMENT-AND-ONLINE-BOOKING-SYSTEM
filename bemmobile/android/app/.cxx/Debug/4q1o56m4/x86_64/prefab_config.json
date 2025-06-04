@@ -2,9 +2,9 @@
   "enabled": true,
   "prefabPath": "C:\\Users\\THANH_NAM\\.gradle\\caches\\modules-2\\files-2.1\\com.google.prefab\\cli\\2.1.0\\aa32fec809c44fa531f01dcfb739b5b3304d3050\\cli-2.1.0-all.jar",
   "packages": [
-    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\4921e399dc760d526b20c10474ed13ea\\transformed\\react-android-0.79.2-debug\\prefab",
+    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\e13d266f5433c5258ad3e7babe2b9064\\transformed\\react-android-0.79.2-debug\\prefab",
     "F:\\Nam\\CODE\\University\\HKVIII\\CCNLTHD\\EMB\\bemmobile\\node_modules\\react-native-reanimated\\android\\build\\intermediates\\prefab_package\\debug\\prefab",
-    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\19b228c99a9f96c9dea6bcb5eea8dce6\\transformed\\hermes-android-0.79.2-debug\\prefab",
-    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\8050d15875717ad3c035882deb89d68f\\transformed\\fbjni-0.7.0\\prefab"
+    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\5cd3f511cc488a419015110adb2cc74c\\transformed\\hermes-android-0.79.2-debug\\prefab",
+    "C:\\Users\\THANH_NAM\\.gradle\\caches\\8.13\\transforms\\676fa049bd66470ef877c537ed907c1d\\transformed\\fbjni-0.7.0\\prefab"
   ]
 }

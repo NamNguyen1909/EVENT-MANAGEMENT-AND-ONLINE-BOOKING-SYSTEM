@@ -97,6 +97,10 @@ class User(AbstractBaseUser):
         if self.total_spent > 2000000:
             return CustomerGroup.SUPER_VIP
         return CustomerGroup.UNKNOWN
+    
+    def get_short_name(self):
+        return self.username
+
 
 
 # Sự kiện
@@ -204,7 +208,7 @@ class Ticket(models.Model):
             models.Index(fields=['user', 'event']),
             models.Index(fields=['qr_code']),
         ]
-        ordering = ['-created_at']
+        ordering = ['-purchase_date']
 
     def __str__(self):
         return f"Vé của {self.user} - Sự kiện {self.event.title}"

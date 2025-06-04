@@ -24,14 +24,28 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
+SECRET_KEY = os.environ.get('SECRET_KEY', '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9')
 DEBUG = True
 
 # ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
+# ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
+
+#Setting của Firebase push notification HTTP V1 API
+
+# Đường dẫn file service account (trùng với utils.py)
+SERVICE_ACCOUNT_PATH = os.path.join(
+    os.path.dirname(__file__), '..', 'bem', 'bemmobile-np-firebase-adminsdk-fbsvc-049b00bb3d.json'
+)
+
+firebase_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+if firebase_json:
+    with open(SERVICE_ACCOUNT_PATH, "w") as f:
+        f.write(firebase_json)
+
+#End setting của Firebase push notification HTTP V1 API
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -273,50 +287,53 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',
+        'level': 'DEBUG',
     },
     'loggers': {
-        'django.server': {  # Access log của Django runserver
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',  # Ẩn info log của Django
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
-        'httpcore': {
+        'django.db.backends': {  # Thêm hoặc chỉnh sửa logger này
             'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
-        },
-        'httpx': {
-            'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
-        },
-        'uvicorn': {
-            'handlers': ['console'],
-            'level': 'CRITICAL',
+            'level': 'INFO',      # Đổi từ DEBUG thành INFO để tắt log SQL
             'propagate': False,
         },
         'daphne': {
             'handlers': ['console'],
-            'level': 'CRITICAL',
+            'level': 'INFO',  # log của Daphne (cần thiết)
             'propagate': False,
         },
-        'oauthlib': {
+        'httpcore': {
             'handlers': ['console'],
-            'level': 'CRITICAL',
-            'propagate': False,
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'uvicorn': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'channels': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
     },
 }
+
+
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -330,4 +347,3 @@ EMAIL_HOST_USER = 'namnguyen19092004@gmail.com'
 EMAIL_HOST_PASSWORD = 'ejoy hwyc qice jgow'  # App password vừa tạo
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = 'Event management and online booking system <namnguyen19092004@gmail.com>'
-

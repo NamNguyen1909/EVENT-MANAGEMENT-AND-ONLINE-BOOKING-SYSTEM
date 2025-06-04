@@ -2,7 +2,7 @@ from django.forms import ValidationError
 from django.test import RequestFactory
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets, generics, status, permissions, filters, mixins
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -20,7 +20,7 @@ import io
 import base64
 from .models import (
     User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification,
-    ChatMessage, EventTrendingLog, UserNotification
+    ChatMessage, EventTrendingLog, UserNotification,DeviceToken
 )
 from .serializers import (
     UserSerializer, UserDetailSerializer, EventSerializer, EventDetailSerializer,
@@ -45,9 +45,45 @@ import json
 
 from cloudinary.uploader import upload
 
+from .utils import send_fcm_v1
+
+from django.conf import settings
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def save_fcm_token(request):
+    fcm_token = request.data.get('fcm_token')
+    if not fcm_token:
+        return Response({'error': 'Missing token'}, status=status.HTTP_400_BAD_REQUEST)
+    user = request.user
+    # Xóa token cũ nếu đã tồn tại (tránh trùng token do chuyển thiết bị)
+    DeviceToken.objects.update_or_create(
+        user=user,
+        token=fcm_token,
+        defaults={'updated_at': timezone.now()}
+    )
+
+    send_fcm_v1(
+        user,
+        title="Chào mừng bạn đến với ứng dụng!",
+        body="Bạn đã đăng nhập thành công. Chúng tôi sẽ gửi thông báo đến bạn qua FCM.",
+        data={"type": "welcome"}
+    )
+    return Response({'message': 'Token saved'})
+
+
 @csrf_exempt
 def ping_view(request):
     """Use cron-job.org to ping this endpoint every 10 minutes to keep the server render.com alive."""
+    
+    #Test push notification khi ứng dụng đóng/kill
+    # user = User.objects.get(id=9)  # Lấy user có id=9
+    # send_fcm_v1(
+    #     user,
+    #     title="Ping",
+    #     body="Server is alive!",
+    #     data={"type": "ping"}
+    # )
     return JsonResponse({"status": "alive"})
 
 @csrf_exempt
@@ -74,6 +110,7 @@ def auto_create_notifications_for_upcoming_events(request):
                 UserNotification.objects.create(user_id=user_id, notification=notification)
                 user = User.objects.get(id=user_id)
                 print(f"Created UserNotification for user: {user.username}")
+                
                 send_mail(
                     subject="Sự kiện sắp diễn ra",
                     message=f"Kính gửi {user.username},\n\n{message}\n\nTrân trọng!",
@@ -82,6 +119,14 @@ def auto_create_notifications_for_upcoming_events(request):
                     fail_silently=False,
                 )
                 print(f"Sent mail to: {user.email}")
+                # Gửi thông báo FCM
+                send_fcm_v1(
+                    user,
+                    title="Sự kiện sắp diễn ra",
+                    body=message,
+                    data={"event_id": event.id, "notification_id": notification.id}
+                )
+                print(f"Sent FCM notification to user: {user.username}")
             count += 1
         except Exception as e:
             print(f"Error for event {event.title}: {e}")
@@ -504,6 +549,11 @@ def vnpay_response_message(code):
     return mapping.get(code, "Lỗi không xác định.")
 
 def vnpay_redirect(request):
+    """
+    Xử lý callback từ VNPay về sau khi thanh toán.
+    Nếu truy cập từ app (from=app), trả về HTML vừa gửi postMessage về FE, vừa hiển thị giao diện đẹp cho user.
+    Nếu truy cập từ web, trả về deeplink hoặc giao diện web.
+    """
     from_app = request.GET.get('from') == 'app'
     vnp_ResponseCode = request.GET.get('vnp_ResponseCode')
     # ... lấy các tham số khác nếu cần
@@ -513,8 +563,8 @@ def vnpay_redirect(request):
 
     message = vnpay_response_message(vnp_ResponseCode)
 
-    # Trường hợp mở từ WebView trong app
     if from_app:
+        # Kết hợp: vừa gửi postMessage về FE, vừa render giao diện đẹp
         return HttpResponse(f"""
             <html>
             <head>
@@ -545,21 +595,28 @@ def vnpay_redirect(request):
                         font-size: 1.7rem;
                     }}
                 </style>
+                <script>
+                // Gửi callback về FE qua postMessage để app luôn nhận được kết quả
+                setTimeout(function() {{
+                    if (window.ReactNativeWebView) {{
+                        window.ReactNativeWebView.postMessage(JSON.stringify({{
+                            vnp_ResponseCode: "{vnp_ResponseCode}",
+                            message: "{message}"
+                        }}));
+                    }}
+                }}, 500);
+                </script>
             </head>
             <body>
                 <div class="result-box">
                     <div class="result-title">Kết quả thanh toán</div>
                     <div class="result-message">{message}</div>
                 </div>
-                <script>
-                setTimeout(function() {{
-                    window.close();
-                }}, 1500);
-                </script>
             </body>
             </html>
         """)
     else:
+        # Nếu không phải từ app, trả về deeplink hoặc giao diện web
         deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}&message={urllib.parse.quote(message)}"
         return redirect(deeplink)
 
@@ -635,17 +692,29 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
 
             event.sold_tickets = event.tickets.filter(is_paid=True).count()
             event.save(update_fields=['sold_tickets'])
-            
-            notification, created = Notification.objects.get_or_create(
-                event=event,
-                notification_type='reminder',
-                title="Thanh toán thành công",
-                message=(
-                    f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất."
-                ),
-            )
-            notification.save()
-            UserNotification.objects.get_or_create(user=request.user, notification=notification)
+
+            message = (f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất.")
+            print("Nội dung thông báo:", message)
+            try:
+                notification, created = Notification.objects.get_or_create(
+                    event=event,
+                    notification_type='reminder',
+                    title="Thanh toán thành công",
+                    message=message
+                )
+                notification.save()
+                UserNotification.objects.get_or_create(user=request.user, notification=notification)
+                print(f"Notification created: {notification.title} - {notification.message}")
+                # Gửi thông báo FCM
+                send_fcm_v1(
+                    user,
+                    title="Thanh toán thành công",
+                    body=message,
+                    data={"event_id": event.id, "notification_id": notification.id}
+                )
+                print(f"Sent FCM notification to user: {user.username}")
+            except Exception as e:
+                print("Lỗi khi gửi notification hoặc FCM:", e)
 
 
             # Tạo tin nhắn từ organizer đến attendee

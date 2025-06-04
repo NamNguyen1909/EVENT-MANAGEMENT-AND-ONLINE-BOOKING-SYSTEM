@@ -79,13 +79,13 @@ const BookTicket = () => {
         return;
       }
       const res = await api.get(endpoints.userTickets);
-      console.log("Res.data of unpaid tickets: ", res.data);
+      // console.log("Res.data of unpaid tickets: ", res.data);
 
       // Kiểm tra res.data có phải là mảng không, nếu không thì lấy res.data.results
       const ticketsData = Array.isArray(res.data)
         ? res.data
         : res.data.results || [];
-      console.log("Tickets data:", ticketsData);
+      // console.log("Tickets data:", ticketsData);
       // Lọc vé chưa thanh toán cho event hiện tại
       const unpaidTickets = ticketsData.filter(
         (ticket) => !ticket.is_paid && ticket.event_id === eventId
@@ -237,6 +237,7 @@ const handlePayment = async () => {
     }
 
     const payRes = await api.post(endpoints.payUnpaidTickets, payPayload);
+    console.log("BookTicket-handlepyament Payment response:", payRes);
     if (!payRes || payRes.status >= 400) {
       setMsg("Tạo payment thất bại. Vui lòng thử lại.");
       setLoading(false);
@@ -245,6 +246,7 @@ const handlePayment = async () => {
 
     const paymentId = payRes?.data?.payment?.id;
     const paymentUrl = payRes?.data?.payment_url;
+    console.log("paymentId:", paymentId, "paymentUrl:", paymentUrl);
     if (!paymentUrl || !paymentId) {
       setMsg("Không nhận được đường dẫn thanh toán hoặc paymentId.");
       setLoading(false);
@@ -252,6 +254,7 @@ const handlePayment = async () => {
     }
 
     navigation.navigate("VNPayScreen", { paymentUrl, paymentId, eventId });
+    console.log("Navigating to VNPayScreen with paymentUrl:", paymentUrl);
   } catch (error) {
     setMsg("Đặt vé thất bại. Vui lòng thử lại.");
     console.log("Booking error:", error);

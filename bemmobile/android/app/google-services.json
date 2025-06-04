@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "749771923656",
+    "project_id": "bemmobile-np",
+    "storage_bucket": "bemmobile-np.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:749771923656:android:325d98154f947ad3e7c5fd",
+        "android_client_info": {
+          "package_name": "com.anonymous.bemmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABf-i7H88M_lruAArC4SKNvkTMdSCm9QU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

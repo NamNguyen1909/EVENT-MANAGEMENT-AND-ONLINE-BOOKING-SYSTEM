@@ -7,7 +7,7 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.urls import path
 from .models import (
     User, Event, Tag, Ticket, Payment, Review, DiscountCode, Notification,
-    ChatMessage, EventTrendingLog, UserNotification
+    ChatMessage, EventTrendingLog, UserNotification,DeviceToken
 )
 
 # Form tùy chỉnh cho Event
@@ -82,7 +82,7 @@ class TagAdmin(admin.ModelAdmin):
 
 # Admin cho Ticket
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at']
+    list_display = ['id', 'event', 'user', 'qr_code_view', 'is_paid', 'is_checked_in', 'created_at','purchase_date']
     search_fields = ['event__title', 'user__username', 'uuid']
     list_filter = ['is_paid', 'is_checked_in', 'created_at']
     readonly_fields = ['qr_code_view']
@@ -195,6 +195,15 @@ class UserNotificationAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'notification')
     
+class DeviceTokenAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'token', 'created_at']
+    search_fields = ['user__username', 'token']
+    list_filter = ['created_at']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+    
 
 
 # Custom Admin Site
@@ -239,3 +248,4 @@ admin_site.register(Notification, NotificationAdmin)
 admin_site.register(ChatMessage, ChatMessageAdmin)
 admin_site.register(EventTrendingLog, EventTrendingLogAdmin)
 admin_site.register(UserNotification, UserNotificationAdmin)
+admin_site.register(DeviceToken, DeviceTokenAdmin)  

@@ -54,7 +54,7 @@ const MainHome = () => {
         // console.log('API response data:', res.data);
 
         const newEvents = Array.isArray(res.data.results) ? res.data.results : [];
-        console.log('Events data:', newEvents);
+        // console.log('Events data:', newEvents);
 
         setEvents((prevEvents) =>
           page === 1 ? newEvents : [...prevEvents, ...newEvents]
