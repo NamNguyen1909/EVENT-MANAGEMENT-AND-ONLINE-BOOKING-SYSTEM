@@ -560,72 +560,72 @@ def vnpay_redirect(request):
 
     # Trường hợp mở từ WebView trong app
     if from_app:
-        # return HttpResponse(f"""
-        #     <html>
-        #     <head>
-        #         <meta charset="utf-8"/>
-        #         <style>
-        #             body {{
-        #                 background: #f5f6fa;
-        #                 display: flex;
-        #                 align-items: center;
-        #                 justify-content: center;
-        #                 height: 100vh;
-        #                 margin: 0;
-        #             }}
-        #             .result-box {{
-        #                 background: #fff;
-        #                 border-radius: 12px;
-        #                 box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        #                 padding: 32px 48px;
-        #                 text-align: center;
-        #             }}
-        #             .result-title {{
-        #                 color: #2d8cf0;
-        #                 font-size: 3rem;
-        #                 margin-bottom: 12px;
-        #             }}
-        #             .result-message {{
-        #                 color: #333;
-        #                 font-size: 1.7rem;
-        #             }}
-        #         </style>
-        #     </head>
-        #     <body>
-        #         <div class="result-box">
-        #             <div class="result-title">Kết quả thanh toán</div>
-        #             <div class="result-message">{message}</div>
-        #         </div>
-        #         <script>
-        #         setTimeout(function() {{
-        #             window.close();
-        #         }}, 1500);
-        #         </script>
-        #     </body>
-        #     </html>
-        # """)
-        # return redirect(f"/vnpay/redirect?{request.META['QUERY_STRING']}")
         return HttpResponse(f"""
             <html>
             <head>
                 <meta charset="utf-8"/>
-                <script>
-                setTimeout(function() {{
-                    if (window.ReactNativeWebView) {{
-                    window.ReactNativeWebView.postMessage(JSON.stringify({{
-                        vnp_ResponseCode: "{vnp_ResponseCode}",
-                        message: "{message}"
-                    }}));
+                <style>
+                    body {{
+                        background: #f5f6fa;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        margin: 0;
                     }}
-                }}, 500);
-                </script>
+                    .result-box {{
+                        background: #fff;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        padding: 32px 48px;
+                        text-align: center;
+                    }}
+                    .result-title {{
+                        color: #2d8cf0;
+                        font-size: 3rem;
+                        margin-bottom: 12px;
+                    }}
+                    .result-message {{
+                        color: #333;
+                        font-size: 1.7rem;
+                    }}
+                </style>
             </head>
             <body>
-                <h2>Kết quả thanh toán</h2>
-                <p>{message}</p>
+                <div class="result-box">
+                    <div class="result-title">Kết quả thanh toán</div>
+                    <div class="result-message">{message}</div>
+                </div>
+                <script>
+                setTimeout(function() {{
+                    window.close();
+                }}, 1500);
+                </script>
             </body>
             </html>
         """)
+        # return redirect(f"/vnpay/redirect?{request.META['QUERY_STRING']}")
+        # return HttpResponse(f"""
+        #     <html>
+        #     <head>
+        #         <meta charset="utf-8"/>
+        #         <script>
+        #         setTimeout(function() {{
+        #             if (window.ReactNativeWebView) {{
+        #             window.ReactNativeWebView.postMessage(JSON.stringify({{
+        #                 vnp_ResponseCode: "{vnp_ResponseCode}",
+        #                 message: "{message}"
+        #             }}));
+        #             }}
+        #         }}, 500);
+        #         </script>
+        #     </head>
+        #     <body>
+        #         <h2>Kết quả thanh toán</h2>
+        #         <p>{message}</p>
+        #     </body>
+        #     </html>
+        # """)
     else:
         deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}&message={urllib.parse.quote(message)}"
         return redirect(deeplink)
