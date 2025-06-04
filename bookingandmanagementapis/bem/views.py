@@ -549,6 +549,11 @@ def vnpay_response_message(code):
     return mapping.get(code, "Lỗi không xác định.")
 
 def vnpay_redirect(request):
+    """
+    Xử lý callback từ VNPay về sau khi thanh toán.
+    Nếu truy cập từ app (from=app), trả về HTML vừa gửi postMessage về FE, vừa hiển thị giao diện đẹp cho user.
+    Nếu truy cập từ web, trả về deeplink hoặc giao diện web.
+    """
     from_app = request.GET.get('from') == 'app'
     vnp_ResponseCode = request.GET.get('vnp_ResponseCode')
     # ... lấy các tham số khác nếu cần
@@ -558,75 +563,60 @@ def vnpay_redirect(request):
 
     message = vnpay_response_message(vnp_ResponseCode)
 
-    # Trường hợp mở từ WebView trong app
     if from_app:
-        # return HttpResponse(f"""
-        #     <html>
-        #     <head>
-        #         <meta charset="utf-8"/>
-        #         <style>
-        #             body {{
-        #                 background: #f5f6fa;
-        #                 display: flex;
-        #                 align-items: center;
-        #                 justify-content: center;
-        #                 height: 100vh;
-        #                 margin: 0;
-        #             }}
-        #             .result-box {{
-        #                 background: #fff;
-        #                 border-radius: 12px;
-        #                 box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        #                 padding: 32px 48px;
-        #                 text-align: center;
-        #             }}
-        #             .result-title {{
-        #                 color: #2d8cf0;
-        #                 font-size: 3rem;
-        #                 margin-bottom: 12px;
-        #             }}
-        #             .result-message {{
-        #                 color: #333;
-        #                 font-size: 1.7rem;
-        #             }}
-        #         </style>
-        #     </head>
-        #     <body>
-        #         <div class="result-box">
-        #             <div class="result-title">Kết quả thanh toán</div>
-        #             <div class="result-message">{message}</div>
-        #         </div>
-        #         <script>
-        #         setTimeout(function() {{
-        #             window.close();
-        #         }}, 1500);
-        #         </script>
-        #     </body>
-        #     </html>
-        # """)
-        # return redirect(f"/vnpay/redirect?{request.META['QUERY_STRING']}")
+        # Kết hợp: vừa gửi postMessage về FE, vừa render giao diện đẹp
         return HttpResponse(f"""
             <html>
             <head>
                 <meta charset="utf-8"/>
+                <style>
+                    body {{
+                        background: #f5f6fa;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        margin: 0;
+                    }}
+                    .result-box {{
+                        background: #fff;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        padding: 32px 48px;
+                        text-align: center;
+                    }}
+                    .result-title {{
+                        color: #2d8cf0;
+                        font-size: 3rem;
+                        margin-bottom: 12px;
+                    }}
+                    .result-message {{
+                        color: #333;
+                        font-size: 1.7rem;
+                    }}
+                </style>
                 <script>
+                // Gửi callback về FE qua postMessage để app luôn nhận được kết quả
                 setTimeout(function() {{
                     if (window.ReactNativeWebView) {{
-                    window.ReactNativeWebView.postMessage(JSON.stringify({{
-                        vnp_ResponseCode: "{vnp_ResponseCode}",
-                        message: "{message}"
-                    }}));
+                        window.ReactNativeWebView.postMessage(JSON.stringify({{
+                            vnp_ResponseCode: "{vnp_ResponseCode}",
+                            message: "{message}"
+                        }}));
                     }}
                 }}, 500);
                 </script>
             </head>
             <body>
-                <h2>Kết quả thanh toán</h2>
-                <p>{message}</p>
+                <div class="result-box">
+                    <div class="result-title">Kết quả thanh toán</div>
+                    <div class="result-message">{message}</div>
+                </div>
             </body>
             </html>
         """)
     else:
+        # Nếu không phải từ app, trả về deeplink hoặc giao diện web
         deeplink = f"bemmobile://payment-result?vnp_ResponseCode={vnp_ResponseCode}&message={urllib.parse.quote(message)}"
         return redirect(deeplink)
 
