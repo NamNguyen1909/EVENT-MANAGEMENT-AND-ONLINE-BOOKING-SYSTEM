@@ -20,6 +20,7 @@ const VNPayScreen = ({ route, navigation }) => {
       confirmedRef.current = true; // Đánh dấu đã xác nhận
       const urlParams = new URLSearchParams(url.split('?')[1]);
       const responseCode = urlParams.get('vnp_ResponseCode');
+      console.log('VNPayScreen responseCode:', responseCode);
       if (responseCode === '00') {
         try {
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -27,6 +28,7 @@ const VNPayScreen = ({ route, navigation }) => {
           if (token && paymentId) {
             const api = authApis(token);
             await api.post(endpoints.confirmPayment(paymentId));
+            console.log('VNPayScreen Payment confirmed successfully');
           }
           Alert.alert('Thanh toán thành công!');
         } catch (err) {
@@ -37,6 +39,7 @@ const VNPayScreen = ({ route, navigation }) => {
         Alert.alert('Thanh toán thất bại hoặc bị hủy');
       }
       navigation.navigate("MyTicketsScreen");
+      console.log('VNPayScreen Navigation to MyTicketsScreen');
     }
   };
 

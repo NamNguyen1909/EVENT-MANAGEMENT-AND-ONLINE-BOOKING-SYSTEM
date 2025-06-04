@@ -681,23 +681,28 @@ class PaymentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             event.sold_tickets = event.tickets.filter(is_paid=True).count()
             event.save(update_fields=['sold_tickets'])
 
-            message=(f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất.")
-            notification, created = Notification.objects.get_or_create(
-                event=event,
-                notification_type='reminder',
-                title="Thanh toán thành công",
-                message=message
-            )
-            notification.save()
-            UserNotification.objects.get_or_create(user=request.user, notification=notification)
-            # Gửi thông báo FCM
-            send_fcm_v1(
-                user,
-                title="Thanh toán thành công",
-                body=message,
-                data={"event_id": event.id, "notification_id": notification.id}
-            )
-            print(f"Sent FCM notification to user: {user.username}")
+            message = (f"Thanh toán {payment.amount} cho {tickets.count()} vé sự kiện {event.title} đã hoàn tất.")
+            print("Nội dung thông báo:", message)
+            try:
+                notification, created = Notification.objects.get_or_create(
+                    event=event,
+                    notification_type='reminder',
+                    title="Thanh toán thành công",
+                    message=message
+                )
+                notification.save()
+                UserNotification.objects.get_or_create(user=request.user, notification=notification)
+                print(f"Notification created: {notification.title} - {notification.message}")
+                # Gửi thông báo FCM
+                send_fcm_v1(
+                    user,
+                    title="Thanh toán thành công",
+                    body=message,
+                    data={"event_id": event.id, "notification_id": notification.id}
+                )
+                print(f"Sent FCM notification to user: {user.username}")
+            except Exception as e:
+                print("Lỗi khi gửi notification hoặc FCM:", e)
 
 
             # Tạo tin nhắn từ organizer đến attendee
