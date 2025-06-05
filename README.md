@@ -31,6 +31,8 @@ với nhau trước sự kiện qua chat trực tuyến.
 khách hàng, và theo dõi xu hướng sự kiện hot.
 ## Technologies Used
 ## Features
+- Payment integration with VNPAY.
+- Email and push notifications for user and order updates.
 ## Setup Instructions
 ## API Endpoints
 ### users
