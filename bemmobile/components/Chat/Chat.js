@@ -21,6 +21,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { MyUserContext } from '../../configs/MyContexts';
 import { authApis, endpoints } from '../../configs/Apis';
 import { colors } from '../../styles/MyStyles';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ChatList = ({ navigation }) => {
   const { colors: themeColors } = useTheme();
@@ -44,7 +46,6 @@ const ChatList = ({ navigation }) => {
       const api = authApis(token);
       let eventsData = [];
 
-      // Kiểm tra vai trò người dùng và gọi API phù hợp
       if (user?.role === 'organizer') {
         const eventsRes = await api.get(endpoints.events);
         eventsData = (eventsRes.data?.results || eventsRes.data || []).map((item, index) => ({
@@ -179,6 +180,10 @@ const ChatList = ({ navigation }) => {
     fetchConversations(event.id);
   };
 
+  const openEventModal = () => {
+    setIsEventModalVisible(true);
+  };
+
   const renderEvent = ({ item }) => (
     <TouchableOpacity style={styles.eventItem} onPress={() => selectEvent(item)}>
       <Text style={styles.eventTitle}>{item.title}</Text>
@@ -209,11 +214,9 @@ const ChatList = ({ navigation }) => {
           <MaterialIcons name="arrow-back" size={28} color={colors.navy} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{selectedEvent ? `Chat - ${selectedEvent.title}` : 'Chat'}</Text>
-        {selectedEvent && (
-          <TouchableOpacity onPress={() => setIsEventModalVisible(true)}>
-            <MaterialIcons name="event" size={28} color={colors.navy} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={openEventModal}>
+          <MaterialIcons name="event" size={28} color={colors.navy} />
+        </TouchableOpacity>
       </View>
 
       {selectedEvent ? (
@@ -231,7 +234,9 @@ const ChatList = ({ navigation }) => {
             <Text style={styles.noConversationsText}>Chưa có hội thoại nào. Bắt đầu chat ngay!</Text>
           )}
         </>
-      ) : null}
+      ) : (
+        <Text style={styles.noConversationsText}>Vui lòng chọn một sự kiện để bắt đầu chat.</Text>
+      )}
 
       <Modal
         animationType="slide"
@@ -270,6 +275,7 @@ const ChatDetail = ({ route, navigation }) => {
   const { eventId, receiverId, receiverUsername } = route.params;
   const { colors: themeColors } = useTheme();
   const user = useContext(MyUserContext);
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [ws, setWs] = useState(null);
@@ -375,8 +381,8 @@ const ChatDetail = ({ route, navigation }) => {
             if (
               (data.sender === user.id && (data.receiver === receiverId || data.receiver === receiverUsername)) ||
               (data.sender === receiverId && (data.receiver === user.username || data.receiver === user.id)) ||
-              (data.sender === user.id && msg.user_info?.id === receiverId) ||
-              (data.sender === receiverId && msg.user_info?.id === user.id)
+              (data.sender === user.id && data.user_info?.id === receiverId) ||
+              (data.sender === receiverId && data.user_info?.id === user.id)
             ) {
               const newMessage = {
                 ...data,
@@ -496,8 +502,8 @@ const ChatDetail = ({ route, navigation }) => {
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 90 : insets.bottom + 20}
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -515,13 +521,13 @@ const ChatDetail = ({ route, navigation }) => {
             renderItem={renderMessage}
             keyExtractor={(item) => item.uniqueKey}
             style={styles.messageList}
-            contentContainerStyle={[styles.messageListContent, { paddingBottom: 120 }]}
+            contentContainerStyle={[styles.messageListContent, { paddingBottom: insets.bottom + 80 }]}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           />
         )}
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
           <TextInput
             style={styles.input}
             value={message}
@@ -546,7 +552,6 @@ const ChatDetail = ({ route, navigation }) => {
   );
 };
 
-import { createStackNavigator } from '@react-navigation/stack';
 const ChatStack = createStackNavigator();
 
 const Chat = () => (
