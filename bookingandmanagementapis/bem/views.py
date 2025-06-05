@@ -1044,7 +1044,31 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         if not (request.user == event.organizer or Ticket.objects.filter(user=request.user, event=event, is_paid=True).exists()):
             return Response({"error": "Bạn không có quyền gửi tin nhắn trong sự kiện này."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer.save(sender=request.user, event=event)
+        # Lưu tin nhắn
+        chat_message = serializer.save(sender=request.user, event=event)
+
+        # Gửi thông báo FCM nếu có người nhận (receiver)
+        receiver_id = serializer.validated_data.get('receiver')
+        if receiver_id:
+            try:
+                from .models import User
+                receiver = User.objects.get(id=receiver_id)
+                message_body = f"Bạn có tin nhắn mới từ {request.user.username} trong sự kiện {event.title}: {chat_message.message[:50]}..."
+                send_fcm_v1(
+                    receiver,
+                    title="Tin nhắn mới",
+                    body=message_body,
+                    data={
+                        "event_id": str(event.id),
+                        "message_id": str(chat_message.id),
+                        "type": "chat_message"
+                    }
+                )
+            except User.DoesNotExist:
+                print(f"Receiver with ID {receiver_id} not found.")
+            except Exception as e:
+                print(f"Error sending FCM notification: {e}")
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # # Giả sử bạn có class ReviewOwner để kiểm tra quyền
