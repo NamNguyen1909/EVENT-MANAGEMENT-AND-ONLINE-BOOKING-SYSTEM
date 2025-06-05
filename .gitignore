@@ -184,3 +184,15 @@ node_modules/
 bookingandmanagementapis/bem/bemmobile-np-firebase-adminsdk-fbsvc-049b00bb3d.json
 
 bemobile/android/gradle/
+bemobile/android/app/.cxx/
+bemobile/android/app/build/
+bemobile/android/app/debug/
+bemobile/android/app/release/
+bemobile/android/.gradle/
+bemobile/android/app/intermediates/
+bemobile/android/app/generated/
+bemobile/android/app/assets/
+bemobile/android/app/src/main/assets/
+bemobile/android/local.properties
+bemobile/android/.idea/
+bemobile/android/build.gradle.lockfile
