@@ -226,8 +226,8 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags', 'avatar','is_staff']
-        read_only_fields = ['id','is_staff']
+        fields = ['id', 'username', 'email', 'password', 'phone', 'role', 'tags', 'avatar','is_staff','is_active']
+        read_only_fields = ['id', 'is_staff', 'is_active']
 
     def validate_tags(self, value):
         if value:

@@ -9,15 +9,10 @@ import {
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Switch } from "react-native-paper";
+import { Switch, Searchbar } from "react-native-paper";
 import { endpoints, authApis } from "../../configs/Apis";
 import { MyUserContext } from "../../configs/MyContexts";
 
-/**
- * ManageUsers component for admin to manage users.
- * Displays list of all users with switches to toggle is_active and is_staff.
- * Calls backend APIs to update user states and updates UI immediately.
- */
 const ManageUsers = () => {
   const user = useContext(MyUserContext);
   const [users, setUsers] = useState([]);
@@ -25,6 +20,7 @@ const ManageUsers = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [updatingUserIds, setUpdatingUserIds] = useState(new Set());
+  const [search, setSearch] = useState("");
 
   // Fetch all users from backend, filter by role organizer or attendee
   const fetchUsers = async () => {
@@ -42,7 +38,11 @@ const ManageUsers = () => {
       // Filter users with role organizer or attendee
       const filteredUsers = (response.data.results || response.data || []).filter(
         (u) => u.role === "organizer" || u.role === "attendee"
-      );
+      ).map(u => ({
+        ...u,
+        is_active: !!u.is_active,
+        is_staff: !!u.is_staff,
+      }));
       setUsers(filteredUsers);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -64,7 +64,7 @@ const ManageUsers = () => {
         <View style={styles.switchRowVertical}>
           <Text>Active</Text>
           <Switch
-            value={item.is_active}
+            value={!!item.is_active}
             onValueChange={(val) => updateUserState(item.id, "is_active", val)}
             disabled={updatingUserIds.has(item.id)}
           />
@@ -73,7 +73,7 @@ const ManageUsers = () => {
           <View style={styles.switchRowVertical}>
             <Text>Staff</Text>
             <Switch
-              value={item.is_staff}
+              value={!!item.is_staff}
               onValueChange={(val) => updateUserState(item.id, "is_staff", val)}
               disabled={updatingUserIds.has(item.id)}
             />
@@ -101,18 +101,13 @@ const ManageUsers = () => {
    */
   const updateUserState = async (userId, field, value) => {
     if (updatingUserIds.has(userId)) {
-      return; // Prevent multiple simultaneous updates for the same user
+      return;
     }
     setUpdatingUserIds((prev) => new Set(prev).add(userId));
     try {
       const token = await AsyncStorage.getItem("token");
       if (!user || !token) {
         Alert.alert("Lỗi", "Vui lòng đăng nhập để thực hiện thao tác này.");
-        setUpdatingUserIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(userId);
-          return newSet;
-        });
         return;
       }
       const api = authApis(token);
@@ -127,15 +122,17 @@ const ManageUsers = () => {
       } else {
         throw new Error("Invalid field");
       }
-      await api.post(url, data);
-      // Update local state immediately
+      // Thêm log để kiểm tra
+      console.log("Gửi request cập nhật:", { url, data, field, value });
+      const response = await api.post(url, data);
+      console.log("Phản hồi từ backend:", response?.data);
       setUsers((prevUsers) =>
         prevUsers.map((u) =>
-          u.id === userId ? { ...u, [field]: value } : u
+          u.id === userId ? { ...u, [field]: !!value } : u
         )
       );
     } catch (err) {
-      console.error("Error updating user state:", err);
+      console.error("Error updating user state:", err, err?.response?.data);
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái. Vui lòng thử lại.");
     } finally {
       setUpdatingUserIds((prev) => {
@@ -146,6 +143,12 @@ const ManageUsers = () => {
     }
   };
 
+  // Lọc users theo search
+  const filteredUsers = users.filter(
+    (u) =>
+      u.username?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading && users.length === 0) {
     return (
@@ -172,15 +175,23 @@ const ManageUsers = () => {
   }
 
   return (
-    <FlatList
-      data={users}
-      keyExtractor={(item) => item.id?.toString() || item.username}
-      renderItem={renderItem}
-      contentContainerStyle={styles.listContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    />
+    <>
+      <Searchbar
+        placeholder="Tìm kiếm theo username hoặc email..."
+        onChangeText={setSearch}
+        value={search}
+        style={{ margin: 16 }}
+      />
+      <FlatList
+        data={filteredUsers}
+        keyExtractor={(item) => item.id?.toString() || item.username}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
+    </>
   );
 };
 
@@ -219,14 +230,15 @@ const styles = StyleSheet.create({
   switchContainer: {
     flexDirection: "column",
     justifyContent: "space-between",
-    width: 60,
+    width: 90,
+    paddingRight: 10,
   },
   switchRowVertical: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
-    width: 60,
+    width: "100%",
   },
   errorText: {
     color: "red",
@@ -237,4 +249,3 @@ const styles = StyleSheet.create({
 });
 
 export default ManageUsers;
-
