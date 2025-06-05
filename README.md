@@ -30,6 +30,7 @@ với nhau trước sự kiện qua chat trực tuyến.
 - Tính năng nổi bật: gợi ý sự kiện dựa trên sở thích, tạo mã giảm giá cho từng nhóm
 khách hàng, và theo dõi xu hướng sự kiện hot.
 ## Technologies Used
+- **Node.js** – Backend runtime environment used to build RESTful APIs for handling application logic and data processing.
 - **VNPAY** – Integrated as the primary payment gateway for secure transaction processing.
 - **Firebase Cloud Messaging (FCM)** – Used to deliver real-time push notifications to users.
 - **Render.com** – Cloud platform for hosting and deploying the backend services.
