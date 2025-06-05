@@ -30,9 +30,15 @@ với nhau trước sự kiện qua chat trực tuyến.
 - Tính năng nổi bật: gợi ý sự kiện dựa trên sở thích, tạo mã giảm giá cho từng nhóm
 khách hàng, và theo dõi xu hướng sự kiện hot.
 ## Technologies Used
+- **VNPAY** – Integrated as the primary payment gateway for secure transaction processing.
+- **Firebase Cloud Messaging (FCM)** – Used to deliver real-time push notifications to users.
+- **Render.com** – Cloud platform for hosting and deploying the backend services.
+- **Cron-job.org** – Scheduled task service for automating recurring jobs (e.g., generating notifications for upcoming events).
+
 ## Features
-- Payment integration with VNPAY.
-- Email and push notifications for user and order updates.
+- Seamless payment integration with VNPAY.
+- Real-time email and push notifications for user activities and order updates.
+- 
 ## Setup Instructions
 ## API Endpoints
 ### users
