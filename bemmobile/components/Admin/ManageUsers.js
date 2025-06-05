@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Switch, Searchbar } from "react-native-paper";
 import { endpoints, authApis } from "../../configs/Apis";
 import { MyUserContext } from "../../configs/MyContexts";
+import { colors } from "../../styles/MyStyles";
 
 const ManageUsers = () => {
   const user = useContext(MyUserContext);
@@ -67,6 +68,8 @@ const ManageUsers = () => {
             value={!!item.is_active}
             onValueChange={(val) => updateUserState(item.id, "is_active", val)}
             disabled={updatingUserIds.has(item.id)}
+            color={colors.bluePrimary} // màu thumb khi bật
+            trackColor={{ false: colors.grayMedium, true: colors.blueLight }} // màu track khi bật/tắt
           />
         </View>
         {item.role === "attendee" && (
@@ -76,6 +79,8 @@ const ManageUsers = () => {
               value={!!item.is_staff}
               onValueChange={(val) => updateUserState(item.id, "is_staff", val)}
               disabled={updatingUserIds.has(item.id)}
+              color={colors.bluePrimary} // màu thumb khi bật
+              trackColor={{ false: colors.grayMedium, true: colors.blueLight }} // màu track khi bật/tắt
             />
           </View>
         )}
@@ -180,7 +185,13 @@ const ManageUsers = () => {
         placeholder="Tìm kiếm theo username hoặc email..."
         onChangeText={setSearch}
         value={search}
-        style={{ margin: 16 }}
+        style={{
+          margin: 16,
+          backgroundColor: colors.blueGray, // hoặc colors.white, hoặc màu bạn muốn
+        }}
+        inputStyle={{
+          color: colors.navy, // màu chữ nếu muốn
+        }}
       />
       <FlatList
         data={filteredUsers}
