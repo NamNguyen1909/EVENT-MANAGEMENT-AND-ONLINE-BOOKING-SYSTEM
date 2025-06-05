@@ -240,7 +240,7 @@ const CreateEvents = () => {
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return 'Chưa chọn';
+    if (!isoString) return <Text>Chưa chọn</Text>;
     const date = new Date(isoString);
     return date.toLocaleString('vi-VN', {
       day: '2-digit',

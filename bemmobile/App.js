@@ -31,6 +31,12 @@ import Toast from "react-native-toast-message"; // Thêm import Toast
 import { getMessaging, onMessage, requestPermission, AuthorizationStatus } from '@react-native-firebase/messaging'
 import notifee, { AndroidImportance } from '@notifee/react-native';
 
+// import { LogBox } from "react-native";
+
+// LogBox.ignoreLogs([
+//   "Text strings must be rendered within a <Text> component"
+// ]);
+
 // Stack Navigator cho tab "Events"
 const EventsStack = createNativeStackNavigator();
 const EventsStackNavigator = () => {

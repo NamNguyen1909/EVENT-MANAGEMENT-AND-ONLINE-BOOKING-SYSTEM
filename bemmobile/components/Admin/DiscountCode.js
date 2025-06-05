@@ -95,7 +95,7 @@ const DiscountCode = () => {
 
   // Format ISO string to localized date time string (Vietnamese)
   const formatDateTime = (isoString) => {
-    if (!isoString) return "Chưa chọn";
+    if (!isoString) return <Text>Chưa chọn</Text>;
     const date = new Date(isoString);
     return date.toLocaleString("vi-VN", {
       day: "2-digit",
