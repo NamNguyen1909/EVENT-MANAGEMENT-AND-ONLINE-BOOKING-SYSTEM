@@ -144,7 +144,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     def get_permissions(self):
         if self.action in ['get_current_user', 'tickets', 'payments', 'notifications', 'sent_messages', 'profile', 'deactivate']:
             return [permissions.IsAuthenticated()]
-        elif self.action in ['list', 'admin_deactivate']:
+        elif self.action in ['list', 'admin_change_user_active_state','admin_change_user_staff_state']:
             return [IsAdminUser()]
         elif self.action == 'create':
             return [permissions.AllowAny()]
@@ -169,12 +169,40 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         user.save()
         return Response({"detail": "Tài khoản đã bị xóa!."}, status=status.HTTP_200_OK)
 
-    @action(methods=['post'], detail=True, url_path='admin-deactivate')
-    def admin_deactivate(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        user.is_active = False
+    @action(methods=['post'], detail=False, url_path='change-user-active-state')
+    def admin_change_user_active_state(self, request):
+        user_id = request.data.get('user_id')
+        is_active = request.data.get('is_active')
+        if user_id is None or is_active is None:
+            return Response({"error": "Thiếu user_id hoặc is_active."}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.user.is_staff:
+            return Response({"error": "Không có quyền truy cập."}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(User, pk=user_id)
+        user.is_active = bool(is_active)
         user.save()
-        return Response({"detail": f"Tài khoản {user.username} đã bị vô hiệu hóa bởi admin."}, status=status.HTTP_200_OK)
+        action = "kích hoạt" if user.is_active else "vô hiệu hóa"
+        return Response(
+            {"detail": f"Tài khoản {user.username} đã được {action} bởi admin."},
+            status=status.HTTP_200_OK
+        )
+
+    @action(methods=['post'], detail=False, url_path='change-user-staff-state')
+    def admin_change_user_staff_state(self, request):
+        user_id = request.data.get('user_id')
+        is_staff = request.data.get('is_staff')
+
+        if user_id is None or is_staff is None:
+            return Response({"error": "Thiếu user_id hoặc is_staff."}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.user.is_staff:
+            return Response({"error": "Không có quyền truy cập."}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(User, pk=user_id)
+        user.is_staff = bool(is_staff)  # <-- Đúng thuộc tính
+        user.save()
+        action = "bật quyền staff" if user.is_staff else "tắt quyền staff"
+        return Response(
+            {"detail": f"Tài khoản {user.username} đã được {action} bởi admin."},
+            status=status.HTTP_200_OK
+        )
 
     @action(methods=['get'], detail=False, url_path='tickets')
     def get_tickets(self, request):

@@ -35,12 +35,14 @@ export const endpoints = {
 
   // Users
   register: "users/",
+  listUsers: "users/",
   currentUser: "users/current-user/",
   userTickets: "users/tickets/",
   userPayments: "users/payments/",
   userNotifications: "notifications/my-notifications/",
   userSentMessages: "users/sent-messages/",
-  deactivateUser: "users/deactivate/",
+  changeUserActiveState: "users/change-user-active-state/",
+  changeUserStaffState: "users/change-user-staff-state/",
 
   // Events
   events: "events/",
