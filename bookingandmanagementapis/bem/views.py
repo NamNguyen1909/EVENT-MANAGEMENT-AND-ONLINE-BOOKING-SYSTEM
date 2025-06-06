@@ -1074,6 +1074,7 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
         # Lưu tin nhắn
         chat_message = serializer.save(sender=request.user, event=event)
+        print(f"Chat message created: {chat_message.message} by {chat_message.sender.username} in event {event.title}")
 
         # Gửi thông báo FCM nếu có người nhận (receiver)
         receiver = serializer.validated_data.get('receiver')
@@ -1089,6 +1090,7 @@ class ChatMessageViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
                     "type": "chat_message"
                 }
             )
+            print(f"Sent FCM notification to {receiver.username} for new chat message in event {event.title}")
 
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
