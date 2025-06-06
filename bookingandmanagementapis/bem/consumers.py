@@ -186,6 +186,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             message_data = serializer_data
             logger.debug(f"Tin nhắn đã lưu: {message_data}")
 
+            # Gửi push notification nếu là tin nhắn riêng
+            if receiver:
+                from bem.utils import send_fcm_v1
+                message_body = f"Bạn có tin nhắn mới từ {self.user.username} trong sự kiện {event.title}: {message[:50]}..."
+                await database_sync_to_async(send_fcm_v1)(
+                    receiver,
+                    title="Tin nhắn mới",
+                    body=message_body,
+                    data={
+                        "event_id": str(event.id),
+                        "message_id": str(chat_message.id),
+                        "type": "chat_message"
+                    }
+                )
+
             # Gửi tin nhắn
             try:
                 if receiver_id:
