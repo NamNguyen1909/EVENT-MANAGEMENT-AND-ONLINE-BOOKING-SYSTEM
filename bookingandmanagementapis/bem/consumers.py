@@ -189,7 +189,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Gửi push notification nếu là tin nhắn riêng
             if receiver:
                 from bem.utils import send_fcm_v1
-                message_body = f"Bạn có tin nhắn mới từ {self.user.username} trong sự kiện {event.title}: {message[:50]}..."
+                message_body = f"{self.user.username} - {event.title}: {message[:50]}..."
                 await database_sync_to_async(send_fcm_v1)(
                     receiver,
                     title="Tin nhắn mới",
