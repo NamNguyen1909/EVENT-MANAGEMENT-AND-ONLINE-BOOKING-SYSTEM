@@ -227,10 +227,6 @@ const MyEvents = () => {
     }
   };
 
-  const changeEvent = (field, value) => {
-    setSelectedEvent(current => ({ ...current, [field]: value }));
-  };
-
   const pickImage = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -306,8 +302,8 @@ const MyEvents = () => {
     setShowImageOptions(false);
   };
 
-  const selectCategory = (category) => {
-    changeEvent('category', category);
+  const selectCategory = (category, setFormData) => {
+    setFormData(current => ({ ...current, category }));
     setShowCategoryModal(false);
   };
 
@@ -323,8 +319,8 @@ const MyEvents = () => {
     });
   };
 
-  const updateEvent = async () => {
-    if (!selectedEvent) return;
+  const updateEvent = async (formData) => {
+    if (!selectedEvent || !formData) return;
 
     setUpdating(true);
     try {
@@ -334,39 +330,50 @@ const MyEvents = () => {
         return;
       }
 
-      const formData = new FormData();
-      formData.append('title', selectedEvent.title || '');
-      formData.append('description', selectedEvent.description || '');
-      formData.append('location', selectedEvent.location || '');
-      formData.append('category', selectedEvent.category || '');
-      formData.append('start_time', selectedEvent.start_time || '');
-      formData.append('end_time', selectedEvent.end_time || '');
-      formData.append('total_tickets', selectedEvent.total_tickets ? parseInt(selectedEvent.total_tickets) : 0);
-      formData.append('ticket_price', selectedEvent.ticket_price ? parseFloat(selectedEvent.ticket_price).toFixed(2) : '0.00');
-      formData.append('is_active', selectedEvent.is_active ? 'true' : 'false');
-      formData.append('latitude', selectedEvent.latitude ? parseFloat(selectedEvent.latitude).toString() : '');
-      formData.append('longitude', selectedEvent.longitude ? parseFloat(selectedEvent.longitude).toString() : '');
+      const data = new FormData();
+      data.append('title', formData.title || '');
+      data.append('description', formData.description || '');
+      data.append('location', formData.location || '');
+      data.append('category', formData.category || '');
+      data.append('start_time', formData.start_time || '');
+      data.append('end_time', formData.end_time || '');
+      data.append('total_tickets', formData.total_tickets ? parseInt(formData.total_tickets) : 0);
+      data.append('ticket_price', formData.ticket_price ? parseFloat(formData.ticket_price).toFixed(2) : '0.00');
+      data.append('is_active', formData.is_active ? 'true' : 'false');
+      data.append('latitude', formData.latitude ? parseFloat(formData.latitude).toString() : '');
+      data.append('longitude', formData.longitude ? parseFloat(formData.longitude).toString() : '');
 
       if (poster && !poster.startsWith('http')) {
         const uriParts = poster.split('.');
         const fileType = uriParts[uriParts.length - 1].toLowerCase();
         const response = await fetch(poster);
         const blob = await response.blob();
-        formData.append('poster', {
+        data.append('poster', {
           uri: poster,
           name: `poster.${fileType}`,
           type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
         });
       }
 
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof Blob ? `File/Blob (size: ${value.size})` : value.toString()}`);
-      }
+      console.log('FormData prepared for submission:', {
+        title: formData.title || '',
+        description: formData.description || '',
+        location: formData.location || '',
+        category: formData.category || '',
+        start_time: formData.start_time || '',
+        end_time: formData.end_time || '',
+        total_tickets: formData.total_tickets ? parseInt(formData.total_tickets) : 0,
+        ticket_price: formData.ticket_price ? parseFloat(formData.ticket_price).toFixed(2) : '0.00',
+        is_active: formData.is_active ? 'true' : 'false',
+        latitude: formData.latitude ? parseFloat(formData.latitude).toString() : '',
+        longitude: formData.longitude ? parseFloat(formData.longitude).toString() : '',
+        poster: poster && !poster.startsWith('http') ? 'Image file included' : 'No new image',
+      });
 
       const api = authApis(token);
       const res = await api.patch(
         `${endpoints['events']}${selectedEvent.id}/`,
-        formData,
+        data,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -376,8 +383,8 @@ const MyEvents = () => {
       );
 
       Alert.alert('Thành công', 'Sự kiện đã được cập nhật thành công!');
+      setSelectedEvent(res.data); // Update with the response data
       fetchMyEvents();
-      setSelectedEvent(null);
       setStatistics(null);
       setPoster(null);
       setShowImageOptions(false);
@@ -390,10 +397,10 @@ const MyEvents = () => {
         dispatch({ type: 'logout' });
       } else if (error.response?.data) {
         const errors = error.response.data;
-        console.error("Lỗi khi cập nhật sự kiện:", errors);
+        console.error('Lỗi khi cập nhật sự kiện:', errors);
         Alert.alert('Lỗi', errors.detail || 'Không thể cập nhật sự kiện. Vui lòng thử lại.');
       } else {
-        console.error("Lỗi khi cập nhật sự kiện:", error.message);
+        console.error('Lỗi khi cập nhật sự kiện:', error.message);
         Alert.alert('Lỗi', 'Lỗi máy chủ (500). Vui lòng liên hệ hỗ trợ hoặc thử lại sau.');
       }
     } finally {
@@ -582,7 +589,22 @@ const MyEvents = () => {
   };
 
   const UpdateSection = () => {
-    // State để lưu tạm ngày giờ trong UpdateSection
+    // Local form state to manage inputs
+    const [formData, setFormData] = useState({
+      title: selectedEvent?.title || '',
+      description: selectedEvent?.description || '',
+      location: selectedEvent?.location || '',
+      category: selectedEvent?.category || '',
+      start_time: selectedEvent?.start_time || '',
+      end_time: selectedEvent?.end_time || '',
+      total_tickets: selectedEvent?.total_tickets?.toString() || '',
+      ticket_price: selectedEvent?.ticket_price?.toString() || '',
+      latitude: selectedEvent?.latitude?.toString() || '',
+      longitude: selectedEvent?.longitude?.toString() || '',
+      is_active: selectedEvent?.is_active || true,
+    });
+
+    // Local state for date/time pickers
     const [localStartDate, setLocalStartDate] = useState(
       selectedEvent?.start_time ? new Date(selectedEvent.start_time) : null
     );
@@ -595,6 +617,10 @@ const MyEvents = () => {
     const [localEndTime, setLocalEndTime] = useState(
       selectedEvent?.end_time ? new Date(selectedEvent.end_time) : null
     );
+
+    const updateFormData = (field, value) => {
+      setFormData(current => ({ ...current, [field]: value }));
+    };
 
     const onStartDateChange = (event, selectedDate) => {
       if (Platform.OS === 'android' && event.type === 'dismissed') {
@@ -635,7 +661,7 @@ const MyEvents = () => {
       if (localStartDate && localStartTime) {
         const newDate = new Date(localStartDate);
         newDate.setHours(localStartTime.getHours(), localStartTime.getMinutes());
-        changeEvent('start_time', newDate.toISOString());
+        updateFormData('start_time', newDate.toISOString());
       }
     };
 
@@ -678,7 +704,7 @@ const MyEvents = () => {
       if (localEndDate && localEndTime) {
         const newDate = new Date(localEndDate);
         newDate.setHours(localEndTime.getHours(), localEndTime.getMinutes());
-        changeEvent('end_time', newDate.toISOString());
+        updateFormData('end_time', newDate.toISOString());
       }
     };
 
@@ -692,8 +718,8 @@ const MyEvents = () => {
         >
           <TextInput
             label="Tiêu đề"
-            value={selectedEvent?.title || ''}
-            onChangeText={(text) => changeEvent('title', text)}
+            value={formData.title}
+            onChangeText={(text) => updateFormData('title', text)}
             style={[styles.input, { marginVertical: 8 }]}
             mode="outlined"
             outlineColor={colors.bluePrimary}
@@ -701,8 +727,8 @@ const MyEvents = () => {
           />
           <TextInput
             label="Mô tả"
-            value={selectedEvent?.description || ''}
-            onChangeText={(text) => changeEvent('description', text)}
+            value={formData.description}
+            onChangeText={(text) => updateFormData('description', text)}
             style={[styles.input, { marginVertical: 8 }]}
             mode="outlined"
             outlineColor={colors.bluePrimary}
@@ -712,8 +738,8 @@ const MyEvents = () => {
           />
           <TextInput
             label="Địa điểm"
-            value={selectedEvent?.location || ''}
-            onChangeText={(text) => changeEvent('location', text)}
+            value={formData.location}
+            onChangeText={(text) => updateFormData('location', text)}
             style={[styles.input, { marginVertical: 8 }]}
             mode="outlined"
             outlineColor={colors.bluePrimary}
@@ -722,8 +748,8 @@ const MyEvents = () => {
           <View style={[styles.row, { marginVertical: 8 }]}>
             <TextInput
               label="Latitude"
-              value={selectedEvent?.latitude?.toString() || ''}
-              onChangeText={(text) => changeEvent('latitude', text)}
+              value={formData.latitude}
+              onChangeText={(text) => updateFormData('latitude', text)}
               style={[styles.input, styles.halfInput]}
               mode="outlined"
               outlineColor={colors.bluePrimary}
@@ -732,8 +758,8 @@ const MyEvents = () => {
             />
             <TextInput
               label="Longitude"
-              value={selectedEvent?.longitude?.toString() || ''}
-              onChangeText={(text) => changeEvent('longitude', text)}
+              value={formData.longitude}
+              onChangeText={(text) => updateFormData('longitude', text)}
               style={[styles.input, styles.halfInput]}
               mode="outlined"
               outlineColor={colors.bluePrimary}
@@ -795,8 +821,8 @@ const MyEvents = () => {
               onPress={() => setShowCategoryModal(true)}
             >
               <Text style={styles.pickerText}>
-                {selectedEvent?.category
-                  ? categories.find(cat => cat.value === selectedEvent.category)?.label
+                {formData.category
+                  ? categories.find(cat => cat.value === formData.category)?.label
                   : 'Chọn danh mục'}
               </Text>
             </TouchableOpacity>
@@ -815,14 +841,14 @@ const MyEvents = () => {
                     renderItem={({ item }) => (
                       <TouchableOpacity
                         style={styles.categoryItem}
-                        onPress={() => selectCategory(item.value)}
+                        onPress={() => selectCategory(item.value, setFormData)}
                       >
                         <Text style={styles.categoryItemText}>{item.label}</Text>
                       </TouchableOpacity>
                     )}
                     contentContainerStyle={styles.categoryList}
                   />
-                  < Button
+                  <Button
                     mode="contained"
                     onPress={() => setShowCategoryModal(false)}
                     style={styles.modalButton}
@@ -841,7 +867,7 @@ const MyEvents = () => {
               style={styles.pickerButton}
               onPress={() => setShowStartDatePicker(true)}
             >
-              <Text style={styles.pickerText}>{formatDateTime(selectedEvent?.start_time)}</Text>
+              <Text style={styles.pickerText}>{formatDateTime(formData.start_time)}</Text>
             </TouchableOpacity>
             <Modal
               visible={showStartDatePicker}
@@ -853,7 +879,7 @@ const MyEvents = () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Chọn ngày bắt đầu</Text>
                   <DateTimePicker
-                    value={localStartDate || new Date(selectedEvent?.start_time || Date.now())}
+                    value={localStartDate || new Date(formData.start_time || Date.now())}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     onChange={onStartDateChange}
@@ -891,7 +917,7 @@ const MyEvents = () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Chọn giờ bắt đầu</Text>
                   <DateTimePicker
-                    value={localStartTime || new Date(selectedEvent?.start_time || Date.now())}
+                    value={localStartTime || new Date(formData.start_time || Date.now())}
                     mode="time"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     onChange={onStartTimeChange}
@@ -926,7 +952,7 @@ const MyEvents = () => {
               style={styles.pickerButton}
               onPress={() => setShowEndDatePicker(true)}
             >
-              <Text style={styles.pickerText}>{formatDateTime(selectedEvent?.end_time)}</Text>
+              <Text style={styles.pickerText}>{formatDateTime(formData.end_time)}</Text>
             </TouchableOpacity>
             <Modal
               visible={showEndDatePicker}
@@ -938,7 +964,7 @@ const MyEvents = () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Chọn ngày kết thúc</Text>
                   <DateTimePicker
-                    value={localEndDate || new Date(selectedEvent?.end_time || Date.now())}
+                    value={localEndDate || new Date(formData.end_time || Date.now())}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     onChange={onEndDateChange}
@@ -976,7 +1002,7 @@ const MyEvents = () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Chọn giờ kết thúc</Text>
                   <DateTimePicker
-                    value={localEndTime || new Date(selectedEvent?.end_time || Date.now())}
+                    value={localEndTime || new Date(formData.end_time || Date.now())}
                     mode="time"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     onChange={onEndTimeChange}
@@ -1008,8 +1034,8 @@ const MyEvents = () => {
           <View style={[styles.row, { marginVertical: 8 }]}>
             <TextInput
               label="Số vé tối đa"
-              value={selectedEvent?.total_tickets?.toString() || ''}
-              onChangeText={(text) => changeEvent('total_tickets', text)}
+              value={formData.total_tickets}
+              onChangeText={(text) => updateFormData('total_tickets', text)}
               style={[styles.input, styles.halfInput]}
               mode="outlined"
               outlineColor={colors.bluePrimary}
@@ -1018,8 +1044,8 @@ const MyEvents = () => {
             />
             <TextInput
               label="Giá vé (VNĐ)"
-              value={selectedEvent?.ticket_price?.toString() || ''}
-              onChangeText={(text) => changeEvent('ticket_price', text)}
+              value={formData.ticket_price}
+              onChangeText={(text) => updateFormData('ticket_price', text)}
               style={[styles.input, styles.halfInput]}
               mode="outlined"
               outlineColor={colors.bluePrimary}
@@ -1040,7 +1066,7 @@ const MyEvents = () => {
           <View style={[styles.modalButtons, { marginVertical: 8 }]}>
             <Button
               mode="contained"
-              onPress={updateEvent}
+              onPress={() => updateEvent(formData)}
               loading={updating}
               disabled={updating}
               style={styles.modalButton}
