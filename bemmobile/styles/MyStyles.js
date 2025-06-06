@@ -23,6 +23,8 @@ export const colors = {
   chartYellow: '#FFCE56',     // Vàng cho biểu đồ tròn
   chartGreen: '#4BC0C0',      // Xanh lá cho biểu đồ tròn
   chartPurple: '#9966FF',     // Tím cho biểu đồ tròn
+  greenActive: '#00FF7F', // Màu xanh giống Facebook Messenger
+  grayMedium: '#B0B0B0', // Màu xám cho trạng thái không hoạt động
 };
 
 const MyStyles = StyleSheet.create({
