@@ -100,47 +100,39 @@ const ChatList = ({ navigation }) => {
         let isPrivate = false;
         let displayParticipant = null;
 
-        if (msg.is_from_organizer) {
-          if (msg.sender === user.id || msg.user_info?.id === user.id) {
-            if (msg.receiver) {
-              otherUserId = typeof msg.receiver === 'string'
-                ? msg.participants?.find(p => p.username === msg.receiver)?.id
-                : msg.receiver;
-              isPrivate = true;
-              if (user?.role === 'organizer') {
-                displayParticipant = msg.participants?.find(p => p.id === otherUserId) || { username: msg.receiver };
-              } else {
-                displayParticipant = msg.user_info || { username: 'Organizer' };
-              }
-            }
-          } else {
-            otherUserId = msg.sender;
-            isPrivate = true;
-            if (user?.role !== 'organizer') {
-              displayParticipant = msg.user_info || { username: 'Organizer' };
-            } else {
-              displayParticipant = msg.participants?.find(p => p.id === otherUserId) || msg.user_info;
-            }
-          }
+        const receiverId = typeof msg.receiver === 'number'
+          ? msg.receiver
+          : msg.participants?.find(p => p.username === msg.receiver)?.id;
 
-          if (isPrivate && otherUserId) {
-            const privateKey = `private_${eventId}_${otherUserId}_${msg.id}_${index}`;
-            if (!conversationMap[privateKey]) {
-              conversationMap[privateKey] = {
-                id: privateKey,
-                otherUserId,
-                lastMessage: msg.message,
-                lastMessageTime: msg.created_at,
-                isPrivate: true,
-                participant: displayParticipant,
-                messages: [msg],
-              };
-            } else {
-              conversationMap[privateKey].messages.push(msg);
-              if (new Date(msg.created_at) > new Date(conversationMap[privateKey].lastMessageTime || 0)) {
-                conversationMap[privateKey].lastMessage = msg.message;
-                conversationMap[privateKey].lastMessageTime = msg.created_at;
-              }
+        if (msg.sender === user.id) {
+          if (receiverId) {
+            otherUserId = receiverId;
+            isPrivate = true;
+            displayParticipant = msg.participants?.find(p => p.id === otherUserId) || { username: msg.receiver };
+          }
+        } else if (receiverId === user.id || msg.receiver === user.username) {
+          otherUserId = msg.sender;
+          isPrivate = true;
+          displayParticipant = msg.user_info || { username: 'Unknown' };
+        }
+
+        if (isPrivate && otherUserId) {
+          const privateKey = `private_${eventId}_${otherUserId}_${msg.id}_${index}`;
+          if (!conversationMap[privateKey]) {
+            conversationMap[privateKey] = {
+              id: privateKey,
+              otherUserId,
+              lastMessage: msg.message,
+              lastMessageTime: msg.created_at,
+              isPrivate: true,
+              participant: displayParticipant,
+              messages: [msg],
+            };
+          } else {
+            conversationMap[privateKey].messages.push(msg);
+            if (new Date(msg.created_at) > new Date(conversationMap[privateKey].lastMessageTime || 0)) {
+              conversationMap[privateKey].lastMessage = msg.message;
+              conversationMap[privateKey].lastMessageTime = msg.created_at;
             }
           }
         }
@@ -155,6 +147,7 @@ const ChatList = ({ navigation }) => {
         }
       });
 
+      console.log('Conversations:', JSON.stringify(finalConversations, null, 2));
       setConversations(finalConversations);
       setParticipants(messages[0]?.participants || []);
     } catch (error) {
@@ -283,6 +276,16 @@ const ChatDetail = ({ route, navigation }) => {
   const wsRef = useRef(null);
   const messageCounter = useRef(0);
   const flatListRef = useRef(null);
+  const retryCountRef = useRef(0);
+
+  const getReceiverId = (msg, participants) => {
+    if (typeof msg.receiver === 'number') return msg.receiver;
+    if (typeof msg.receiver === 'string') {
+      const participant = participants?.find(p => p.username === msg.receiver);
+      return participant?.id;
+    }
+    return null;
+  };
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -301,22 +304,23 @@ const ChatDetail = ({ route, navigation }) => {
 
       const messageMap = new Map();
       const filteredMessages = allMessages
-        .filter(
-          (msg) =>
-            (msg.sender === user.id && (msg.receiver === receiverId || msg.receiver === receiverUsername)) ||
-            (msg.sender === receiverId && (msg.receiver === user.username || msg.receiver === user.id)) ||
-            (msg.sender === user.id && msg.user_info?.id === receiverId) ||
-            (msg.sender === receiverId && msg.user_info?.id === user.id)
-        )
+        .filter((msg) => {
+          const receiverIdFromMsg = getReceiverId(msg, msg.participants);
+          return (
+            (msg.sender === user.id && receiverIdFromMsg === receiverId) ||
+            (msg.sender === receiverId && receiverIdFromMsg === user.id)
+          );
+        })
         .map((msg) => ({
           ...msg,
-          uniqueKey: `msg_${eventId}_${receiverId}_${msg.id || Date.now()}_${msg.created_at || Date.now()}`,
+          uniqueKey: `msg_${eventId}_${receiverId}_${msg.id}_${msg.created_at}`,
         }))
         .forEach((msg) => messageMap.set(msg.id || msg.uniqueKey, msg));
 
       const sortedMessages = Array.from(messageMap.values()).sort(
         (a, b) => new Date(a.created_at) - new Date(b.created_at)
       );
+      console.log('Filtered Messages:', JSON.stringify(sortedMessages, null, 2));
       setMessages(sortedMessages);
     } catch (error) {
       console.error('Lỗi khi lấy tin nhắn:', error);
@@ -351,58 +355,73 @@ const ChatDetail = ({ route, navigation }) => {
 
       websocket.onopen = () => {
         console.log('WebSocket connected successfully');
+        retryCountRef.current = 0;
       };
 
       websocket.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
           console.log('WebSocket received:', JSON.stringify(data, null, 2));
+
           if (data.history) {
             const messageMap = new Map(messages.map(m => [m.id || m.uniqueKey, m]));
             const filteredHistory = data.history
-              .filter(
-                (msg) =>
-                  (msg.sender === user.id && (msg.receiver === receiverId || msg.receiver === receiverUsername)) ||
-                  (msg.sender === receiverId && (msg.receiver === user.username || msg.receiver === user.id)) ||
-                  (msg.sender === user.id && msg.user_info?.id === receiverId) ||
-                  (msg.sender === receiverId && msg.user_info?.id === user.id)
-              )
+              .filter((msg) => {
+                const receiverIdFromMsg = getReceiverId(msg, msg.participants);
+                return (
+                  (msg.sender === user.id && receiverIdFromMsg === receiverId) ||
+                  (msg.sender === receiverId && receiverIdFromMsg === user.id)
+                );
+              })
               .map((msg) => ({
                 ...msg,
-                uniqueKey: `msg_${eventId}_${receiverId}_${msg.id || Date.now()}_${msg.created_at || Date.now()}`,
+                uniqueKey: `msg_${eventId}_${receiverId}_${msg.id}_${msg.created_at}`,
               }))
               .forEach((msg) => messageMap.set(msg.id || msg.uniqueKey, msg));
 
             const sortedMessages = Array.from(messageMap.values()).sort(
               (a, b) => new Date(a.created_at) - new Date(b.created_at)
             );
+            console.log('Filtered History:', JSON.stringify(sortedMessages, null, 2));
             setMessages(sortedMessages);
-          } else {
+          } else if (data.message) {
+            const msg = data.message;
+            const receiverIdFromMsg = getReceiverId(msg, msg.participants);
             if (
-              (data.sender === user.id && (data.receiver === receiverId || data.receiver === receiverUsername)) ||
-              (data.sender === receiverId && (data.receiver === user.username || data.receiver === user.id)) ||
-              (data.sender === user.id && data.user_info?.id === receiverId) ||
-              (data.sender === receiverId && data.user_info?.id === user.id)
+              (msg.sender === user.id && receiverIdFromMsg === receiverId) ||
+              (msg.sender === receiverId && receiverIdFromMsg === user.id)
             ) {
               const newMessage = {
-                ...data,
-                sender: data.sender || user.id,
-                user_info: data.user_info || { id: user.id, username: user.username },
-                created_at: data.created_at || new Date().toISOString(),
-                uniqueKey: `msg_${eventId}_${receiverId}_${data.id || Date.now()}_${data.created_at || Date.now()}`,
+                ...msg,
+                sender: msg.sender,
+                user_info: msg.user_info || { id: msg.sender, username: msg.user_info?.username || 'Unknown' },
+                created_at: msg.created_at || new Date().toISOString(),
+                uniqueKey: `msg_${eventId}_${receiverId}_${msg.id}_${msg.created_at}`,
               };
+
               setMessages((prev) => {
                 const messageMap = new Map(prev.map(m => [m.id || m.uniqueKey, m]));
+                // Kiểm tra và xóa tin nhắn tạm thời nếu tồn tại
+                const tempKey = prev.find(m => m.isTemp && m.message === msg.message && m.sender === msg.sender && 
+                  Math.abs(new Date(m.created_at).getTime() - new Date(msg.created_at).getTime()) < 1000);
+                if (tempKey) {
+                  messageMap.delete(tempKey.uniqueKey);
+                }
+                // Chỉ thêm tin nhắn mới nếu chưa tồn tại
                 if (!messageMap.has(newMessage.id || newMessage.uniqueKey)) {
                   messageMap.set(newMessage.id || newMessage.uniqueKey, newMessage);
                 }
                 const sortedMessages = Array.from(messageMap.values()).sort(
                   (a, b) => new Date(a.created_at) - new Date(b.created_at)
                 );
+                console.log('New Message Added:', JSON.stringify(newMessage, null, 2));
                 return sortedMessages;
               });
               flatListRef.current?.scrollToEnd({ animated: true });
             }
+          } else if (data.error) {
+            console.error('WebSocket error:', data.error);
+            Alert.alert('Lỗi', data.error);
           }
         } catch (error) {
           console.error('Lỗi xử lý WebSocket message:', error);
@@ -411,7 +430,14 @@ const ChatDetail = ({ route, navigation }) => {
 
       websocket.onclose = () => {
         console.log('WebSocket closed');
-        setTimeout(() => initializeWebSocket(), 2000);
+        if (retryCountRef.current < 5) {
+          setTimeout(() => {
+            initializeWebSocket();
+            retryCountRef.current += 1;
+          }, 2000 * (retryCountRef.current + 1));
+        } else {
+          Alert.alert('Lỗi', 'Không thể kết nối lại. Vui lòng kiểm tra mạng.');
+        }
       };
 
       websocket.onerror = (error) => {
@@ -430,6 +456,7 @@ const ChatDetail = ({ route, navigation }) => {
   const sendMessage = () => {
     if (!ws || !message.trim()) return;
 
+    const tempUniqueKey = `temp_${eventId}_${receiverId}_${messageCounter.current++}_${Date.now()}`;
     const messageData = {
       message: message.trim(),
       receiver_id: receiverId,
@@ -445,7 +472,8 @@ const ChatDetail = ({ route, navigation }) => {
         receiver: receiverId,
         user_info: { id: user.id, username: user.username },
         created_at: new Date().toISOString(),
-        uniqueKey: `msg_${eventId}_${receiverId}_temp_${messageCounter.current++}_${Date.now()}`,
+        uniqueKey: tempUniqueKey,
+        isTemp: true,
       };
       setMessages((prev) => {
         const messageMap = new Map(prev.map(m => [m.id || m.uniqueKey, m]));
@@ -464,6 +492,10 @@ const ChatDetail = ({ route, navigation }) => {
   };
 
   useEffect(() => {
+    console.log('Messages state:', JSON.stringify(messages, null, 2));
+  }, [messages]);
+
+  useEffect(() => {
     if (!user) {
       Alert.alert('Lỗi', 'Bạn cần đăng nhập để sử dụng chat.');
       navigation.navigate('loginStack');
@@ -480,7 +512,7 @@ const ChatDetail = ({ route, navigation }) => {
   }, [user, eventId, receiverId]);
 
   const renderMessage = ({ item }) => {
-    const isOwnMessage = item.sender === user.id || item.user_info?.id === user.id;
+    const isOwnMessage = item.sender === user.id;
 
     return (
       <View
