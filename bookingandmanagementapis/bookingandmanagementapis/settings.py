@@ -21,11 +21,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9'
 DEBUG = True
 
-# ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-ALLOWED_HOSTS = ['192.168.1.8', 'localhost', 'your-ngrok-url.ngrok.io']
+# ALLOWED_HOSTS = ['192.168.1.3', 'localhost', 'your-ngrok-url.ngrok.io']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
