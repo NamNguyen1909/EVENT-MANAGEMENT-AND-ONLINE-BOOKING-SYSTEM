@@ -8,6 +8,7 @@ import { MyDispatchContext } from '../../configs/MyContexts';
 import MyStyles ,{colors} from '../../styles/MyStyles';
 import { getMessaging, requestPermission, getToken, AuthorizationStatus } from '@react-native-firebase/messaging';
 import axios from 'axios';
+import { CLIENT_ID, CLIENT_SECRET } from 'react-native-dotenv';
 
 const requestUserPermission = async () => {
   const permission = await requestPermission(getMessaging());
@@ -67,8 +68,8 @@ const Login = () => {
       const data = {
         username: username,
         password: password,
-        client_id: 'SJ61STYu3n0mTxWaOWpgaaGp2DA7Ray7OHUGmLgE',
-        client_secret: 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010beM5QFCmVyrDcSfJMQlpUiycVx6wkS3e0MFfViHBHTa2mrKlM9ut4BikkU1y2cjwo',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
         grant_type: 'password',
       };
 
