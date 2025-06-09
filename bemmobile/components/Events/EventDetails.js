@@ -106,7 +106,7 @@ const EventDetails = ({ route }) => {
       ]);
       setRating(0);
       setComment("");
-      Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
+      // Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data && typeof err.response.data === 'string' && err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")) {

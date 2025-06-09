@@ -56,8 +56,20 @@ const Profile = () => {
 
   useFocusEffect(
     React.useCallback(() => {
+      const fetchUser = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (token) {
+            const res = await authApis(token).get(endpoints.currentUser);
+            dispatch({ type: 'login', payload: res.data });
+          }
+        } catch (error) {
+          // Xử lý lỗi nếu cần
+        }
+      };
+      fetchUser();
       fetchUserStats();
-    }, [user])
+    }, [])
   );
 
   const fetchUserStats = async () => {

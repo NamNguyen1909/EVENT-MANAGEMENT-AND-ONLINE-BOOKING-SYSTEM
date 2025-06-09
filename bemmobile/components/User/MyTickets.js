@@ -248,7 +248,7 @@ const fetchMoreTickets = () => {
           refreshing={refreshing} // Use refreshing state
           onRefresh={() => fetchTickets(endpoints.userTickets, false, true)} // Pass isRefresh true
           onEndReached={fetchMoreTickets}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.8}
           ListFooterComponent={() =>
             loadingMore ? (
               <View style={{ paddingVertical: 20 }}>
