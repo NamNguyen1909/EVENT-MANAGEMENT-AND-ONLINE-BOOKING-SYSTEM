@@ -475,6 +475,7 @@ const Profile = () => {
                 </TouchableOpacity>
               </View>
               <Notifications
+                navigation={navigation}
                 unreadNotifications={unreadNotifications}
                 onClose={closeNotificationModal}
                 onUpdateUnreadCount={() => fetchUserStats()}

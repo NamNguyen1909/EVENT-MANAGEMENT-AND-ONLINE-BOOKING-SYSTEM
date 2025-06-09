@@ -7,7 +7,7 @@ import Apis, { endpoints, authApis } from '../../configs/Apis';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MyStyles, { colors } from '../../styles/MyStyles';
 
-const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) => {
+const Notifications = ({ navigation,unreadNotifications, onClose, onUpdateUnreadCount }) => {
     const user = useContext(MyUserContext);
     const dispatch = useContext(MyDispatchContext);
 
@@ -16,6 +16,16 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState(null);
+
+    // Hàm xử lý khi bấm vào notification
+    const handleNotificationPress = (item) => {
+        if (item.notification_type === 'reply' && item.event) {
+            navigation.navigate('events', {
+                screen: 'EventDetails',
+                params: { event: { id: item.event } }
+            });
+        }
+    };
 
     // Debug: Log user và unreadNotifications
     useEffect(() => {
@@ -209,39 +219,44 @@ const Notifications = ({ unreadNotifications, onClose, onUpdateUnreadCount }) =>
 
     // Render notification item
     const renderNotificationItem = ({ item }) => (
-        <Card 
-            style={[styles.notificationCard, item.is_read && styles.readNotification]}
-            key={item.id.toString()}
+        <TouchableOpacity
+            activeOpacity={item.notification_type === 'reply' && item.event ? 0.7 : 1}
+            onPress={() => handleNotificationPress(item)}
         >
-            <Card.Content>
-                <Text style={styles.notificationTitle}>
-                    {item.title || 'Không có tiêu đề'}
-                </Text>
-                <Text style={styles.notificationMessage}>
-                    {item.message || 'Không có nội dung'}
-                </Text>
-                <Text style={styles.notificationTime}>
-                    {item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : 'Không có thời gian'}
-                </Text>
-                
-                {item.event && item.event_title && (
-                    <Text style={styles.notificationEvent}>
-                        Sự kiện: {item.event_title}
+            <Card 
+                style={[styles.notificationCard, item.is_read && styles.readNotification]}
+                key={item.id.toString()}
+            >
+                <Card.Content>
+                    <Text style={styles.notificationTitle}>
+                        {item.title || 'Không có tiêu đề'}
                     </Text>
-                )}
-                
-                {!item.is_read && (
-                    <Button
-                        mode="contained"
-                        onPress={() => markAsRead(item.id)}
-                        style={styles.markReadButton}
-                        icon="check-circle"
-                    >
-                        Đánh Dấu Đã Đọc
-                    </Button>
-                )}
-            </Card.Content>
-        </Card>
+                    <Text style={styles.notificationMessage}>
+                        {item.message || 'Không có nội dung'}
+                    </Text>
+                    <Text style={styles.notificationTime}>
+                        {item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : 'Không có thời gian'}
+                    </Text>
+                    
+                    {item.event && item.event_title && (
+                        <Text style={styles.notificationEvent}>
+                            Sự kiện: {item.event_title}
+                        </Text>
+                    )}
+                    
+                    {!item.is_read && (
+                        <Button
+                            mode="contained"
+                            onPress={() => markAsRead(item.id)}
+                            style={styles.markReadButton}
+                            icon="check-circle"
+                        >
+                            Đánh Dấu Đã Đọc
+                        </Button>
+                    )}
+                </Card.Content>
+            </Card>
+        </TouchableOpacity>
     );
 
     // Kiểm tra vai trò

@@ -286,6 +286,7 @@ const EventDetails = ({ route }) => {
       setReviews(reviewsRes.data.results || []);
     } catch (err) {
       setError("Không thể tải chi tiết sự kiện.");
+      console.error("Error fetching event detail:", err);
     } finally {
       setLoading(false);
     }
