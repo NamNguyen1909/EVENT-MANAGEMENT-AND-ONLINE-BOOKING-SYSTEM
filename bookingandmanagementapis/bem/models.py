@@ -336,6 +336,7 @@ class DiscountCode(models.Model):
         indexes = [
             models.Index(fields=['code', 'is_active']),
         ]
+        ordering = ['-discount_percentage', 'valid_to']
 
     def __str__(self):
         return self.code
