@@ -1,5 +1,11 @@
 // EventDetails.js
-import React, { useReducer, useEffect, useState, useContext, useRef } from "react";
+import React, {
+  useReducer,
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -23,9 +29,12 @@ import { useNavigation } from "@react-navigation/native";
 import { MyUserContext } from "../../configs/MyContexts";
 import MyStyles, { colors } from "../../styles/MyStyles";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Dimensions } from "react-native";
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 
 const EventDetails = ({ route }) => {
@@ -74,7 +83,7 @@ const EventDetails = ({ route }) => {
     if (!user || !user.username) {
       navigation.navigate("loginStack");
     } else {
-      navigation.navigate('chat', { eventId: eventDetail.id });
+      navigation.navigate("chat", { eventId: eventDetail.id });
     }
   };
 
@@ -109,9 +118,20 @@ const EventDetails = ({ route }) => {
       // Alert.alert("Thành công", "Đánh giá của bạn đã được gửi.");
     } catch (err) {
       console.error(err);
-      if (err.response && err.response.data && typeof err.response.data === 'string' && err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")) {
+      if (
+        err.response &&
+        err.response.data &&
+        typeof err.response.data === "string" &&
+        err.response.data.includes("Bạn đã có đánh giá cho sự kiện này.")
+      ) {
         setReviewError("Bạn đã review event này rồi.");
-      } else if (err.response && err.response.data && err.response.data.detail && typeof err.response.data.detail === 'string' && err.response.data.detail.includes("Bạn đã có đánh giá cho sự kiện này.")) {
+      } else if (
+        err.response &&
+        err.response.data &&
+        err.response.data.detail &&
+        typeof err.response.data.detail === "string" &&
+        err.response.data.detail.includes("Bạn đã có đánh giá cho sự kiện này.")
+      ) {
         setReviewError("Bạn đã review event này rồi.");
       } else {
         setReviewError("Gửi đánh giá thất bại. Vui lòng thử lại.");
@@ -126,7 +146,7 @@ const EventDetails = ({ route }) => {
       Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
       return;
     }
-    
+
     setSubmittingReview(true);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -134,22 +154,25 @@ const EventDetails = ({ route }) => {
         Alert.alert("Lỗi", "Bạn cần đăng nhập để chỉnh sửa đánh giá.");
         return;
       }
-      
+
       const api = authApis(token);
       const payload = {
         rating: rating,
         comment: comment.trim(),
       };
       console.log("Payload cập nhật:", payload);
-      console.log('user id',user.id);
-      console.log('userowner id',editingReview.user);
-      
-      const res = await api.patch(endpoints.updateReview(editingReview.id), payload);
+      console.log("user id", user.id);
+      console.log("userowner id", editingReview.user);
+
+      const res = await api.patch(
+        endpoints.updateReview(editingReview.id),
+        payload
+      );
       console.log("resPatch:", res.data);
-      setReviews(prev => prev.map(r => 
-        r.id === editingReview.id ? res.data : r
-      ));
-      
+      setReviews((prev) =>
+        prev.map((r) => (r.id === editingReview.id ? res.data : r))
+      );
+
       setEditingReview(null);
       setRating(0);
       setComment("");
@@ -169,11 +192,11 @@ const EventDetails = ({ route }) => {
         Alert.alert("Lỗi", "Bạn cần đăng nhập để thực hiện thao tác này.");
         return;
       }
-      
+
       const api = authApis(token);
       await api.delete(endpoints.deleteReview(reviewId));
-      
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
+
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       Alert.alert("Thành công", "Đánh giá đã được xóa.");
     } catch (err) {
       console.error(err);
@@ -196,7 +219,7 @@ const EventDetails = ({ route }) => {
 
     return (
       <View style={styles.menuContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => {
             setSelectedReview(review);
             setModalVisible(true);
@@ -211,12 +234,12 @@ const EventDetails = ({ route }) => {
           visible={modalVisible && selectedReview?.id === review.id}
           onRequestClose={() => setModalVisible(false)}
         >
-          <Pressable 
-            style={styles.modalOverlay} 
+          <Pressable
+            style={styles.modalOverlay}
             onPress={() => setModalVisible(false)}
           >
             <View style={styles.menuModal}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => {
                   handleEditReview(review);
@@ -225,7 +248,7 @@ const EventDetails = ({ route }) => {
               >
                 <Text style={styles.menuText}>Sửa đánh giá</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.menuItem, styles.deleteItem]}
                 onPress={() => handleDeleteReview(review.id)}
               >
@@ -321,7 +344,7 @@ const EventDetails = ({ route }) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
       <ScrollView style={styles.container}>
         {eventDetail.poster && (
           <Image source={{ uri: eventDetail.poster }} style={styles.poster} />
@@ -329,7 +352,11 @@ const EventDetails = ({ route }) => {
         <View style={styles.header}>
           <Text style={styles.title}>{eventDetail.title}</Text>
           <TouchableOpacity onPress={handleChatPress} style={styles.chatIcon}>
-            <MaterialIcons name="chat-bubble-outline" size={28} color={colors.bluePrimary} />
+            <MaterialIcons
+              name="chat-bubble-outline"
+              size={28}
+              color={colors.bluePrimary}
+            />
           </TouchableOpacity>
         </View>
         <View style={styles.section}>
@@ -337,13 +364,20 @@ const EventDetails = ({ route }) => {
           <InfoRow icon="map-marker" text={eventDetail.location} />
           <InfoRow
             icon="calendar"
-            text={`Bắt đầu: ${new Date(eventDetail.start_time).toLocaleString()}`}
+            text={`Bắt đầu: ${new Date(
+              eventDetail.start_time
+            ).toLocaleString()}`}
           />
           <InfoRow
             icon="calendar"
-            text={`Kết thúc: ${new Date(eventDetail.end_time).toLocaleString()}`}
+            text={`Kết thúc: ${new Date(
+              eventDetail.end_time
+            ).toLocaleString()}`}
           />
-          <InfoRow icon="ticket" text={`Tổng vé: ${eventDetail.total_tickets}`} />
+          <InfoRow
+            icon="ticket"
+            text={`Tổng vé: ${eventDetail.total_tickets}`}
+          />
           <InfoRow
             icon="ticket-confirmation"
             text={`Đã bán: ${eventDetail.sold_tickets}`}
@@ -351,7 +385,9 @@ const EventDetails = ({ route }) => {
           <InfoRow
             icon="currency-usd"
             text={`Giá vé: ${
-              eventDetail.ticket_price ? eventDetail.ticket_price + " VND" : "N/A"
+              eventDetail.ticket_price
+                ? eventDetail.ticket_price + " VND"
+                : "N/A"
             }`}
           />
         </View>
@@ -385,12 +421,19 @@ const EventDetails = ({ route }) => {
                 <Text
                   style={styles.openMapButton}
                   onPress={() =>
-                    openInGoogleMaps(eventDetail.latitude, eventDetail.longitude)
+                    openInGoogleMaps(
+                      eventDetail.latitude,
+                      eventDetail.longitude
+                    )
                   }
                 >
-                  Open in map <Icon name="map-marker" size={18} color="#1a73e8" />
+                  Open in map{" "}
+                  <Icon name="map-marker" size={18} color="#1a73e8" />
                 </Text>
-                <TouchableOpacity onPress={centerMap} style={{ marginLeft: 12 }}>
+                <TouchableOpacity
+                  onPress={centerMap}
+                  style={{ marginLeft: 12 }}
+                >
                   <Icon name="crosshairs-gps" size={22} color="#1a73e8" />
                 </TouchableOpacity>
               </View>
@@ -495,46 +538,80 @@ const EventDetails = ({ route }) => {
           {reviews.length === 0 ? (
             <Text style={styles.noReviewsText}>Chưa có đánh giá nào.</Text>
           ) : (
-            reviews.map((review) => (
-              <View key={review.id} style={[
-                styles.reviewItem,
-                user?.id === review.user && styles.myReview
-              ]}>
-                <View style={styles.reviewHeader}>
-                  {review.user_infor && review.user_infor.avatar ? (
-                    <Image
-                      source={{ uri: review.user_infor.avatar }}
-                      style={styles.avatar}
-                    />
-                  ) : (
-                    <Icon name="account-circle" size={40} color="#888" />
-                  )}
-                  <View style={styles.userInfo}>
-                    <Text style={styles.reviewUsername}>
-                      {review.user_infor?.username || "Người dùng"}
-                    </Text>
-                    <View style={styles.reviewStars}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FontAwesome
-                          key={star}
-                          name={star <= review.rating ? "star" : "star-o"}
-                          size={16}
-                          color="#f1c40f"
-                          style={styles.starIcon}
-                        />
-                      ))}
+            reviews
+              .filter((review) => review.parent_review === null)
+              .map((review) => (
+                <View
+                  key={review.id}
+                  style={[
+                    styles.reviewItem,
+                    user?.id === review.user && styles.myReview,
+                  ]}
+                >
+                  <View style={styles.reviewHeader}>
+                    {review.user_infor && review.user_infor.avatar ? (
+                      <Image
+                        source={{ uri: review.user_infor.avatar }}
+                        style={styles.avatar}
+                      />
+                    ) : (
+                      <Icon name="account-circle" size={40} color="#888" />
+                    )}
+                    <View style={styles.userInfo}>
+                      <Text style={styles.reviewUsername}>
+                        {review.user_infor?.username || "Người dùng"}
+                      </Text>
+                      <View style={styles.reviewStars}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FontAwesome
+                            key={star}
+                            name={star <= review.rating ? "star" : "star-o"}
+                            size={16}
+                            color="#f1c40f"
+                            style={styles.starIcon}
+                          />
+                        ))}
+                      </View>
                     </View>
+                    <ReviewMenu review={review} />
                   </View>
-                  <ReviewMenu review={review} />
+                  {review.comment ? (
+                    <Text style={styles.reviewComment}>{review.comment}</Text>
+                  ) : null}
+                  <Text style={styles.reviewDate}>
+                    {new Date(review.created_at).toLocaleDateString()}
+                  </Text>
+
+                  {/* Hiển thị các reply */}
+                  {reviews
+                    .filter((r) => r.parent_review === review.id)
+                    .map((reply) => (
+                      <View key={reply.id} style={styles.replyContainer}>
+                        <View style={styles.replyHeader}>
+                          {reply.user_infor && reply.user_infor.avatar ? (
+                            <Image
+                              source={{ uri: reply.user_infor.avatar }}
+                              style={styles.replyAvatar}
+                            />
+                          ) : (
+                            <Icon
+                              name="account-circle"
+                              size={28}
+                              color="#888"
+                            />
+                          )}
+                          <Text style={styles.replyUsername}>
+                            {reply.user_infor?.username || "Người tổ chức"}
+                          </Text>
+                        </View>
+                        <Text style={styles.replyComment}>{reply.comment}</Text>
+                        <Text style={styles.replyDate}>
+                          {new Date(reply.created_at).toLocaleDateString()}
+                        </Text>
+                      </View>
+                    ))}
                 </View>
-                {review.comment ? (
-                  <Text style={styles.reviewComment}>{review.comment}</Text>
-                ) : null}
-                <Text style={styles.reviewDate}>
-                  {new Date(review.created_at).toLocaleDateString()}
-                </Text>
-              </View>
-            ))
+              ))
           )}
         </View>
       </ScrollView>
@@ -560,9 +637,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   chatIcon: {
@@ -742,35 +819,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuContainer: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   menuModal: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     width: 200,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   menuItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   deleteItem: {
     borderBottomWidth: 0,
   },
   menuText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   buttonGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   cancelButton: {
@@ -779,6 +856,39 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 2,
+  },
+  replyContainer: {
+    marginTop: 8,
+    marginLeft: 24,
+    backgroundColor: "#f1f8e9",
+    borderRadius: 8,
+    padding: 10,
+  },
+  replyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  replyAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+  },
+  replyUsername: {
+    fontWeight: "600",
+    fontSize: 13,
+    color: colors.greenSuccess,
+  },
+  replyComment: {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 2,
+  },
+  replyDate: {
+    fontSize: 11,
+    color: "#888",
+    textAlign: "right",
   },
 });
 
