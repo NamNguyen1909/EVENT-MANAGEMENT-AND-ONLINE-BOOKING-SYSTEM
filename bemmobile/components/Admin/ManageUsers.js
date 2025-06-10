@@ -187,10 +187,10 @@ const ManageUsers = () => {
         value={search}
         style={{
           margin: 16,
-          backgroundColor: colors.blueGray, // hoặc colors.white, hoặc màu bạn muốn
+          backgroundColor: colors.blueGray, 
         }}
         inputStyle={{
-          color: colors.navy, // màu chữ nếu muốn
+          color: colors.navy,
         }}
       />
       <FlatList

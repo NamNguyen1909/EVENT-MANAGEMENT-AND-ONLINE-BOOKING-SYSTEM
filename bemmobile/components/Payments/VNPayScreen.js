@@ -65,8 +65,8 @@ const VNPayScreen = ({ route, navigation }) => {
         ref={webviewRef}
         source={{ uri: paymentUrl }}
         onLoadEnd={() => setLoading(false)}
-        onNavigationStateChange={handleNavigationChange} // Chỉ log, không xác nhận payment ở đây!
-        onMessage={handleWebViewMessage} // Xác nhận payment ở đây!
+        onNavigationStateChange={handleNavigationChange} 
+        onMessage={handleWebViewMessage} 
         startInLoadingState
       />
     </View>
