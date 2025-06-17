@@ -30,11 +30,12 @@ với nhau trước sự kiện qua chat trực tuyến.
 - Tính năng nổi bật: gợi ý sự kiện dựa trên sở thích, tạo mã giảm giá cho từng nhóm
 khách hàng, và theo dõi xu hướng sự kiện hot.
 ## Technologies Used
-- **Node.js** – Backend runtime environment used to build RESTful APIs for handling application logic and data processing.
+- **Django** & **Django REST Framework** – Backend framework for building RESTful APIs to handle user registration, event creation, ticket booking, and other application logic.
+- **React Native** – Cross-platform mobile app development for seamless user interaction on iOS and Android.
 - **VNPAY** – Integrated as the primary payment gateway for secure transaction processing.
 - **Firebase Cloud Messaging (FCM)** – Used to deliver real-time push notifications to users.
 - **Render.com** – Cloud platform for hosting and deploying the backend services.
-- **Cron-job.org** – Scheduled task service for automating recurring jobs (e.g., generating notifications for upcoming events).
+- **Cron-job.org** – Third-party service for scheduling automated API calls (e.g., generating notifications for upcoming events).
 
 ## Features
 - Seamless payment integration with VNPAY.
