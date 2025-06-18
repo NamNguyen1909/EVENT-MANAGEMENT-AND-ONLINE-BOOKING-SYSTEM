@@ -113,7 +113,6 @@ khách hàng, và theo dõi xu hướng sự kiện hot.
 - **PATCH** /tags/{id}/: Partially update a tag by ID.
 - **DELETE** /tags/{id}/: Delete a tag by ID.
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request for any improvements or bug fixes.
 ## Contact
