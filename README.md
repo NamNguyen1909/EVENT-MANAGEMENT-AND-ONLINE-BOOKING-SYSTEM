@@ -1,121 +1,244 @@
-# EVENT-MANAGEMENT-AND-ONLINE-BOOKING-SYSTEM
+# Event Management and Online Booking System
 
 ## Table of Contents
 - [Introduction](#introduction)
 - [Technologies Used](#technologies-used)
 - [Features](#features)
 - [Setup Instructions](#setup-instructions)
-- [API Endpoints](#aPI-endpoints)
+- [API Endpoints](#api-endpoints)
 - [License](#license)
 - [Contributing](#contributing)
 - [Contact](#contact)
+
 ## Introduction
-### HỆ THỐNG QUẢN LÝ SỰ KIỆN VÀ ĐẶT VÉ TRỰC TUYẾN
-- Đăng ký tài khoản: người dùng có thể đăng ký với vai trò quản trị viên, nhà tổ chức sự
-kiện, hoặc khách tham gia.
-- Tạo sự kiện: nhà tổ chức đăng tải sự kiện với các thông tin chi tiết như ngày giờ, địa
-điểm (kết nối Google Maps), số lượng vé, giá vé, và mô tả sự kiện.
-- Đặt vé trực tuyến: người dùng tìm kiếm sự kiện theo loại hình (âm nhạc, hội thảo, thể
-thao…) và đặt vé online qua các cổng thanh toán như MoMo, VNPAY.
-- Quản lý vé và check-in: sau khi đặt vé thành công, người dùng nhận mã QR. Nhân viên
-quét mã QR tại sự kiện để xác nhận check-in.
-- Thông báo và nhắc nhở: hệ thống gửi email hoặc push notification nhắc người dùng về
-sự kiện sắp diễn ra hoặc thông báo sự thay đổi.
-- Đánh giá sự kiện: người tham gia có thể đánh giá và viết nhận xét về sự kiện. Nhà tổ
-chức theo dõi phản hồi để cải thiện chất lượng.
-- Thống kê và báo cáo: quản trị viên và nhà tổ chức xem báo cáo số lượng vé bán ra,
-doanh thu, và mức độ quan tâm qua biểu đồ trực quan.
-- *Tích hợp chat real-time: người tham gia có thể trao đổi với ban tổ chức hoặc thảo luận
-với nhau trước sự kiện qua chat trực tuyến.
-- Tính năng nổi bật: gợi ý sự kiện dựa trên sở thích, tạo mã giảm giá cho từng nhóm
-khách hàng, và theo dõi xu hướng sự kiện hot.
+The **Event Management and Online Booking System** is a comprehensive platform designed to streamline event organization and ticket booking processes. It caters to various user roles, including administrators, event organizers, attendees, and staff, providing a seamless experience for creating, managing, and attending events. Key functionalities include real-time chat, secure payment integration, QR code-based check-in, and personalized event recommendations.
+
+### Key Features
+- **User Registration**: Users can sign up as administrators, event organizers, or attendees.
+- **Event Creation**: Organizers can create events with details such as date, time, location (integrated with Google Maps), ticket quantity, pricing, and descriptions.
+- **Online Ticket Booking**: Attendees can search events by category (e.g., music, seminars, sports) and book tickets via integrated payment gateways like VNPAY or MoMo.
+- **Ticket Management & Check-in**: Users receive QR codes upon successful booking, which staff scan for event check-in.
+- **Notifications & Reminders**: Automated email and push notifications for upcoming events or changes.
+- **Event Reviews**: Attendees can rate and review events, allowing organizers to gather feedback and improve.
+- **Analytics & Reporting**: Administrators and organizers access visual reports on ticket sales, revenue, and event engagement.
+- **Real-time Chat**: Attendees can communicate with organizers.
+- **Personalized Recommendations**: Suggests events based on user preferences.
+- **Discount Codes**: Organizers can create targeted discount codes for specific user groups.
+- **Trending Events**: Tracks and highlights popular events based on user interactions.
+
 ## Technologies Used
-- **Django** & **Django REST Framework** – Backend framework for building RESTful APIs to handle user registration, event creation, ticket booking, and other application logic.
-- **React Native** – Cross-platform mobile app development for seamless user interaction on iOS and Android.
-- **VNPAY** – Integrated as the primary payment gateway for secure transaction processing.
-- **Firebase Cloud Messaging (FCM)** – Used to deliver real-time push notifications to users.
-- **Render.com** – Cloud platform for hosting and deploying the backend services.
-- **Cron-job.org** – Third-party service for scheduling automated API calls (e.g., generating notifications for upcoming events).
+- **Backend**:
+  - **Django** & **Django REST Framework**: For building robust RESTful APIs handling user management, event creation, ticket booking, and more.
+  - **PostgreSQL**: Relational database for storing user, event, and transaction data (configurable).
+- **Frontend**:
+  - **React Native**: Cross-platform mobile app development for iOS and Android.
+- **Payment Integration**:
+  - **VNPAY**: Secure payment gateway for transaction processing.
+- **Notifications**:
+  - **Firebase Cloud Messaging (FCM)**: Real-time push notifications for user updates and event reminders.
+- **Hosting & Deployment**:
+  - **Render.com**: Cloud platform for hosting backend services.
+- **Task Scheduling**:
+  - **Cron-job.org**: Schedules automated API calls for tasks like generating event notifications.
+- **Other**:
+  - **WebSocket**: For real-time chat functionality.
+  - **Google Maps API**: For event location integration.
 
 ## Features
-- Seamless payment integration with VNPAY.
-- Real-time email and push notifications for user activities and order updates.
-- 
+- **Secure Payment Processing**: Seamless integration with VNPAY for ticket purchases.
+- **Real-time Notifications**: Email and push notifications for booking confirmations, event reminders, and updates.
+- **QR Code Check-in**: Efficient event entry with staff-managed QR code scanning.
+- **Real-time Chat**: Enables communication between attendees and organizers.
+- **Event Analytics**: Visual dashboards for tracking ticket sales, revenue, and engagement.
+- **Personalized Experience**: Event suggestions based on user preferences and behavior.
+- **Discount Management**: Flexible discount code creation for targeted promotions.
+- **Scalable Architecture**: Supports multiple user roles and high transaction volumes.
+
 ## Setup Instructions
+### Prerequisites
+- Python 3.9+
+- Node.js 16+
+- PostgreSQL 13+
+- Render.com account (for deployment)
+- Firebase project (for FCM)
+- VNPAY merchant account
+- Google Maps API key
+- Expo CLI (`npm install -g expo-cli`)
+
+### Backend Setup
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/your-username/event-management-system.git
+   cd event-management-system/backend
+   ```
+2. **Create a Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Configure Environment Variables**:
+   - Create a `.env` file in the `backend` directory with the following:
+     ```env
+     SECRET_KEY=your_django_secret_key
+     DATABASE_URL=postgresql://user:password@localhost:5432/event_db
+     VNPAY_TMN_CODE=your_vnpay_tmn_code
+     VNPAY_HASH_SECRET=your_vnpay_hash_secret
+     GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+     FIREBASE_CREDENTIALS_PATH=/path/to/firebase-credentials.json
+     ```
+   - **Note**: The project on GitHub is configured for online deployment on Render.com. For local setup, ensure `DATABASE_URL` points to your local PostgreSQL instance.
+5. **Run Migrations**:
+   ```bash
+   python manage.py migrate
+   ```
+6. **Create Superuser** (optional):
+   ```bash
+   python manage.py createsuperuser
+   ```
+7. **Start the Development Server**:
+   ```bash
+   python manage.py runserver
+   ```
+   - **Local**: Access the API at `http://localhost:8000`.
+   - **Online**: If deployed, access at `https://event-management-and-online-booking.onrender.com/`.
+
+### Frontend Setup
+1. **Navigate to the Frontend Directory**:
+   ```bash
+   cd ../frontend
+   ```
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Configure API Endpoint**:
+   - Update the API base URL in `frontend/src/configs/Apis.js`:
+     ```javascript
+     // For local development
+     const BASE_URL = 'http://localhost:8000/api/';
+     // For online deployment
+     // const BASE_URL = 'https://event-management-and-online-booking.onrender.com/api/';
+     ```
+   - **Note**: The GitHub project is configured for online deployment. For local testing, use the local URL (`http://localhost:8000/api/`).
+4. **Run the Mobile App**:
+   - For development with Expo Go:
+     ```bash
+     npx expo start
+     ```
+     - Scan the QR code with the Expo Go app on your iOS or Android device.
+   - **To use the Scan feature (QR code scanning)**:
+     - The scan functionality requires native modules (e.g., `react-native-camera` or similar). Therefore, you must build a native app using:
+       ```bash
+       npx expo run:android  # For Android
+       npx expo run:ios      # For iOS
+       ```
+     - Ensure an Android emulator/physical device or Xcode (for iOS) is set up.
+     - These commands generate native builds, enabling features like QR code scanning that are not supported in Expo Go.
+   - **Note**: Ensure the device/emulator has camera permissions enabled for QR code scanning.
+
+### Deployment
+- **Backend**: Deploy to Render.com by connecting your GitHub repository and configuring the environment variables. Use the online URL `https://event-management-and-online-booking.onrender.com/`.
+- **Frontend**: Build APKs/IPAs using `npx expo run:android` or `npx expo run:ios` for production. Distribute via Google Play Store or Apple App Store.
+- **Cron Jobs**: Set up scheduled tasks on Cron-job.org to trigger notification APIs.
+
 ## API Endpoints
-### users
-- **GET** /users/: Get all users.
-- **POST** /users/: Create a new user.
-- **GET** /users/current-user/: Get current user details.
-- **PATCH** /users/current-user/: Update current user details.
-- **POST** /users/deactivate/: Deactivate a user.
-- **GET** /users/my-notifications/: Get user's notifications.
-- **GET** /users/payments/: Get user's payments.
-- **GET** /users/sent-messages/: Get user's sent messages.
-- **GET** /users/tickets/: Get user's tickets.
-- **POST** /users/{id}/admin-deactivate/: Admin deactivate user by ID.
-### events
-- **GET** /events/: Get all events.
-- **POST** /events/: Create a new event.
-- **GET** /events/categories/: Get event categories.
-- **GET** /events/hot/: Get hot events.
-- **GET** /events/my-events/: Get user's events.
-- **GET** /events/suggest_events/: Get suggested events.
-- **GET** /events/{id}/: Get event by ID.
-- **PUT** /events/{id}/: Update an event by ID.
-- **PATCH** /events/{id}/: Partially update an event by ID.
-- **GET** /events/{id}/chat-messages/: Get chat messages for an event.
-- **GET** /events/{id}/statistics/: Get statistics for an event.
-- **GET** /events/{id}/tickets/: Get tickets for an event.
-### payments
-- **GET** /payments/: Get all payments.
-- **POST** /payments/pay-unpaid-tickets/: Pay unpaid tickets.
-- **POST** /payments/webhook/: Handle payment webhook.
-- **GET** /payments/{id}/: Get payment by ID.
-- **PUT** /payments/{id}/: Update a payment by ID.
-- **PATCH** /payments/{id}/: Partially update a payment by ID.
-- **DELETE** /payments/{id}/: Delete a payment by ID.
-- **POST** /payments/{id}/confirm/: Confirm a payment by ID.
-### tickets
-- **GET** /tickets/: Get all tickets.
-- **POST** /tickets/book-ticket/: Book a ticket.
-- **POST** /tickets/check-in/: Check in a ticket.
-- **GET** /tickets/{id}/: Get ticket by ID.
-- **PUT** /tickets/{id}/: Update a ticket by ID.
-- **PATCH** /tickets/{id}/: Partially update a ticket by ID.
-### chat-messages
-- **GET** /chat-messages/: Get all chat messages.
-- **POST** /chat-messages/: Create a new chat message.
-### discount-codes
-- **GET** /discount-codes/: Get all discount codes.
-- **POST** /discount-codes/: Create a new discount code.
-- **GET** /discount-codes/user-group-discount-codes/: Get user group discount codes.
-- **DELETE** /discount-codes/{id}/: Delete a discount code by ID.
-### event-trending-logs
-- **GET** /event-trending-logs/: Get all event trending logs.
-- **GET** /event-trending-logs/{event}/: Get trending logs for a specific event.
-### notifications
-- **POST** /notifications/create-notification/: Create a new notification.
-- **GET** /notifications/event-notifications/: Get event notifications.
-- **GET** /notifications/my-notifications/: Get user's notifications.
-- **POST** /notifications/{id}/mark-as-read/: Mark a notification as read by ID.
-### reviews
-- **GET** /reviews/: Get all reviews.
-- **POST** /reviews/: Create a new review.
-- **GET** /reviews/event-reviews-organizer/: Get event reviews for organizer.
-- **PUT** /reviews/{id}/: Update a review by ID.
-- **PATCH** /reviews/{id}/: Partially update a review by ID.
-- **DELETE** /reviews/{id}/: Delete a review by ID.
-### tags
-- **GET** /tags/: Get all tags.
-- **POST** /tags/: Create a new tag.
-- **PUT** /tags/{id}/: Update a tag by ID.
-- **PATCH** /tags/{id}/: Partially update a tag by ID.
-- **DELETE** /tags/{id}/: Delete a tag by ID.
+### Users
+- `GET /users/`: Retrieve all users (admin only).
+- `POST /users/`: Register a new user.
+- `GET /users/current-user/`: Get current user details.
+- `PATCH /users/current-user/`: Update current user details.
+- `POST /users/deactivate/`: Deactivate a user account.
+- `GET /users/my-notifications/`: Get user's notifications.
+- `GET /users/payments/`: Get user's payment history.
+- `GET /users/sent-messages/`: Get user's sent messages.
+- `GET /users/tickets/`: Get user's tickets.
+- `POST /users/{id}/admin-deactivate/`: Deactivate a user by ID (admin only).
+
+### Events
+- `GET /events/`: List all public events.
+- `POST /events/`: Create a new event (organizer only).
+- `GET /events/categories/`: List event categories.
+- `GET /events/hot/`: List trending events.
+- `GET /events/my-events/`: List user's events (organizer only).
+- `GET /events/suggest_events/`: Get personalized event suggestions.
+- `GET /events/{id}/`: Get event details by ID.
+- `PUT /events/{id}/`: Update an event by ID (organizer only).
+- `PATCH /events/{id}/`: Partially update an event by ID (organizer only).
+- `GET /events/{id}/chat-messages/`: Get chat messages for an event.
+- `GET /events/{id}/statistics/`: Get event statistics (organizer/admin only).
+- `GET /events/{id}/tickets/`: Get tickets for an event.
+
+### Payments
+- `GET /payments/`: List all payments (admin only).
+- `POST /payments/pay-unpaid-tickets/`: Pay unpaid tickets.
+- `POST /payments/webhook/`: Handle payment webhook (VNPAY).
+- `GET /payments/{id}/`: Get payment details by ID.
+- `PUT /payments/{id}/`: Update a payment by ID (admin only).
+- `PATCH /payments/{id}/`: Partially update a payment by ID (admin only).
+- `DELETE /payments/{id}/`: Delete a payment by ID (admin only).
+- `POST /payments/{id}/confirm/`: Confirm a payment by ID.
+
+### Tickets
+- `GET /tickets/`: List all tickets (admin only).
+- `POST /tickets/book-ticket/`: Book a ticket.
+- `POST /tickets/check-in/`: Check in a ticket (staff only).
+- `GET /tickets/{id}/`: Get ticket details by ID.
+- `PUT /tickets/{id}/`: Update a ticket by ID (admin only).
+- `PATCH /tickets/{id}/`: Partially update a ticket by ID (admin only).
+
+### Chat Messages
+- `GET /chat-messages/`: List all chat messages (admin only).
+- `POST /chat-messages/`: Create a new chat message.
+
+### Discount Codes
+- `GET /discount-codes/`: List all discount codes (admin/organizer only).
+- `POST /discount-codes/`: Create a new discount code (admin/organizer only).
+- `GET /discount-codes/user-group-discount-codes/`: Get discount codes for user groups.
+- `DELETE /discount-codes/{id}/`: Delete a discount code by ID (admin/organizer only).
+
+### Event Trending Logs
+- `GET /event-trending-logs/`: List all trending logs (admin only).
+- `GET /event-trending-logs/{event}/`: Get trending logs for a specific event.
+
+### Notifications
+- `POST /notifications/create-notification/`: Create a new notification (admin/organizer only).
+- `GET /notifications/event-notifications/`: Get event-related notifications.
+- `GET /notifications/my-notifications/`: Get user's notifications.
+- `POST /notifications/{id}/mark-as-read/`: Mark a notification as read.
+
+### Reviews
+- `GET /reviews/`: List all reviews.
+- `POST /reviews/`: Create a new review.
+- `GET /reviews/event-reviews-organizer/`: Get reviews for organizer's events.
+- `PUT /reviews/{id}/`: Update a review by ID.
+- `PATCH /reviews/{id}/`: Partially update a review by ID.
+- `DELETE /reviews/{id}/`: Delete a review by ID.
+
+### Tags
+- `GET /tags/`: List all tags.
+- `POST /tags/`: Create a new tag (admin/organizer only).
+- `PUT /tags/{id}/`: Update a tag by ID (admin/organizer only).
+- `PATCH /tags/{id}/`: Partially update a tag by ID (admin/organizer only).
+- `DELETE /tags/{id}/`: Delete a tag by ID (admin/organizer only).
+
 ## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
 ## Contributing
-Contributions are welcome! Please fork the repository and submit a pull request for any improvements or bug fixes.
+Contributions are welcome! To contribute:
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -m "Add your feature"`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Submit a pull request.
+
+Please ensure your code follows the project's coding standards and includes relevant tests.
+
 ## Contact
-For any inquiries or support, please contact us at:
-- namnguyen19092004@gmail.com
-- npphus@gmail.com
+For inquiries or support, please contact:
+- **Nam Nguyen**: namnguyen19092004@gmail.com
+- **Phu Nguyen**: npphus@gmail.com
