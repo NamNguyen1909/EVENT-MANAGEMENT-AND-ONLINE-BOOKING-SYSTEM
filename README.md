@@ -226,7 +226,6 @@ The **Event Management and Online Booking System** is a comprehensive platform d
 - `DELETE /tags/{id}/`: Delete a tag by ID (admin/organizer only).
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 Contributions are welcome! To contribute:
