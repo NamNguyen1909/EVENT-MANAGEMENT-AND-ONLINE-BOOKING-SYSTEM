@@ -14,17 +14,15 @@
 The **Event Management and Online Booking System** is a comprehensive platform designed to streamline event organization and ticket booking processes. It caters to various user roles, including administrators, event organizers, attendees, and staff, providing a seamless experience for creating, managing, and attending events. Key functionalities include real-time chat, secure payment integration, QR code-based check-in, and personalized event recommendations.
 
 ### Key Features
-- **User Registration**: Users can sign up as administrators, event organizers, or attendees.
-- **Event Creation**: Organizers can create events with details such as date, time, location (integrated with Google Maps), ticket quantity, pricing, and descriptions.
-- **Online Ticket Booking**: Attendees can search events by category (e.g., music, seminars, sports) and book tickets via integrated payment gateways like VNPAY or MoMo.
-- **Ticket Management & Check-in**: Users receive QR codes upon successful booking, which staff scan for event check-in.
-- **Notifications & Reminders**: Automated email and push notifications for upcoming events or changes.
-- **Event Reviews**: Attendees can rate and review events, allowing organizers to gather feedback and improve.
-- **Analytics & Reporting**: Administrators and organizers access visual reports on ticket sales, revenue, and event engagement.
-- **Real-time Chat**: Attendees can communicate with organizers.
-- **Personalized Recommendations**: Suggests events based on user preferences.
-- **Discount Codes**: Organizers can create targeted discount codes for specific user groups.
-- **Trending Events**: Tracks and highlights popular events based on user interactions.
+- **User Registration**: Users can register as administrators, event organizers, or attendees.
+- **Event Creation**: Organizers can post events with full details including date, time, location (integrated with Google Maps), number of tickets, ticket prices, and event description.
+- **Online Ticket Booking**: Users can search for events by category (e.g., music, seminars, sports, etc.) and book tickets online via payment gateways such as MoMo and VNPAY.
+- **Ticket Management & Check-in**: After a successful booking, users receive a QR code. Staff can scan the QR code at the event to confirm check-in.
+- **Notifications & Reminders**: The system sends email or push notifications to remind users about upcoming events or inform them of any changes.
+- **Event Reviews**: Attendees can rate and leave comments about events. Organizers can monitor feedback to improve event quality.
+- **Analytics & Reporting**: Administrators and organizers can view reports on ticket sales, revenue, and user engagement through visualized charts.
+- **Real-time Chat Integration**: Attendees can communicate with organizers or discuss with each other before the event via live chat.
+- **Highlighted Features**: Event suggestions based on user interests, targeted discount codes for different customer segments, and tracking of trending events.
 
 ## Technologies Used
 - **Backend**:
