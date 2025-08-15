@@ -48,6 +48,7 @@ from cloudinary.uploader import upload
 from .utils import send_fcm_v1
 
 from django.conf import settings
+import os
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -505,8 +506,8 @@ def create_payment_url(request):
     import pytz
     tz = pytz.timezone("Asia/Ho_Chi_Minh")
 
-    vnp_TmnCode = 'GUPETCYO'
-    vnp_HashSecret = 'E2G0Y153XRTW37LVRKW8DJ1TGEQ9RK6I'
+    vnp_TmnCode = os.environ.get('VNPAY_TMN_CODE')
+    vnp_HashSecret = os.environ.get('VNPAY_HASH_SECRET')
     vnp_Url = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
     vnp_ReturnUrl = 'https://event-management-and-online-booking.onrender.com/vnpay/redirect?from=app'
 

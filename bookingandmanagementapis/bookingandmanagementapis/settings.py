@@ -24,7 +24,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', '7y**tu@&nfx9cmq_)m%%evaf5uyqvckg)!fm(b5c81_hoe20$9')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
 # ALLOWED_HOSTS = ["*"]
@@ -103,10 +103,6 @@ cloudinary.config(
     cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
     api_key=os.getenv('CLOUDINARY_API_KEY'),
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-
-#     cloud_name="dncgine9e",
-#     api_key="257557947612624",
-#     api_secret="88EDQ7-Ltwzn1oaI4tT_UIb_bWI",
 
     secure=True
 )
@@ -248,8 +244,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'django.contrib.auth.backends.ModelBackend',
 # ]
 
-CLIENT_ID = 'SJ61STYu3n0mTxWaOWpgaaGp2DA7Ray7OHUGmLgE'
-CLIENT_SECRET = 'WnWKsKu8wG14aA0EMgGnO1fByZuqUZGSTJCkHX6SFHTUQ1vYWbUyThmsHCOJ010beM5QFCmVyrDcSfJMQlpUiycVx6wkS3e0MFfViHBHTa2mrKlM9ut4BikkU1y2cjwo'
+# OAuth2 Configuration - Required environment variables
+CLIENT_ID = os.environ.get('CLIENT_ID')
+CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 
 ALLOWED_HOSTS = ['*']
 
@@ -274,7 +271,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get("REDIS_URL", "rediss://:<default_password>@renewed-glider-13998.upstash.io:6379")],
+            "hosts": [os.environ.get("REDIS_URL")],
         },
     },
 }
@@ -343,7 +340,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'namnguyen19092004@gmail.com'
-EMAIL_HOST_PASSWORD = 'ejoy hwyc qice jgow'  # App password vừa tạo
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')  # App password vừa tạo
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-DEFAULT_FROM_EMAIL = 'Event management and online booking system <namnguyen19092004@gmail.com>'
+DEFAULT_FROM_EMAIL = 'Event management and online booking system <{}>'.format(EMAIL_HOST_USER)
