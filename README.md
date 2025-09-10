@@ -27,7 +27,7 @@ A comprehensive event management platform with mobile app support, featuring rea
 - **Push Notifications**: FCM integration for event reminders and updates
 - **Payment Integration**: Secure VNPAY payment processing
 - **Event Analytics**: Dashboard for tracking sales, revenue, and engagement
-- **Personalized Recommendations**: AI-driven event suggestions based on user behavior
+- **Personalized Recommendations**: event suggestions based on user behavior
 
 ## Setup Instructions
 
